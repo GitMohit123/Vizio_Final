@@ -52,7 +52,7 @@ const Homepage = () => {
         try {
           const userId = user?.uid;
           listTeams(userId).then(async (data) => {
-            if (data.length === 0) {
+            if (!data) {
               try {
                 const userName = user?.name;
                 await createTeam(userName, userId).then(() => {

@@ -38,29 +38,50 @@ export const listTeams = async (req, res, next) => {
 };
 
 export const createTeam = async (req, res, next) => {
-    const { teamName, user_id } = req.body;
-    if (!teamName || !user_id) {
-      return res.status(400).json({ message: "Missing required fields: teamName and user_id" });
-    }
-    try {
-      const params = {
+  const { teamName, user_id } = req.body;
+  if (!teamName || !user_id) {
+    return res
+      .status(400)
+      .json({ message: "Missing required fields: teamName and user_id" });
+  }
+  try {
+    const userParams = {
+      Bucket: "vidzspace",
+      Prefix: prefix + `${user_id}/`,
+    };
+    const headObjectResponse = await s3Client.send(
+      new ListObjectsV2Command(userParams)
+    );
+    if (headObjectResponse.KeyCount === 0) {
+      console.log("No user found");
+      const userIdParams = {
         Bucket: "vidzspace",
-        Key: prefix + `${user_id}/${teamName}/`,
+        Key: prefix + `${user_id}/`,
         Body: "",
       };
-  
-      const data = await s3Client.send(new PutObjectCommand(params));
-      return res.status(200).json({ message: "Team created successfully" });
-    } catch (err) {
-      console.error("Error creating team folder:", err);
-      // Handle specific errors (optional)
-      if (err.code === "AccessDenied") {
-        return res.status(403).json({ message: "Insufficient permissions to create team folder" });
-      } else if (err.code === "BucketNotFound") {
-        return res.status(404).json({ message: "Bucket not found" });
-      } else {
-        // Generic error handling (improve based on specific needs)
-        return res.status(500).json({ message: "Internal Server Error" });
-      }
+      await s3Client.send(new PutObjectCommand(userIdParams));
     }
-  };
+    console.log("User found");
+    const params = {
+      Bucket: "vidzspace",
+      Key: prefix + `${user_id}/${teamName}/`,
+      Body: "",
+    };
+
+    const data = await s3Client.send(new PutObjectCommand(params));
+    return res.status(200).json({ message: "Team created successfully" });
+  } catch (err) {
+    console.error("Error creating team folder:", err);
+    // Handle specific errors (optional)
+    if (err.code === "AccessDenied") {
+      return res
+        .status(403)
+        .json({ message: "Insufficient permissions to create team folder" });
+    } else if (err.code === "BucketNotFound") {
+      return res.status(404).json({ message: "Bucket not found" });
+    } else {
+      // Generic error handling (improve based on specific needs)
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+};
