@@ -8,7 +8,7 @@ import { cloudOptions } from "../../constants/homePage";
 import { setProjectState } from "../../app/Actions/cmsAction";
 import { useDropzone } from "react-dropzone";
 import HomeContext from "../../context/homePage/HomeContext";
-import useDrivePicker from 'react-google-drive-picker'
+import useDrivePicker from "react-google-drive-picker";
 
 const ProjectAdd = () => {
   const dispatch = useDispatch();
@@ -22,11 +22,12 @@ const ProjectAdd = () => {
     isDragging,
     setIsDragging,
   } = useContext(HomeContext);
-  const [openPicker, authResponse] = useDrivePicker(); 
+  const [openPicker, authResponse] = useDrivePicker();
 
   const handleOpenPicker = () => {
     openPicker({
-      clientId: "112355236362-jv377gl5mau1ucsf0mghe9h96tfcefj3.apps.googleusercontent.com",
+      clientId:
+        "112355236362-jv377gl5mau1ucsf0mghe9h96tfcefj3.apps.googleusercontent.com",
       developerKey: "AIzaSyB2FDWk9GwFLGsGsFrnpCvh2nzByI73W8o",
       viewId: "DOCS",
       // token: token, // pass oauth token in case you already have one
@@ -36,22 +37,22 @@ const ProjectAdd = () => {
       multiselect: true,
       // customViews: customViewsArray, // custom view
       callbackFunction: (data) => {
-        if (data.action === 'cancel') {
-          console.log('User clicked cancel/close button')
+        if (data.action === "cancel") {
+          console.log("User clicked cancel/close button");
         }
-        console.log(data.docs)
+        console.log(data.docs);
       },
-    })
-  }
+    });
+  };
 
   const handleCloudOptionClick = (cloudName) => {
     if (cloudName === "Google Drive") {
-      handleOpenPicker()
+      handleOpenPicker();
     } else {
-      console.log("One Drive");
+      openOneDrivePicker();
     }
   };
-  
+
   const toggleDropdown = () => {
     setIsOpenVisibility(!isOpenVisibility);
   };
@@ -114,6 +115,34 @@ const ProjectAdd = () => {
       onDragEnter: () => setIsDragging(true),
       onDragLeave: () => setIsDragging(false),
     });
+
+  // files to add using one drive
+  const clientId = "5835f2c3-7c48-4ba8-8b72-a95e71c04d46";
+  const redirectUri = "http://localhost:3000";
+
+  const openOneDrivePicker = () => {
+    const odOptions = {
+      clientId: clientId,
+      action: "query", // or "download" to download the file directly
+      multiSelect: false,
+      advanced: {
+        redirectUri: redirectUri,
+        filter: ".docx,.pptx,.xlsx,.txt,.pdf,.jpg,.png", // Example filter for specific file types
+      },
+      success: (files) => {
+        console.log("Files selected:", files);
+        // Handle the selected files here
+      },
+      cancel: () => {
+        console.log("User canceled the picker.");
+      },
+      error: (error) => {
+        console.error("Error picking files:", error);
+      },
+    };
+
+    OneDrive.open(odOptions);
+  };
 
   return (
     <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-2 bg-opacity-10 bg-[#2f2f2f]">
