@@ -68,7 +68,7 @@ export const createTeam = async (req, res, next) => {
       Body: "",
     };
 
-    const data = await s3Client.send(new PutObjectCommand(params));
+    await s3Client.send(new PutObjectCommand(params));
     return res.status(200).json({ message: "Team created successfully" });
   } catch (err) {
     console.error("Error creating team folder:", err);

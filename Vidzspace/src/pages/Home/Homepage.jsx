@@ -76,7 +76,7 @@ const Homepage = () => {
       }
     };
     fetchTeams();
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     dispatch(setTeamPath(currentTeam));

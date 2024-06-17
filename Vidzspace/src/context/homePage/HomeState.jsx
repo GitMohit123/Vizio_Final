@@ -9,11 +9,15 @@ const HomeState = ({ children }) => {
   const user = useSelector((state) => state.user.info);
 
   //team state
-  const { team, currentTeam, teamState, teamPath, optionState } = useSelector(
-    (state) => state.team
-  );
 
+  const team = useSelector((state)=>state.team.info)
+  const currentTeam = useSelector((state)=>state.team.currentTeam)
+  const teamState = useSelector((state)=>state.team.teamState)
+  const optionState = useSelector((state)=>state.team.optionState)
+  
+  
   //cms State
+  const teamPath = useSelector((state)=>state.cms.teamPath)
   const projectState = useSelector((state) => state.cms.projectState);
 
   //setting current team
