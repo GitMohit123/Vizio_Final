@@ -19,8 +19,4 @@ export const cloudOptions =[
         label:"One Drive",
         icon:"/icons/Onedrive.png"
     },
-    {
-        label:"DropBox",
-        icon:"/icons/Dropbox.png"
-    }
 ]

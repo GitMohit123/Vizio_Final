@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useContext } from "react";
 import { useState } from "react";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { useDispatch } from "react-redux";
@@ -6,28 +6,116 @@ import { motion } from "framer-motion";
 import { TbCloudUpload } from "react-icons/tb";
 import { cloudOptions } from "../../constants/homePage";
 import { setProjectState } from "../../app/Actions/cmsAction";
+import { useDropzone } from "react-dropzone";
+import HomeContext from "../../context/homePage/HomeContext";
+import useDrivePicker from 'react-google-drive-picker'
 
 const ProjectAdd = () => {
   const dispatch = useDispatch();
-  const [isOpen, setIsOpen] = useState(false);
+  const {
+    isOpenVisibility,
+    setIsOpenVisibility,
+    isUploadDropdownOpen,
+    setIsUploadDropdownOpen,
+    selectedFiles,
+    setSelectedFiles,
+    selectedFolders,
+    setSelectedFolders,
+    isDragging,
+    setIsDragging,
+  } = useContext(HomeContext);
+  const [openPicker, authResponse] = useDrivePicker(); 
 
-  const toggleDropdown = () => {
-    setIsOpen(!isOpen);
+  const handleOpenPicker = () => {
+    openPicker({
+      clientId: "112355236362-jv377gl5mau1ucsf0mghe9h96tfcefj3.apps.googleusercontent.com",
+      developerKey: "AIzaSyB2FDWk9GwFLGsGsFrnpCvh2nzByI73W8o",
+      viewId: "DOCS",
+      // token: token, // pass oauth token in case you already have one
+      showUploadView: true,
+      showUploadFolders: true,
+      supportDrives: true,
+      multiselect: true,
+      // customViews: customViewsArray, // custom view
+      callbackFunction: (data) => {
+        if (data.action === 'cancel') {
+          console.log('User clicked cancel/close button')
+        }
+        console.log(data.docs)
+      },
+    })
+  }
+
+  const handleCloudOptionClick = (cloudName) => {
+    if (cloudName === "Google Drive") {
+      handleOpenPicker()
+    } else {
+      console.log("One Drive");
+    }
   };
-  const handleCloudOptionClick = (cloudName)=>{
-    if(cloudName==="Google Drive"){
-        console.log("Google Drive")
-    }else if(cloudName==="One Drive"){
-        console.log("One Drive")
-    }
-    else{
-        console.log("DropBox")
-    }
-  }
+  
+  const toggleDropdown = () => {
+    setIsOpenVisibility(!isOpenVisibility);
+  };
+  const handleCancelClick = () => {
+    dispatch(setProjectState(false));
+    setSelectedFiles([]);
+    setSelectedFolders([]);
+  };
 
-  const handleCancelClick = ()=>{
-    dispatch(setProjectState(false))
-  }
+  const toggleFilesDropdown = () => {
+    setIsUploadDropdownOpen(!isUploadDropdownOpen);
+  };
+
+  const onDrop = useCallback((acceptedFiles) => {
+    const filesList = [];
+    const foldersList = [];
+
+    acceptedFiles.forEach((file) => {
+      console.log("path", file.path);
+      if (file.path && file.path.includes("/")) {
+        foldersList.push(file);
+      } else {
+        filesList.push(file);
+      }
+    });
+
+    const videoFiles = filesList.filter((file) =>
+      file.type.startsWith("video/")
+    );
+    const folderFiles = foldersList.filter((file) =>
+      file.type.startsWith("video/")
+    );
+    setSelectedFiles((prevFiles) => [...prevFiles, ...videoFiles]);
+    setSelectedFolders((prevFolders) => [...prevFolders, ...folderFiles]);
+    setIsDragging(false);
+  }, []);
+
+  const {
+    getRootProps,
+    getInputProps: getFilesInputProps,
+    open: openFilesPicker,
+  } = useDropzone({
+    onDrop,
+    accept: "video/*",
+    multiple: true,
+    noClick: true,
+    noKeyboard: true,
+    onDragEnter: () => setIsDragging(true),
+    onDragLeave: () => setIsDragging(false),
+  });
+
+  const { getInputProps: getFoldersInputProps, open: openFoldersPicker } =
+    useDropzone({
+      onDrop,
+      accept: "video/*",
+      multiple: true,
+      noClick: true,
+      noKeyboard: true,
+      webkitdirectory: true,
+      onDragEnter: () => setIsDragging(true),
+      onDragLeave: () => setIsDragging(false),
+    });
 
   return (
     <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-2 bg-opacity-10 bg-[#2f2f2f]">
@@ -53,7 +141,7 @@ const ProjectAdd = () => {
             >
               <p>Select Members</p>
               <MdOutlineKeyboardArrowDown />
-              {isOpen && (
+              {isOpenVisibility && (
                 <ul className="absolute top-full left-0 w-full bg-black shadow-md rounded-md overflow-hidden z-10 cursor-pointer border-2 border-white">
                   {/* List items for dropdown options */}
                   <li className="block px-4 py-2 text-sm  hover:bg-[#2f2f2f]">
@@ -72,34 +160,82 @@ const ProjectAdd = () => {
         </div>
 
         {/* Drop Down files section */}
-        <div className="flex w-full px-3 mb-5">
-          <div className="flex p-3 bg-[#3c3b3b] w-full justify-center items-center rounded-md border-2 border-white border-dashed text-white">
+        <div className="flex flex-row w-full px-3 mb-5 gap-6 justify-center items-center">
+          <motion.div
+            {...getRootProps()}
+            className="flex p-3 py-5 bg-[#3c3b3b] w-full justify-center items-center rounded-md border-2 border-white border-dashed text-white"
+            animate={
+              isDragging
+                ? { scale: 1.05, z: -10, borderColor: "#f8ff2a" }
+                : { scale: 1, y: 0 }
+            }
+          >
             <div className="flex flex-row gap-3 items-center justify-center">
               <TbCloudUpload className="text-3xl" />
-              <p>Drop files here to Upload or</p>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="text-[#f8ff2a] underline font-bold cursor-pointer"
-                // onClick={}
-              >
-                Browse
-              </motion.div>
+              <p>Drop files here to Upload </p>
             </div>
-          </div>
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="flex w-[25%] relative text-[#f8ff2a] underline font-bold cursor-pointer mr-4"
+            onClick={toggleFilesDropdown}
+          >
+            Browse
+            {isUploadDropdownOpen && (
+              <ul className="absolute top-full left-0 w-full bg-black shadow-md rounded-md overflow-hidden z-10 cursor-pointer">
+                <li
+                  onClick={openFilesPicker}
+                  className="block px-1 py-2 text-sm  hover:bg-[#2f2f2f]"
+                >
+                  Upload Files
+                </li>
+                <li
+                  onClick={openFoldersPicker}
+                  className="block px-1 py-2 text-sm  hover:bg-[#2f2f2f]"
+                >
+                  Upload Folders
+                </li>
+              </ul>
+            )}
+            <input
+              {...getFilesInputProps()}
+              type="file"
+              accept="video/*"
+              multiple
+              style={{ display: "none" }}
+            />
+            <input
+              {...getFoldersInputProps()}
+              type="file"
+              accept="video/*"
+              multiple
+              webkitdirectory="true"
+              style={{ display: "none" }}
+            />
+          </motion.div>
         </div>
 
         {/* Import from cloud */}
         <div className="flex flex-col gap-3 w-full px-3 text-white text-lg font-bold mb-8">
-            <p>Import from cloud</p>
-            <div className="w-full flex flex-row py-4 px-10 gap-3 bg-[#4d4b4b] justify-evenly items-center rounded-md">
-                {cloudOptions.map((option,index)=>{
-                    return (
-                        <motion.div whileHover={{scale:1.08}} className="cursor-pointer" key={index} onClick={()=>handleCloudOptionClick(option.label)}>
-                            <img src={option.icon} alt={option.label} className="h-14 w-16"/>
-                        </motion.div>
-                    )
-                })}
-            </div>
+          <p>Import from cloud</p>
+          <div className="w-full flex flex-row py-4 px-10 gap-3 bg-[#4d4b4b] justify-evenly items-center rounded-md">
+            {cloudOptions.map((option, index) => {
+              return (
+                <motion.div
+                  whileHover={{ scale: 1.08 }}
+                  className="cursor-pointer"
+                  key={index}
+                  onClick={() => handleCloudOptionClick(option.label)}
+                >
+                  <img
+                    src={option.icon}
+                    alt={option.label}
+                    className="h-14 w-16"
+                  />
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
 
         <div className="flex w-full flex-row justify-end items-center px-2 gap-3">

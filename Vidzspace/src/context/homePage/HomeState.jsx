@@ -5,32 +5,46 @@ import { addTeamState, setCurrentTeam } from "../../app/Actions/teamActions";
 import { setTeamPath } from "../../app/Actions/cmsAction";
 
 const HomeState = ({ children }) => {
+  // user state
+  const user = useSelector((state) => state.user.info);
+
+  //team state
+  const { team, currentTeam, teamState, teamPath, optionState } = useSelector(
+    (state) => state.team
+  );
+
+  //cms State
+  const projectState = useSelector((state) => state.cms.projectState);
+
+  //setting current team
+  const handleTeamClick = (currentTeamName) => {
+    dispatch(setCurrentTeam(currentTeamName));
+    dispatch(setTeamPath(currentTeam));
+  };
+  //open team add popup
+  const handleAddTeam = () => {
+    dispatch(addTeamState(true));
+  };
+
+  //profile team dropdown
+  const handleDropDownClick = () => {
+    console.log("Drop down clicked ");
+  };
+
+  //diplay team Name
   const displayName = (teamName) => {
     const firstLetter = teamName.charAt(0);
     const nameDisplayed = `${firstLetter} T`;
     return nameDisplayed;
   };
-  const user = useSelector((state) => state.user.info);
-  const team = useSelector((state) => state.team.info);
-  const currentTeam = useSelector((state) => state.team.currentTeam);
-  const teamState = useSelector((state) => state.team.teamState);
-  const teamPath = useSelector((state) => state.cms.teamPath);
-  const optionState = useSelector((state) => state.team.optionState);
-  const projectState = useSelector((state) => state.cms.projectState);
+
+  const [isOpenVisibility, setIsOpenVisibility] = useState(false);
+  const [isUploadDropdownOpen, setIsUploadDropdownOpen] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [selectedFolders, setSelectedFolders] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
   const dispatch = useDispatch();
   const [teamName, setTeamName] = useState("");
-
-  const handleTeamClick = (currentTeamName) => {
-    dispatch(setCurrentTeam(currentTeamName));
-    dispatch(setTeamPath(currentTeam));
-  };
-  const handleAddTeam = () => {
-    dispatch(addTeamState(true));
-  };
-
-  const handleDropDownClick = () => {
-    console.log("Drop down clicked ");
-  };
 
   return (
     <HomeContext.Provider
@@ -47,7 +61,17 @@ const HomeState = ({ children }) => {
         handleAddTeam,
         handleDropDownClick,
         optionState,
-        projectState
+        projectState,
+        isOpenVisibility,
+        setIsOpenVisibility,
+        isUploadDropdownOpen,
+        setIsUploadDropdownOpen,
+        selectedFiles,
+        setSelectedFiles,
+        selectedFolders,
+        setSelectedFolders,
+        isDragging,
+        setIsDragging,
       }}
     >
       {children}
