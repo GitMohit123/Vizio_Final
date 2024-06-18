@@ -33,6 +33,7 @@ const HomeState = ({ children }) => {
   //profile team dropdown
   const handleDropDownClick = () => {
     console.log("Drop down clicked ");
+    setIsTeamDropDownOpen((prev)=>!prev);
   };
 
   //diplay team Name
@@ -49,6 +50,7 @@ const HomeState = ({ children }) => {
   const [isDragging, setIsDragging] = useState(false);
   const dispatch = useDispatch();
   const [teamName, setTeamName] = useState("");
+  const [isTeamDropDownOpen,setIsTeamDropDownOpen] = useState(false);
 
   return (
     <HomeContext.Provider
@@ -76,6 +78,8 @@ const HomeState = ({ children }) => {
         setSelectedFolders,
         isDragging,
         setIsDragging,
+        isTeamDropDownOpen,
+        setIsTeamDropDownOpen
       }}
     >
       {children}

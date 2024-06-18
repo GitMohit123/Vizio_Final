@@ -12,7 +12,7 @@ import {
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { setUserDetails, userLoadingComponent } from "../../app/Actions/userAction";
+import { setUserDetails, setUserNULL, userLoadingComponent } from "../../app/Actions/userAction";
 import { validateUserJWTToken } from "../../api/auth";
 
 const firebaseAuth = getAuth(app);
@@ -110,6 +110,16 @@ const FirebaseState = ({ children }) => {
     
   };
 
+  const handleSignOut=()=>{
+    firebaseAuth.signOut().then(()=>{
+      dispatch(setUserNULL())
+      navigate("/login")
+    })
+    .catch((err)=>[
+      console.log(err)
+    ])
+  }
+
   return (
     <FirebaseContext.Provider
       value={{
@@ -122,7 +132,8 @@ const FirebaseState = ({ children }) => {
         firebaseAuth,
         userName,
         setUseName,
-        signUpWithEmailPass
+        signUpWithEmailPass,
+        handleSignOut
       }}
     >
       {children}

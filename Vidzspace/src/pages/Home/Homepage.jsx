@@ -4,6 +4,8 @@ import { teamProjectsInfoList } from "../../constants/homePage";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { createTeam, listTeams } from "../../api/s3Objects";
+import { CgProfile } from "react-icons/cg";
+import { FiLogOut } from "react-icons/fi";
 import {
   addTeamState,
   setCurrentTeam,
@@ -21,6 +23,7 @@ import TeamProjects from "./TeamProjects";
 import TeamInfo from "./TeamInfo";
 import UpgradePlan from "./UpgradePlan";
 import ProjectAdd from "../../components/PopUp/ProjectAdd";
+import FirebaseContext from "../../context/firebase/FirebaseContext";
 
 const Homepage = () => {
   const dispatch = useDispatch();
@@ -36,8 +39,12 @@ const Homepage = () => {
     handleAddTeam,
     handleDropDownClick,
     optionState,
-    projectState
+    projectState,
+    isTeamDropDownOpen,
+    setIsTeamDropDownOpen,
   } = useContext(HomeContext);
+
+  const {handleSignOut} = useContext(FirebaseContext)
   // console.log(path)
 
   useEffect(() => {
@@ -82,9 +89,9 @@ const Homepage = () => {
     dispatch(setTeamPath(currentTeam));
   }, [currentTeam]);
 
-  const handleOptionClick = (optionName)=>{
-    dispatch(setOptionState(optionName))
-  }
+  const handleOptionClick = (optionName) => {
+    dispatch(setOptionState(optionName));
+  };
 
   return (
     <div className="h-screen w-screen bg-[#1B1B1B] flex flex-row">
@@ -110,7 +117,9 @@ const Homepage = () => {
           })}
           <motion.div
             whileHover={{ scale: 1.03 }}
-            className={`w-full h-10 p-2 flex justify-center items-center hover:shadow-[#f8ff2a] hover:text-[#f8ff2a] bg-[#2f2f2f] text-[#bebea9] ${projectState?"cursor-not-allowed":"cursor-pointer"}`}
+            className={`w-full h-10 p-2 flex justify-center items-center hover:shadow-[#f8ff2a] hover:text-[#f8ff2a] bg-[#2f2f2f] text-[#bebea9] ${
+              projectState ? "cursor-not-allowed" : "cursor-pointer"
+            }`}
             onClick={() => handleAddTeam()}
           >
             <FaPlus />
@@ -119,21 +128,52 @@ const Homepage = () => {
       </div>
 
       {/* Section 2 */}
-      <div className="team-projects-info flex bg-[#242426] h-full w-1/6 p-2 rounded-lg flex-col gap-4">
+      <div className="team-projects-info flex bg-[#242426] h-full w-1/6 p-2 rounded-lg flex-col gap-4 relative">
         <motion.div
           onClick={handleDropDownClick}
-          className="bg-[#2f2f2f] flex w-full h-fit p-2 rounded-lg justify-center items-center text-[#f8ff2a] cursor-pointer"
+          className="bg-[#2f2f2f] flex w-full h-fit p-2 rounded-lg justify-center items-center text-[#f8ff2a] cursor-pointer "
         >
           {currentTeam ? currentTeam : "Team"}
           <MdOutlineKeyboardArrowDown />
         </motion.div>
+        {isTeamDropDownOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4 }}
+            className="absolute bg-[#2f2f2f] rounded-lg text-[#bbbdc0] shadow-lg h-fit mt-11 px-2 pt-2 mr-2 w-[94%]"
+          >
+            <div className="flex flex-col gap-3 pb-3">
+              <div
+                className="flex flex-row gap-3 items-center justify-start px-3 pb-4 border-b border-gray-600"
+                style={{ wordBreak: "break-word" }}
+              >
+                <CgProfile className="h-6 w-6" />
+                <p>{user?.email}</p>
+              </div>
+
+              <div
+                className="flex flex-row gap-2 items-center justify-start px-3 cursor-pointer"
+                style={{ wordBreak: "break-word" }}
+                onClick={handleSignOut}
+              >
+                <FiLogOut className="h-6 w-6" />
+                <p>LogOut</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
         <div className="bg-[#8b8d90] flex w-full h-full p-3 rounded-lg text-[#f8ff2a] flex-col gap-2">
           {/* New Project Section */}
           <motion.div
             whileHover={{ scale: 1.03 }}
             className="new-project flex w-full p-2 h-fit justify-center items-center bg-[#f8ff2a] rounded-xl shadow-2xl cursor-pointer"
           >
-            <motion.div onClick={()=>dispatch(setProjectState(true))} className="flex flex-row- gap-2 justify-center items-center text-[#1B1B1B]">
+            <motion.div
+              onClick={() => dispatch(setProjectState(true))}
+              className="flex flex-row- gap-2 justify-center items-center text-[#1B1B1B]"
+            >
               <p>New Project</p>
               <FaArrowRightLong />
             </motion.div>
@@ -143,7 +183,7 @@ const Homepage = () => {
             return (
               <div
                 key={option.label}
-                onClick={()=>handleOptionClick(option.label)}
+                onClick={() => handleOptionClick(option.label)}
                 className={`options flex w-full p-2 h-fit justify-center items-center rounded-xl shadow-2xl hover:bg-[#1B1B1B] hover:text-[#f8ff2a]  cursor-pointer ${
                   optionState === option.label
                     ? "bg-[#1B1B1B] text-[#f8ff2a]"
@@ -185,20 +225,13 @@ const Homepage = () => {
 
         {/* Projects */}
         <div className="relative flex flex-col w-full h-full bg-[#242426] rounded-lg p-5">
-          {projectState && <ProjectAdd/>}
+          {projectState && <ProjectAdd />}
           {teamState && <TeamAdd />}
-          {optionState==="Team Projects" && (
-            <TeamProjects/>
-          )}
-          {optionState==="Team Info" && (
-            <TeamInfo/>
-          )}
-          {optionState==="Upgrade the plan" && (
-            <UpgradePlan/>
-          )}
+          {optionState === "Team Projects" && <TeamProjects />}
+          {optionState === "Team Info" && <TeamInfo />}
+          {optionState === "Upgrade the plan" && <UpgradePlan />}
         </div>
       </div>
-
     </div>
   );
 };
