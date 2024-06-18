@@ -154,7 +154,7 @@ const Homepage = () => {
               </div>
 
               <div
-                className="flex flex-row gap-2 items-center justify-start px-3 cursor-pointer"
+                className="flex flex-row gap-2 items-center justify-start px-3 cursor-pointer hover:text-[#f8ff2a]"
                 style={{ wordBreak: "break-word" }}
                 onClick={handleSignOut}
               >
