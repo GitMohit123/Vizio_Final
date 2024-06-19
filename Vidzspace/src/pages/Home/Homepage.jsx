@@ -3,7 +3,7 @@ import { FaArrowRightLong } from "react-icons/fa6";
 import { teamProjectsInfoList } from "../../constants/homePage";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import { createTeam, listTeams } from "../../api/s3Objects";
+import { createTeam, fetchTeamsData, listTeams } from "../../api/s3Objects";
 import { CgProfile } from "react-icons/cg";
 import { FiLogOut } from "react-icons/fi";
 import {
@@ -52,6 +52,19 @@ const Homepage = () => {
       dispatch(setCurrentTeam(team[0]));
     }
   }, [team]);
+
+  useEffect(()=>{
+    const fetchData = async()=>{
+      try{
+        const userId = user?.uid;
+        const response = await fetchTeamsData(`${userId}/Mohit Jindal's Team`,userId);
+        console.log(response)
+      }catch(err){
+        console.log("Unable to fetch data")
+      }
+    }
+    fetchData()
+  },[currentTeam,user])
 
   useEffect(() => {
     const fetchTeams = async () => {

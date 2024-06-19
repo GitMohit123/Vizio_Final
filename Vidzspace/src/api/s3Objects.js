@@ -56,3 +56,18 @@ export const createTeam = async (teamName, userId) => {
       throw err; // Re-throw the error for handling in the calling component
     }
 };
+
+export const fetchTeamsData = async(path,user_id)=>{
+  try{
+    const response = await axios.get(`/vidzspaceApi/users/s3/fetchTeamsData`,{
+      params:{
+        requester_id: user_id,
+        path:path
+      }
+    })
+    console.log(response.data);
+    return response.data
+  }catch(err){
+    console.log(err)
+  }
+}

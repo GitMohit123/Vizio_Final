@@ -1,5 +1,6 @@
-import { ListObjectsV2Command, PutObjectCommand } from "@aws-sdk/client-s3";
+import { GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand } from "@aws-sdk/client-s3";
 import { s3Client } from "../s3config.js";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const prefix = "users/";
 
@@ -83,5 +84,169 @@ export const createTeam = async (req, res, next) => {
       // Generic error handling (improve based on specific needs)
       return res.status(500).json({ message: "Internal Server Error" });
     }
+  }
+};
+
+
+function getFilesForSubfolder(subfolderKey, objects) {
+  var subFiles = []
+  var subfolders = []
+   objects.map(item => {
+    
+    if (item.Key.startsWith(subfolderKey)) {
+      
+      const relativePath = item.Key.slice(subfolderKey.length);
+
+      if(relativePath.endsWith('/')) subfolders.push({Key: relativePath.slice(0, -1), Type: "folder"});
+      
+      // if (relativePath.indexOf('/') === -1 && relativePath !== "") subFiles.push( { ...item, Key: relativePath }); //is a file
+      if (relativePath.indexOf('/') === -1 && relativePath !== "") subFiles.push( item ); //is a file
+    }
+  });
+  return {subFiles: subFiles, subfolders: subfolders}
+}
+
+async function addMetadataAndSignedUrl(file) {
+  const key = file.Key.split("/").filter(Boolean).pop();
+  const fileParams = {
+    Bucket: "vidzspace",
+    Key: file.Key,
+    ContentType: "video/mp4",
+  };
+  const url = await getSignedUrl(s3Client, new GetObjectCommand(fileParams));
+  const metadata = await s3Client.send(new HeadObjectCommand(fileParams));
+  return {
+    Key: key,
+    LastModified: file.LastModified,
+    ETag: file.ETag,
+    Size: file.Size,
+    StorageClass: file.StorageClass,
+    Type: "file",
+    SignedUrl: url,
+    Metadata: metadata?.Metadata,
+  };
+}
+
+export const listRoot = async (req, res, next) => {
+  const user_id = req.query.requester_id;
+  let path = req.query.path || ""; // Default to empty string if path is not provided
+  console.log("path:"+path)
+
+  // Ensure path ends with a slash if it is not empty
+  if (path && !path.endsWith("/")) {
+    path += "/";
+  }
+  
+  try {
+    const params = {
+      Bucket: "vidzspace",
+      Prefix: prefix + `${path}`,
+      Delimiter: "/",
+    };
+    const data = await s3Client.send(new ListObjectsV2Command(params));
+
+    const params2 = {
+      Bucket: "vidzspace",
+      Prefix: prefix + `${path}`,
+      Delimiter: "",
+    };
+    const data2 = await s3Client.send(new ListObjectsV2Command(params2));
+
+
+    // const owner_id = getOwnerIdFromObjectKey(prefix + path);
+    // var sharingDetails;
+
+    // const hasMetadata = (data.Contents || []).filter((item) => item.Key.endsWith("metadata.json")).length > 0;
+    // if(hasMetadata){
+    //   console.log("has metadata")
+    //   const {sharing, sharingwith, sharingtype} = await getFolderMetadata(path);
+    //   if((user_id !== owner_id) && (sharing !== "public") && !(sharing === "limited" && sharingwith.includes(user_id))){ //requester has no access
+    //     console.log("no access")
+    //     return res.status(201).json({
+    //       success: false,
+    //       message: "no access"
+    //     });
+    //   }
+    //   sharingDetails = {sharing, sharingwith, sharingtype};
+    // }
+    // else if (owner_id !== user_id) {
+    //   return res.status(201).json({
+    //     success: false,
+    //     message: "no access"
+    //   });
+    // }
+    
+    // Extract the common prefixes (folders) and top-level files
+    const folders = (data.CommonPrefixes || []).map((prefix) => ({
+      Key: prefix.Prefix.split("/").filter(Boolean).pop(),
+      Type: "folder",
+    }));
+
+    console.log("reached here")
+    
+    //inner files
+    // folders.forEach(subfolder => {
+    //   const innerStuff = getFilesForSubfolder(params.Prefix + subfolder.Key + '/', data2.Contents);
+    //   subfolder.innerFiles = innerStuff.subFiles;
+    //   subfolder.innerFolders = innerStuff.subfolders;
+    // });
+    // res.json({folders: folders, data2: data2.Contents})
+
+    for (const subfolder of folders) {
+      const innerStuff = getFilesForSubfolder(params.Prefix + subfolder.Key + '/', data2.Contents);
+      subfolder.innerFolders = innerStuff.subfolders;
+      subfolder.innerFiles = await Promise.all(
+        innerStuff.subFiles.map(async (file) => {
+          if(file){
+            return await addMetadataAndSignedUrl(file);
+          }else{
+            return []
+          }
+        })
+      );
+    }
+    // console.log("Got the meta data")
+
+    const files = await Promise.all(
+      (data.Contents || [])
+        .filter((item) => item.Key !== params.Prefix) // Exclude the prefix itself if it's listed
+        .map(async (file) => {
+          const key = file.Key.split("/").filter(Boolean).pop();
+          // console.log(file.Key);
+          const fileParams = {
+            Bucket: "vidzspace",
+            Key: file.Key,
+            ContentType: "video/mp4",
+          };
+          // Generate pre-signed URL for each file
+          const url = await getSignedUrl(
+            s3Client,
+            new GetObjectCommand(fileParams)
+          );
+
+          const metadata = await s3Client.send(new HeadObjectCommand(fileParams));
+
+          return {
+            Key: key,
+            LastModified: file.LastModified,
+            ETag: file.ETag,
+            Size: file.Size,
+            StorageClass: file.StorageClass,
+            Type: "file",
+            SignedUrl: url,
+            Metadata:metadata?.Metadata
+          };
+        })
+    );
+    // Combine folders and files into a single array
+    const result = {
+      folders: folders,
+      files: files,
+      // sharingDetails: sharingDetails,
+    };
+
+    return res.json(result);
+  } catch (err) {
+    return err;
   }
 };
