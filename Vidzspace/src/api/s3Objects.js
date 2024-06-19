@@ -12,7 +12,15 @@ export const listTeams = async (userId) => {
     });
     if (response.status === 200) {
         // Successful response, process the data as needed
-        return response.data; 
+        if(response.data.length===0){
+          return null; 
+        }
+        else if(!response.data){
+          return null;
+        }
+        else{
+          return response.data;
+        }
       } else {
         // Handle non-200 status codes (errors)
         throw new Error(`API request failed with status code: ${response.status}`);
@@ -23,9 +31,16 @@ export const listTeams = async (userId) => {
 };
 
 export const createTeam = async (teamName, userId) => {
+
     try {
+      const encodedTeamName = teamName.includes('/')
+      ? teamName.split('/')[0] // Extract the first part before the first slash
+      : teamName;
+      if(encodedTeamName===""){
+        encodedTeamName = "Demo"
+      }
       const response = await axios.post('/vidzspaceApi/users/s3/createTeam', {
-        teamName:`${teamName}'s Team`,
+        teamName:`${encodedTeamName}'s Team`,
         user_id: userId,
       });
   
@@ -40,4 +55,4 @@ export const createTeam = async (teamName, userId) => {
       // Handle errors generically (e.g., display a generic error message)
       throw err; // Re-throw the error for handling in the calling component
     }
-  };
+};

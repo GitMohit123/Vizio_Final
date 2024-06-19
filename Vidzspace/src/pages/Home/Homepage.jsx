@@ -59,6 +59,7 @@ const Homepage = () => {
         try {
           const userId = user?.uid;
           listTeams(userId).then(async (data) => {
+            console.log(!data);
             if (!data) {
               try {
                 const userName = user?.name;
@@ -66,7 +67,7 @@ const Homepage = () => {
                   fetchTeams();
                   console.log("added");
                 });
-                handleCancelClick();
+                // handleCancelClick();
               } catch (err) {
                 console.log(err);
               }
@@ -83,7 +84,7 @@ const Homepage = () => {
       }
     };
     fetchTeams();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     dispatch(setTeamPath(currentTeam));
@@ -133,7 +134,7 @@ const Homepage = () => {
           onClick={handleDropDownClick}
           className="bg-[#2f2f2f] flex w-full h-fit p-2 rounded-lg justify-center items-center text-[#f8ff2a] cursor-pointer "
         >
-          {currentTeam ? currentTeam : "Team"}
+          {currentTeam ? decodeURIComponent(currentTeam) : "Team"}
           <MdOutlineKeyboardArrowDown />
         </motion.div>
         {isTeamDropDownOpen && (

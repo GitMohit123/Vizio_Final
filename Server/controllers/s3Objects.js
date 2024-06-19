@@ -64,7 +64,7 @@ export const createTeam = async (req, res, next) => {
     console.log("User found");
     const params = {
       Bucket: "vidzspace",
-      Key: prefix + `${user_id}/${teamName}/`,
+      Key: prefix + `${user_id}/${(teamName)}/`,
       Body: "",
     };
 
