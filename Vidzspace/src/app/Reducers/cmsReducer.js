@@ -3,6 +3,8 @@ const initialState = {
   error: null,
   path: "",
   projectState: false,
+  files:[],
+  folders:[]
 };
 
 const cmsReducer = (state = initialState, action) => {
@@ -17,6 +19,13 @@ const cmsReducer = (state = initialState, action) => {
         ...state,
         projectState: action.value,
       };
+
+      case "SET_CMS_DATA":
+        return{
+          ...state,
+          files:action.files,
+          folders:action.folders
+        }
     default:
       return state;
   }

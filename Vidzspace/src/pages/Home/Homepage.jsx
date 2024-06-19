@@ -18,7 +18,7 @@ import { FaPlus } from "react-icons/fa";
 import TeamAdd from "../../components/PopUp/TeamAdd";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { FaSearch } from "react-icons/fa";
-import { setProjectState, setTeamPath } from "../../app/Actions/cmsAction";
+import { setCMSData, setProjectState, setTeamPath } from "../../app/Actions/cmsAction";
 import TeamProjects from "./TeamProjects";
 import TeamInfo from "./TeamInfo";
 import UpgradePlan from "./UpgradePlan";
@@ -57,8 +57,11 @@ const Homepage = () => {
     const fetchData = async()=>{
       try{
         const userId = user?.uid;
-        const response = await fetchTeamsData(`${userId}/Mohit Jindal's Team`,userId);
-        console.log(response)
+        const fileLocation = "/Mohit Jindal's Team"
+        const response = await fetchTeamsData(userId,userId);
+        const filesData = response?.files;
+        const folderData = response?.folders;
+        dispatch(setCMSData(filesData,folderData));
       }catch(err){
         console.log("Unable to fetch data")
       }
@@ -238,7 +241,7 @@ const Homepage = () => {
         </div>
 
         {/* Projects */}
-        <div className="relative flex flex-col w-full h-full bg-[#242426] rounded-lg p-5">
+        <div className="relative flex flex-col w-full h-full bg-[#242426] rounded-lg p-5 overflow-y-auto">
           {projectState && <ProjectAdd />}
           {teamState && <TeamAdd />}
           {optionState === "Team Projects" && <TeamProjects />}

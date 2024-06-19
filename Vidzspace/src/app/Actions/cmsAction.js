@@ -10,3 +10,10 @@ export const setProjectState = (value)=>{
         value:value
     }
 }
+export const setCMSData = (files,folders)=>{
+    return{
+        type:"SET_CMS_DATA",
+        files:files,
+        folders:folders
+    }
+}

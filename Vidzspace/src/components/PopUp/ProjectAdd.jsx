@@ -145,7 +145,7 @@ const ProjectAdd = () => {
   };
 
   return (
-    <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-2 bg-opacity-10 bg-[#2f2f2f]">
+    <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-10 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
       <div className="popup bg-[#383838] w-3/6 h-3/5 p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c]">
         {/* Title Section */}
         <div className="flex w-full px-2 mb-8">

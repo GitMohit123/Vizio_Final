@@ -1,0 +1,16 @@
+.no-scrollbar::-webkit-scrollbar {
+    width: 8px; /* Adjust width as desired */
+  }
+  
+  .no-scrollbar::-webkit-scrollbar-track {
+    background: gray(200); /* Light grey */
+  }
+  
+  .no-scrollbar::-webkit-scrollbar-thumb {
+    background: gray(400); /* Darker grey */
+    border-radius: 6px; /* Add rounded corners */
+  }
+  
+  .no-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: gray(500); /* Slightly lighter grey */
+  }

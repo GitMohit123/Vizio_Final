@@ -14,7 +14,9 @@ const HomeState = ({ children }) => {
   const currentTeam = useSelector((state)=>state.team.currentTeam)
   const teamState = useSelector((state)=>state.team.teamState)
   const optionState = useSelector((state)=>state.team.optionState)
-  
+  const folders = useSelector((state)=>state.cms.folders);
+  const files = useSelector((state)=>state.cms.files);
+  const path = useSelector((state)=>state.cms.path);
   
   //cms State
   const teamPath = useSelector((state)=>state.cms.teamPath)
@@ -79,7 +81,8 @@ const HomeState = ({ children }) => {
         isDragging,
         setIsDragging,
         isTeamDropDownOpen,
-        setIsTeamDropDownOpen
+        setIsTeamDropDownOpen,
+        files,folders,path
       }}
     >
       {children}
