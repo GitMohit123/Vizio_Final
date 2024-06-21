@@ -4,28 +4,76 @@ import HomeContext from "../../context/homePage/HomeContext";
 import { TbCloudUpload } from "react-icons/tb";
 import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
-import { setProjectState } from "../../app/Actions/cmsAction";
+import { routePath, setPath, setPathEmpty, setProjectState } from "../../app/Actions/cmsAction";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { ImFilesEmpty } from "react-icons/im";
-import ProgressBar from "../../components/Project/ProgressBar"
-import "../../styles/CSS/Scrollbar/projectScrollbar.css"
+import ProgressBar from "../../components/Project/ProgressBar";
+import "../../styles/CSS/Scrollbar/projectScrollbar.css";
 
 const TeamProjects = () => {
   const { teamPath, files, folders, path } = useContext(HomeContext);
-  console.log(folders);
+  const display = path.split("/")
   const dispatch = useDispatch();
   const extractName = (filename) => {
     const match = filename.match(/-(\w+)\./);
     return match ? match[1] : filename;
+  };
+  const convertBytesToGB = (bytes) => {
+    const gigabyte = 1024 * 1024 * 1024; // One gigabyte in bytes
+    const convertedValue = bytes / gigabyte;
+    return convertedValue.toFixed(2) + " GB"; // Format to two decimal places and add unit
+  };
+  const getDifferenceText = (pastTimeString) => {
+    const currentDate = new Date()
+    const timeDifference =
+      currentDate.getTime() - new Date(pastTimeString).getTime();
+    const millisecondsInSecond = 1000;
+    const secondsInMinute = 60;
+    const minutesInHour = 60;
+    const hoursInDay = 24;
+
+    const seconds = Math.floor(timeDifference / millisecondsInSecond);
+    const minutes = Math.floor(seconds / secondsInMinute);
+    const hours = Math.floor(minutes / minutesInHour);
+    const days = Math.floor(hours / hoursInDay);
+
+    if (days > 0) {
+      return `${days} days ago`;
+    } else if (hours > 0) {
+      return `${hours} hours ago`;
+    } else if (minutes > 0) {
+      return `${minutes} minutes ago`;
+    } else {
+      return "now";
+    }
+  };
+  const handleRoute = async (file_path) => {
+    dispatch(setPath(file_path));
+  };
+  const handleRouteClick = (display_path) => {
+    console.log("route")
+    dispatch(routePath(display_path));
   };
   return (
     <>
       <div className="flex flex-row w-full p-2 justify-between items-center">
         <div className="flex flex-row gap-3 items-center  justify-center text-[#9B9DA0]">
           <FaPhotoVideo />
-          <p>
-            {teamPath} / Team Projects / {path}
+          <p className="text-[#f8ff2a] cursor-pointer" onClick={()=>dispatch(setPathEmpty(""))}>
+            {teamPath}
           </p>
+          {display.map((part, index) => (
+            <div
+              key={index}
+              onClick={() => handleRouteClick(display.slice(0, index + 1).join("/"))}
+              className="flex flex-row gap-2"
+            >
+              {index < path.length - 1 && (
+                <span className="separator">{" / "}</span>
+              )}
+              <div className="cursor-pointer">{part}</div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -45,9 +93,10 @@ const TeamProjects = () => {
             {folders?.map((folder, index) => (
               <div
                 key={index}
-                className="p-4 bg-[#35353a] rounded-lg text-white relative"
+                className="p-4 bg-[#35353a] rounded-lg text-white relative cursor-pointer"
+                onClick={()=>handleRoute(folder.Key)}
               >
-                <ProgressBar/>
+                <ProgressBar />
                 <div className="flex flex-col gap-2 w-full px-2 rounded-md">
                   {folder?.innerFiles.length !== 0 ||
                   folder?.innerFolders.length !== 0 ? (
@@ -90,10 +139,13 @@ const TeamProjects = () => {
                     <div className="flex flex-col gap-1 w-[91%]">
                       <div className="flex flex-row gap-4 justify-start items-center">
                         <p className="text-xl font-bold">{folder.Key}</p>
-                        <p>Size</p>
+                        <p>{convertBytesToGB(folder.size)}</p>
                       </div>
                       <div className="text-lg text-gray-400">
-                        Mohit - 2days ago
+                        Mohit -{" "}
+                        {folder.LastModified
+                          ? getDifferenceText(folder.LastModified)
+                          : "Unknown"}
                       </div>
                     </div>
 
@@ -107,8 +159,9 @@ const TeamProjects = () => {
             {files?.map((file, index) => (
               <div
                 key={index}
-                className="p-4 bg-[#35353a] rounded-lg text-white"
+                className="p-4 bg-[#35353a] rounded-lg text-white relative"
               >
+                <ProgressBar/>
                 <div className="flex flex-col h-full w-full gap-2">
                   <video
                     className="rounded-lg object-cover aspect-square w-full h-40"
@@ -121,10 +174,13 @@ const TeamProjects = () => {
                         <p className="text-xl font-bold">
                           {extractName(file.Key)}
                         </p>
-                        <p>Size</p>
+                        <p>{convertBytesToGB(file.Size)}</p>
                       </div>
                       <div className="text-lg text-gray-400">
-                        Mohit - 2days ago
+                        Mohit -{" "}
+                        {file.LastModified
+                          ? getDifferenceText(file.LastModified)
+                          : "Unknown"}
                       </div>
                     </div>
 

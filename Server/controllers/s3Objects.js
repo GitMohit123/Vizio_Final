@@ -1,4 +1,9 @@
-import { GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  GetObjectCommand,
+  HeadObjectCommand,
+  ListObjectsV2Command,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
 import { s3Client } from "../s3config.js";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -65,7 +70,7 @@ export const createTeam = async (req, res, next) => {
     console.log("User found");
     const params = {
       Bucket: "vidzspace",
-      Key: prefix + `${user_id}/${(teamName)}/`,
+      Key: prefix + `${user_id}/${teamName}/`,
       Body: "",
     };
 
@@ -87,23 +92,22 @@ export const createTeam = async (req, res, next) => {
   }
 };
 
-
 function getFilesForSubfolder(subfolderKey, objects) {
-  var subFiles = []
-  var subfolders = []
-   objects.map(item => {
-    
+  var subFiles = [];
+  var subfolders = [];
+  objects.map((item) => {
     if (item.Key.startsWith(subfolderKey)) {
-      
       const relativePath = item.Key.slice(subfolderKey.length);
 
-      if(relativePath.endsWith('/')) subfolders.push({Key: relativePath.slice(0, -1), Type: "folder"});
-      
+      if (relativePath.endsWith("/"))
+        subfolders.push({ Key: relativePath.slice(0, -1), Type: "folder" });
+
       // if (relativePath.indexOf('/') === -1 && relativePath !== "") subFiles.push( { ...item, Key: relativePath }); //is a file
-      if (relativePath.indexOf('/') === -1 && relativePath !== "") subFiles.push( item ); //is a file
+      if (relativePath.indexOf("/") === -1 && relativePath !== "")
+        subFiles.push(item); //is a file
     }
   });
-  return {subFiles: subFiles, subfolders: subfolders}
+  return { subFiles: subFiles, subfolders: subfolders };
 }
 
 async function addMetadataAndSignedUrl(file) {
@@ -127,16 +131,60 @@ async function addMetadataAndSignedUrl(file) {
   };
 }
 
+async function getFolderSize(bucketName, folderPath, data2) {
+  const params = {
+    Bucket: bucketName,
+    Prefix: folderPath,
+  };
+  let totalSize = 0;
+  let continuationToken = null;
+  do {
+    let response;
+
+    if (data2 && !data2.IsTruncated) response = data2;
+    else
+      response = await s3Client.send(
+        new ListObjectsV2Command({
+          ...params,
+
+          ContinuationToken: continuationToken,
+        })
+      );
+    response.Contents.forEach((item) => {
+      totalSize += item.Size;
+    });
+
+    continuationToken = response.IsTruncated
+      ? response.NextContinuationToken
+      : null;
+  } while (continuationToken);
+
+  return totalSize;
+}
+
+async function calculateFolderSizes(folders, bucketName, prefix) {
+  const folderSizes = [];
+
+  for (const folder of folders) {
+    if (folder.Type === "folder") {
+      const folderSize = await getFolderSize(bucketName, prefix + folder.Key + "/");
+      folderSizes.push({ Key: folder.Key, size: folderSize });
+    }
+  }
+
+  return folderSizes;
+}
+
 export const listRoot = async (req, res, next) => {
   const user_id = req.query.requester_id;
   let path = req.query.path || ""; // Default to empty string if path is not provided
-  console.log("path:"+path)
+  console.log("path:" + path);
 
   // Ensure path ends with a slash if it is not empty
   if (path && !path.endsWith("/")) {
     path += "/";
   }
-  
+
   try {
     const params = {
       Bucket: "vidzspace",
@@ -151,7 +199,7 @@ export const listRoot = async (req, res, next) => {
       Delimiter: "",
     };
     const data2 = await s3Client.send(new ListObjectsV2Command(params2));
-
+    const size = await getFolderSize("vidzspace", prefix + path, data2);
 
     // const owner_id = getOwnerIdFromObjectKey(prefix + path);
     // var sharingDetails;
@@ -175,15 +223,16 @@ export const listRoot = async (req, res, next) => {
     //     message: "no access"
     //   });
     // }
-    
+
     // Extract the common prefixes (folders) and top-level files
     const folders = (data.CommonPrefixes || []).map((prefix) => ({
       Key: prefix.Prefix.split("/").filter(Boolean).pop(),
       Type: "folder",
+      LastModified: null,
     }));
 
-    console.log("reached here")
-    
+    console.log("reached here");
+
     //inner files
     // folders.forEach(subfolder => {
     //   const innerStuff = getFilesForSubfolder(params.Prefix + subfolder.Key + '/', data2.Contents);
@@ -193,17 +242,28 @@ export const listRoot = async (req, res, next) => {
     // res.json({folders: folders, data2: data2.Contents})
 
     for (const subfolder of folders) {
-      const innerStuff = getFilesForSubfolder(params.Prefix + subfolder.Key + '/', data2.Contents);
+      const innerStuff = getFilesForSubfolder(
+        params.Prefix + subfolder.Key + "/",
+        data2.Contents
+      );
       subfolder.innerFolders = innerStuff.subfolders;
       subfolder.innerFiles = await Promise.all(
         innerStuff.subFiles.map(async (file) => {
-          if(file){
+          if (file) {
             return await addMetadataAndSignedUrl(file);
-          }else{
-            return []
+          } else {
+            return [];
           }
         })
       );
+
+      // Get LastModified for the folder itself (assuming it's listed in data2.Contents)
+      const folderObject = data2.Contents.find(
+        (item) => item.Key === params.Prefix + subfolder.Key + "/"
+      );
+      if (folderObject) {
+        subfolder.LastModified = folderObject.LastModified;
+      }
     }
     // console.log("Got the meta data")
 
@@ -224,7 +284,9 @@ export const listRoot = async (req, res, next) => {
             new GetObjectCommand(fileParams)
           );
 
-          const metadata = await s3Client.send(new HeadObjectCommand(fileParams));
+          const metadata = await s3Client.send(
+            new HeadObjectCommand(fileParams)
+          );
 
           return {
             Key: key,
@@ -234,15 +296,17 @@ export const listRoot = async (req, res, next) => {
             StorageClass: file.StorageClass,
             Type: "file",
             SignedUrl: url,
-            Metadata:metadata?.Metadata
+            Metadata: metadata?.Metadata,
           };
         })
     );
+    const folderSizes = await calculateFolderSizes(folders, "vidzspace", prefix + path);
     // Combine folders and files into a single array
     const result = {
-      folders: folders,
+      folders: folders.map((folder) => ({ ...folder, size: folderSizes.find((f) => f.Key === folder.Key)?.size || 0 })), // Add size to each folder object
       files: files,
       // sharingDetails: sharingDetails,
+      size:size
     };
 
     return res.json(result);

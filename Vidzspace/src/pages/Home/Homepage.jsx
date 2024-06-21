@@ -42,6 +42,7 @@ const Homepage = () => {
     projectState,
     isTeamDropDownOpen,
     setIsTeamDropDownOpen,
+    path
   } = useContext(HomeContext);
 
   const {handleSignOut} = useContext(FirebaseContext)
@@ -54,11 +55,11 @@ const Homepage = () => {
   }, [team]);
 
   useEffect(()=>{
+    const currentTeamPath = currentTeam
     const fetchData = async()=>{
       try{
         const userId = user?.uid;
-        const fileLocation = "/Mohit Jindal's Team"
-        const response = await fetchTeamsData(userId,userId);
+        const response = await fetchTeamsData(`${userId}/${currentTeamPath}/${path}`,userId);
         const filesData = response?.files;
         const folderData = response?.folders;
         dispatch(setCMSData(filesData,folderData));
@@ -67,7 +68,7 @@ const Homepage = () => {
       }
     }
     fetchData()
-  },[currentTeam,user])
+  },[currentTeam,user,path])
 
   useEffect(() => {
     const fetchTeams = async () => {

@@ -3,8 +3,8 @@ const initialState = {
   error: null,
   path: "",
   projectState: false,
-  files:[],
-  folders:[]
+  files: [],
+  folders: [],
 };
 
 const cmsReducer = (state = initialState, action) => {
@@ -20,12 +20,27 @@ const cmsReducer = (state = initialState, action) => {
         projectState: action.value,
       };
 
-      case "SET_CMS_DATA":
-        return{
-          ...state,
-          files:action.files,
-          folders:action.folders
-        }
+    case "SET_CMS_DATA":
+      return {
+        ...state,
+        files: action.files,
+        folders: action.folders,
+      };
+    case "SET_PATH":
+      return {
+        ...state,
+        path: state.path ? `${state.path}/${action.path}` : action.path,
+      };
+    case "SET_PATH_EMPTY":
+      return {
+        ...state,
+        path: action.path,
+      };
+    case "ROUTE_PATH":
+      return {
+        ...state,
+        path: action.path,
+      };
     default:
       return state;
   }

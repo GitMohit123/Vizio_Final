@@ -17,3 +17,23 @@ export const setCMSData = (files,folders)=>{
         folders:folders
     }
 }
+
+export const setPath = (path)=>{
+    return{
+        type:"SET_PATH",
+        path:path
+    }
+}
+export const setPathEmpty = (path)=>{
+    return{
+        type:"SET_PATH_EMPTY",
+        path:path
+    }
+}
+
+export const routePath = (path)=>{
+    return{
+        type:"ROUTE_PATH",
+        path:path
+    }
+}

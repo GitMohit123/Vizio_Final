@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import HomeContext from "./HomeContext";
 import { useDispatch, useSelector } from "react-redux";
 import { addTeamState, setCurrentTeam } from "../../app/Actions/teamActions";
-import { setTeamPath } from "../../app/Actions/cmsAction";
+import { setPath, setPathEmpty, setTeamPath } from "../../app/Actions/cmsAction";
 
 const HomeState = ({ children }) => {
   // user state
@@ -10,22 +10,23 @@ const HomeState = ({ children }) => {
 
   //team state
 
-  const team = useSelector((state)=>state.team.info)
-  const currentTeam = useSelector((state)=>state.team.currentTeam)
-  const teamState = useSelector((state)=>state.team.teamState)
-  const optionState = useSelector((state)=>state.team.optionState)
-  const folders = useSelector((state)=>state.cms.folders);
-  const files = useSelector((state)=>state.cms.files);
-  const path = useSelector((state)=>state.cms.path);
-  
+  const team = useSelector((state) => state.team.info);
+  const currentTeam = useSelector((state) => state.team.currentTeam);
+  const teamState = useSelector((state) => state.team.teamState);
+  const optionState = useSelector((state) => state.team.optionState);
+  const folders = useSelector((state) => state.cms.folders);
+  const files = useSelector((state) => state.cms.files);
+  const path = useSelector((state) => state.cms.path);
+
   //cms State
-  const teamPath = useSelector((state)=>state.cms.teamPath)
+  const teamPath = useSelector((state) => state.cms.teamPath);
   const projectState = useSelector((state) => state.cms.projectState);
 
   //setting current team
   const handleTeamClick = (currentTeamName) => {
     dispatch(setCurrentTeam(currentTeamName));
     dispatch(setTeamPath(currentTeam));
+    dispatch(setPathEmpty(""));
   };
   //open team add popup
   const handleAddTeam = () => {
@@ -35,7 +36,7 @@ const HomeState = ({ children }) => {
   //profile team dropdown
   const handleDropDownClick = () => {
     console.log("Drop down clicked ");
-    setIsTeamDropDownOpen((prev)=>!prev);
+    setIsTeamDropDownOpen((prev) => !prev);
   };
 
   //diplay team Name
@@ -52,7 +53,7 @@ const HomeState = ({ children }) => {
   const [isDragging, setIsDragging] = useState(false);
   const dispatch = useDispatch();
   const [teamName, setTeamName] = useState("");
-  const [isTeamDropDownOpen,setIsTeamDropDownOpen] = useState(false);
+  const [isTeamDropDownOpen, setIsTeamDropDownOpen] = useState(false);
 
   return (
     <HomeContext.Provider
@@ -82,7 +83,9 @@ const HomeState = ({ children }) => {
         setIsDragging,
         isTeamDropDownOpen,
         setIsTeamDropDownOpen,
-        files,folders,path
+        files,
+        folders,
+        path,
       }}
     >
       {children}
