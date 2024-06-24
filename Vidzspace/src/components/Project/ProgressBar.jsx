@@ -20,7 +20,7 @@ const RectBar = () => {
     boxShadow: 'inset 0 0 0 2px rgba(105, 105, 105, 0.7)',
   };
   return (
-    <motion.div style={insetBorderStyle} className="absolute flex gap-2 rounded-md top-2 right-2 text-black items-center justify-center px-3 py-1 bg-[#7A7B99] bg-opacity-60 backdrop-blur-3xl">
+    <motion.div style={insetBorderStyle} className="absolute flex gap-2 rounded-md top-2 right-2 text-black items-center justify-center px-3 py-1 bg-[#7A7B99] bg-opacity-60 backdrop-blur-3xl z-10">
       <FaCircle className={getStatusColor(progress)} size={20} />
       <span>{progress}</span>
     </motion.div>

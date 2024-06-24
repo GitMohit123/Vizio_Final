@@ -2,7 +2,11 @@ import React, { useState } from "react";
 import HomeContext from "./HomeContext";
 import { useDispatch, useSelector } from "react-redux";
 import { addTeamState, setCurrentTeam } from "../../app/Actions/teamActions";
-import { setPath, setPathEmpty, setTeamPath } from "../../app/Actions/cmsAction";
+import {
+  setPath,
+  setPathEmpty,
+  setTeamPath,
+} from "../../app/Actions/cmsAction";
 
 const HomeState = ({ children }) => {
   // user state
@@ -21,7 +25,6 @@ const HomeState = ({ children }) => {
   //cms State
   const teamPath = useSelector((state) => state.cms.teamPath);
   const projectState = useSelector((state) => state.cms.projectState);
-
   //setting current team
   const handleTeamClick = (currentTeamName) => {
     dispatch(setCurrentTeam(currentTeamName));
@@ -54,10 +57,24 @@ const HomeState = ({ children }) => {
   const dispatch = useDispatch();
   const [teamName, setTeamName] = useState("");
   const [isTeamDropDownOpen, setIsTeamDropDownOpen] = useState(false);
+  const [videoContainer, setVideoContainer] = useState(false);
+  const [videoPreview, setVideoPreview] = useState("");
+  const [load, setLoad] = useState(false);
+  const [reName, setReName] = useState("");
+  const [renamePopup, setRenamePopup] = useState(false);
+  const [itemToRename, setItemToRename] = useState({});
 
   return (
     <HomeContext.Provider
       value={{
+        itemToRename,
+        setItemToRename,
+        renamePopup,
+        setRenamePopup,
+        reName,
+        setReName,
+        load,
+        setLoad,
         displayName,
         user,
         team,
@@ -86,6 +103,10 @@ const HomeState = ({ children }) => {
         files,
         folders,
         path,
+        videoContainer,
+        setVideoContainer,
+        videoPreview,
+        setVideoPreview,
       }}
     >
       {children}

@@ -1,9 +1,16 @@
 import {
+  CopyObjectCommand,
+  DeleteObjectCommand,
+  DeleteObjectsCommand,
   GetObjectCommand,
+  GetObjectTaggingCommand,
   HeadObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
+  PutObjectTaggingCommand,
 } from "@aws-sdk/client-s3";
+import path from "path"
+import archiver from "archiver";
 import { s3Client } from "../s3config.js";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -99,8 +106,9 @@ function getFilesForSubfolder(subfolderKey, objects) {
     if (item.Key.startsWith(subfolderKey)) {
       const relativePath = item.Key.slice(subfolderKey.length);
 
-      if (relativePath.endsWith("/"))
-        subfolders.push({ Key: relativePath.slice(0, -1), Type: "folder" });
+      // if (relativePath.endsWith("/"))
+      //   subfolders.push({ Key: relativePath.slice(0, -1), Type: "folder" });
+      if(relativePath.endsWith('/') && relativePath.slice(0, -1).indexOf('/') === -1) subfolders.push({Key: relativePath.slice(0, -1), Type: "folder"});
 
       // if (relativePath.indexOf('/') === -1 && relativePath !== "") subFiles.push( { ...item, Key: relativePath }); //is a file
       if (relativePath.indexOf("/") === -1 && relativePath !== "")
@@ -314,3 +322,304 @@ export const listRoot = async (req, res, next) => {
     return err;
   }
 };
+
+export const deleteVideo = async (req, res, next) => {
+  const { url } = req.body;
+
+  const decodeUrl = decodeURIComponent(url);
+
+  const parts = decodeUrl.split("/");
+
+  const bucketName = parts[2].split(".")[0];
+
+  const key = parts.slice(3).join("/").split("?")[0];
+
+  const params = {
+    Bucket: bucketName,
+    Key: key,
+  };
+
+  console.log("bucket", bucketName, key);
+  try {
+    const command = new DeleteObjectCommand(params);
+    await s3Client.send(command);
+    return res.status(200).send({ message: "Video deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ error: "Failed to delete video" });
+  }
+};
+
+export const deleteVideoFolder = async (req, res, next) => {
+  const { folderKey, teamPath, path } = req.body;
+  const { userId } = req.query;
+
+  console.log("folderpath", folderKey, userId, teamPath, path);
+
+  // const decodefolderpath = decodeURIComponent();
+
+  try {
+    const folderPref = path
+      ? `${userId}/${teamPath}/${path}/${folderKey}`
+      : `${userId}/${teamPath}/${folderKey}`;
+    const params = {
+      Bucket: "vidzspace",
+      Prefix: prefix + folderPref,
+    };
+    const listCommand = new ListObjectsV2Command(params);
+    const data = await s3Client.send(listCommand);
+    if (!data.Contents || data.Contents.length === 0) {
+      return res
+        .status(404)
+        .send({ message: "Folder not found or already empty" });
+    }
+    const keysToDelete = data.Contents.map((obj) => obj.Key);
+    const objects = keysToDelete.map((Key) => ({ Key }));
+    const delparams = {
+      Bucket: "vidzspace",
+      Delete: {
+        Objects: objects,
+        Quiet: true,
+      },
+    };
+    const commanddel = new DeleteObjectsCommand(delparams);
+    await s3Client.send(commanddel);
+    return res
+      .status(200)
+      .send({ message: "Video folder deleted successfully" });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const renameFolderFile = async (req, res, next) => {
+  console.log(req);
+  const { type, newName, teamPath, path, filefoldername } = req.body;
+  const { userId } = req.query;
+
+  console.log("type", type, newName, path, userId, teamPath, filefoldername);
+
+  let folprefix;
+  if (!path) {
+    folprefix = prefix + `${userId}/${teamPath}/`;
+  } else {
+    folprefix = prefix + `${userId}/${teamPath}/${path}/`;
+  }
+
+  console.log(folprefix);
+
+  try {
+    if (type === "file") {
+      const copyParams = {
+        Bucket: "vidzspace",
+        CopySource: `/vidzspace/${folprefix}${filefoldername}`,
+        Key: `${folprefix}${newName}.mp4`,
+      };
+
+      console.log("Key", copyParams?.CopySource, copyParams?.Key);
+
+      let tags = [];
+      try {
+        const taggingCommand = new GetObjectTaggingCommand({
+          Bucket: "vidzspace",
+          Key: `${folprefix}${filefoldername}`,
+        });
+        const taggingData = await s3Client.send(taggingCommand);
+        tags = taggingData.TagSet;
+      } catch (error) {
+        if (error.name !== "NoSuchTagSet") {
+          throw error;
+        }
+      }
+
+      const copyCommand = new CopyObjectCommand(copyParams);
+      await s3Client.send(copyCommand);
+
+      if (tags.length > 0) {
+        const taggingCommand = new PutObjectTaggingCommand({
+          Bucket: "vidzspace",
+          Key: `${folprefix}${newName}`,
+          Tagging: {
+            TagSet: tags,
+          },
+        });
+        await s3Client.send(taggingCommand);
+      }
+
+      const deleteParams = {
+        Bucket: "vidzspace",
+        Key: `${folprefix}${filefoldername}`,
+      };
+
+      const deleteCommand = new DeleteObjectCommand(deleteParams);
+      await s3Client.send(deleteCommand);
+
+      res.status(200).json({
+        message: "File renamed and original object deleted successfully",
+      });
+    } else if (type === "folder") {
+      const listParams = {
+        Bucket: "vidzspace",
+        Prefix: `${folprefix}${filefoldername}/`,
+      };
+
+      const listCommand = new ListObjectsV2Command(listParams);
+      const listedObjects = await s3Client.send(listCommand);
+
+      for (const object of listedObjects.Contents) {
+        const copyParams = {
+          Bucket: "vidzspace",
+          CopySource: `/${listParams.Bucket}/${object.Key}`,
+          Key: object.Key.replace(
+            `${folprefix}${filefoldername}/`,
+            `${folprefix}${newName}/`
+          ),
+        };
+
+        const copyCommand = new CopyObjectCommand(copyParams);
+        await s3Client.send(copyCommand);
+
+        const deleteParams = {
+          Bucket: "vidzspace",
+          Key: object.Key,
+        };
+
+        const deleteCommand = new DeleteObjectCommand(deleteParams);
+        await s3Client.send(deleteCommand);
+      }
+      res.status(200).json({
+        message: "File/Folder renamed and original object deleted successfully",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const downloadFile = async (key, res) => {
+  try {
+    const command = new GetObjectCommand({
+      Bucket: "vidzspace",
+      Key: key,
+    });
+    const { Body, ContentLength } = await s3Client.send(command);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=${path.basename(key)}`
+    );
+    res.setHeader("Content-Type", "application/octet-stream");
+
+    Body.pipe(res)
+      .on("error", (err) => {
+        console.error("Stream Error:", err);
+        res.status(500).json({ error: "Failed to stream file" });
+      })
+      .on("finish", () => {
+        console.log("Download completed:", key);
+      });
+  } catch (error) {
+    console.error("Error downloading file:", error);
+    res.status(500).json({ error: "Failed to download file" });
+  }
+};
+
+const CalculateTotalSize = async (contents) => {
+  let totSize = 0;
+
+  for (const item of contents) {
+    const fileCommand = new HeadObjectCommand({
+      Bucket: "vidzspace",
+      Key: item.Key,
+    });
+
+    try {
+      const { ContentLength } = await s3Client.send(fileCommand);
+      totSize += ContentLength;
+    } catch (error) {
+      console.error(`Error fetching file size for ${item.Key}:`, error);
+    }
+  }
+
+  return totSize;
+};
+
+const downloadFolder = async (key, res) => {
+  try {
+    const listCommand = new ListObjectsV2Command({
+      Bucket: "vidzspace",
+      Prefix: key,
+    });
+
+    const { Contents } = await s3Client.send(listCommand);
+
+    console.log(Contents);
+
+    if (!Contents || Contents.length === 0) {
+      return res.status(404).json({ error: "No files found in the folder" });
+    }
+
+    const totSize = await CalculateTotalSize(Contents);
+
+    console.log(totSize);
+
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=${path.basename(key)}.zip`
+    );
+    res.setHeader("Content-Type", "application/zip");
+
+    const archive = archiver("zip");
+    archive.pipe(res);
+
+    const fetchFile = async (item) => {
+      const fileCommand = new GetObjectCommand({
+        Bucket: "vidzspace",
+        Key: item.Key,
+      });
+
+      const { Body } = await s3Client.send(fileCommand);
+      //console.log(Body);
+      return { body: Body, name: path.relative(key, item.Key) };
+    };
+
+    const fetchPromises = Contents?.map((item) => fetchFile(item));
+    const files = await Promise.all(fetchPromises);
+
+    for (const file of files) {
+      // console.log("file", file.body, file.name);
+      if (!file.name) {
+        console.error(`Error: File name is empty for key`);
+        continue; // Skip this file
+      }
+      console.log(`Appending file: ${file.name}`);
+      archive.append(file.body, { name: file.name });
+    }
+
+    await archive.finalize();
+  } catch (error) {
+    console.error("Error downloading folder:", error);
+    res.status(500).json({ error: "Failed to download folder" });
+  }
+};
+
+export const downloadFolderFile = async (req, res, next) => {
+  const { filePath, teamPath, fileName, type } = req.body;
+  const { userId } = req.query;
+
+  console.log("filepath", filePath, userId, teamPath, fileName, type);
+
+  let folprefix;
+  if (!filePath) {
+    folprefix = prefix + `${userId}/${teamPath}/${fileName}`;
+  } else {
+    folprefix = prefix + `${userId}/${teamPath}/${filePath}/${fileName}`;
+  }
+
+  if (type === "file") {
+    await downloadFile(folprefix, res);
+  } else if (type === "folder") {
+    //console.log("folder");
+    await downloadFolder(folprefix, res);
+  }
+};
+
