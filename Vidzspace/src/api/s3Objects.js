@@ -216,3 +216,33 @@ export const download = async (filePath, teamPath, userId, fileName, type) => {
     throw error;
   }
 };
+
+export const getUploadPresignedUrl = async (
+  filename,
+  contentType,
+  user_id,
+  path
+) => {
+  try {
+    console.log("in api: ", filename, contentType, user_id, path);
+    const metaData = {
+      sharing: "none",
+      sharingType: "none",
+      sharingWith:[],
+      progress: "upcoming",
+    };
+    const response = await axios.post(
+      `/vidzspaceApi/users/s3/generateUploadUrl`,
+      {
+        filename,
+        contentType,
+        user_id,
+        path,
+      },
+    );
+   return response.data; // Returning the response data
+  } catch (error) {
+    console.error("Error:", error);
+    throw error; // Re-throwing the error for handling elsewhere if needed
+  }
+};

@@ -24,6 +24,9 @@ import TeamInfo from "./TeamInfo";
 import UpgradePlan from "./UpgradePlan";
 import ProjectAdd from "../../components/PopUp/ProjectAdd";
 import FirebaseContext from "../../context/firebase/FirebaseContext";
+import ProjectContext from "../../context/project/ProjectContext";
+import UploadProgress from "../../components/PopUp/UploadProgress";
+import Delete from "../../components/PopUp/Delete";
 
 const Homepage = () => {
   const dispatch = useDispatch();
@@ -42,8 +45,10 @@ const Homepage = () => {
     projectState,
     isTeamDropDownOpen,
     setIsTeamDropDownOpen,
-    path
+    path,
+    load
   } = useContext(HomeContext);
+  const {isUploadingProgressOpen,deletePopup} = useContext(ProjectContext);
 
   const {handleSignOut} = useContext(FirebaseContext)
   // console.log(path)
@@ -68,7 +73,7 @@ const Homepage = () => {
       }
     }
     fetchData()
-  },[currentTeam,user,path])
+  },[currentTeam,user,path,load])
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -244,6 +249,8 @@ const Homepage = () => {
         {/* Projects */}
         <div className="relative flex flex-col w-full h-full bg-[#242426] rounded-lg p-5 overflow-y-auto">
           {projectState && <ProjectAdd />}
+          {deletePopup && <Delete/>}
+          {isUploadingProgressOpen && <UploadProgress/>}
           {teamState && <TeamAdd />}
           {optionState === "Team Projects" && <TeamProjects />}
           {optionState === "Team Info" && <TeamInfo />}

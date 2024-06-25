@@ -26,6 +26,7 @@ import {
   fetchTeamsData,
 } from "../../api/s3Objects";
 import Rename from "../../components/PopUp/Rename";
+import ProjectContext from "../../context/project/ProjectContext";
 
 const TeamProjects = () => {
   const {
@@ -47,26 +48,31 @@ const TeamProjects = () => {
     load,
     setLoad,
     currentTeam,
+    selectedItem,
+    setSelectedItem,
+    handleDelete,
+    handleDeleteFolder,
   } = useContext(HomeContext);
+  const { deletePopup, setDeletePopup, deletedFiles, setDeletedFiles } =
+    useContext(ProjectContext);
   const display = path.split("/");
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [selectedItem, setSelectedItem] = useState({});
 
   const extractName = (filename) => {
-    const match = filename.match(/-(\w+)\./);
+    const match = filename.match(/.*_(.+)$/);
     return match ? match[1] : filename;
   };
   const convertBytesToGB = (bytes) => {
-    const megabyte = 1024 * 1024; 
-    const gigabyte = 1024 * 1024 * 1024; 
+    const megabyte = 1024 * 1024;
+    const gigabyte = 1024 * 1024 * 1024;
     const convertedGB = bytes / gigabyte;
 
     if (convertedGB < 0.1) {
       const convertedMB = bytes / megabyte;
-      return convertedMB.toFixed(2) + " MB"; 
+      return convertedMB.toFixed(2) + " MB";
     } else {
-      return convertedGB.toFixed(2) + " GB"; 
+      return convertedGB.toFixed(2) + " GB";
     }
   };
   const getDifferenceText = (pastTimeString) => {
@@ -125,49 +131,12 @@ const TeamProjects = () => {
     setSelectedItem(null);
   };
 
-  const handleDelete = (url) => {
-    setLoad(true);
-    setSelectedItem(null);
-    deleteVideo(url)
-      .then((data) => {
-        console.log(data);
-        fetchData();
-      })
-      .catch((error) => {
-        console.log(error);
-      })
-      .finally(() => {
-        setTimeout(() => {
-          setLoad(false);
-        }, 1000);
-      });
-  };
-
-  const handleDeleteFolder = (folderKey) => {
-    const userId = user?.uid;
-    console.log(userId, folderKey);
-    setSelectedItem(null);
-    setLoad(true);
-    deleteVideoFolder(folderKey, userId, teamPath, path)
-      .then((data) => {
-        console.log(data);
-
-        fetchData();
-      })
-      .catch((error) => {
-        console.log(error);
-      })
-      .finally(() => {
-        setTimeout(() => {
-          setLoad(false);
-        }, 1000);
-      });
-  };
-
   const handleThreeDotClick = (option_passed, file, index) => {
     if (option_passed === "Delete") {
-      handleDelete(file?.SignedUrl);
-      setSelectedItem(null);
+      // handleDelete(file?.SignedUrl);
+      // setSelectedItem(null);
+      setDeletePopup(true);
+      setDeletedFiles(file);
       closeSidebar();
     }
     if (option_passed === "Rename") {
@@ -190,9 +159,11 @@ const TeamProjects = () => {
   };
   const handleThreeDotFolderClick = (option_passed, folder, index) => {
     if (option_passed === "Delete") {
-      handleDeleteFolder(folder?.Key);
-      setSelectedItem(null);
+      // handleDeleteFolder(folder?.Key);
+      // setSelectedItem(null);
       closeSidebar();
+      setDeletePopup(true);
+      setDeletedFiles(folder);
     }
     if (option_passed === "Rename") {
       closeSidebar();
@@ -212,21 +183,7 @@ const TeamProjects = () => {
       handleDownload(path, folder?.Key, "folder");
     }
   };
-  const fetchData = async () => {
-    const currentTeamPath = currentTeam;
-    try {
-      const userId = user?.uid;
-      const response = await fetchTeamsData(
-        `${userId}/${currentTeamPath}/${path}`,
-        userId
-      );
-      const filesData = response?.files || [];
-      const folderData = response?.folders || [];
-      dispatch(setCMSData(filesData, folderData));
-    } catch (err) {
-      console.log("Unable to fetch data");
-    }
-  };
+
   const handleDownload = (filePath, fileName, type) => {
     const userId = user?.uid;
     setSelectedItem(null);
@@ -288,14 +245,14 @@ const TeamProjects = () => {
                 key={index}
                 className="p-4 bg-[#35353a] rounded-lg text-white relative cursor-pointer"
               >
-                <ProgressBar />
+                <ProgressBar document={folder} />
                 <div className="flex flex-col gap-2 w-full px-2 rounded-md">
                   {folder?.innerFiles.length !== 0 ||
                   folder?.innerFolders.length !== 0 ? (
                     <div
                       className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-3 gap-4 h-40 overflow-y-auto no-scrollbar"
-                      onClick={() => handleRoute(folder.Key)}
                       key={folders}
+                      onClick={() => handleRoute(folder.Key)}
                     >
                       {folder?.innerFiles &&
                         folder?.innerFiles.map((file, index) => (
@@ -322,7 +279,7 @@ const TeamProjects = () => {
                         ))}
                     </div>
                   ) : (
-                    <div className="h-40 w-full flex justify-center items-center">
+                    <div className="h-40 w-full flex justify-center items-center" onClick={()=>handleRoute(folder.Key)}>
                       <div className="flex flex-col justify-center items-center gap-3 text-gray-400">
                         <ImFilesEmpty className="text-5xl" />
                         <p>Empty Folder</p>
@@ -396,7 +353,7 @@ const TeamProjects = () => {
                 key={index}
                 className="p-4 bg-[#35353a] rounded-lg text-white relative cursor-pointer"
               >
-                <ProgressBar />
+                <ProgressBar document={file} />
                 <motion.div className="flex flex-col h-full w-full gap-2">
                   <motion.div whileHover={{ scale: 1.03 }}>
                     <video

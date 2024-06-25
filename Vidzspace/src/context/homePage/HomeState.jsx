@@ -3,10 +3,12 @@ import HomeContext from "./HomeContext";
 import { useDispatch, useSelector } from "react-redux";
 import { addTeamState, setCurrentTeam } from "../../app/Actions/teamActions";
 import {
+  setCMSData,
   setPath,
   setPathEmpty,
   setTeamPath,
 } from "../../app/Actions/cmsAction";
+import { deleteVideo, deleteVideoFolder, fetchTeamsData } from "../../api/s3Objects";
 
 const HomeState = ({ children }) => {
   // user state
@@ -63,6 +65,63 @@ const HomeState = ({ children }) => {
   const [reName, setReName] = useState("");
   const [renamePopup, setRenamePopup] = useState(false);
   const [itemToRename, setItemToRename] = useState({});
+  
+  const [selectedItem, setSelectedItem] = useState({});
+  const handleDelete = (url) => {
+    setLoad(true);
+    setSelectedItem(null);
+    deleteVideo(url)
+      .then(async(data) => {
+        console.log(data);
+        await fetchData();
+      })
+      .catch((error) => {
+        console.log(error);
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setLoad(false);
+        }, 1000);
+      });
+  };
+
+  const handleDeleteFolder = (folderKey) => {
+    const userId = user?.uid;
+    console.log(userId, folderKey);
+    setSelectedItem(null);
+    setLoad(true);
+    deleteVideoFolder(folderKey, userId, teamPath, path)
+      .then(async(data) => {
+        console.log(data);
+
+        await fetchData();
+      })
+      .catch((error) => {
+        console.log(error);
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setLoad(false);
+        }, 1000);
+      });
+  };
+  const fetchData = async () => {
+    const currentTeamPath = currentTeam;
+    console.log(currentTeamPath)
+    try {
+      const userId = user?.uid;
+      const response = await fetchTeamsData(
+        `${userId}/${currentTeamPath}/${path}`,
+        userId
+      );
+      const filesData = response?.files || [];
+      const folderData = response?.folders || [];
+      console.log(filesData,folderData);
+      dispatch(setCMSData(filesData, folderData));
+    } catch (err) {
+      console.log("Unable to fetch data");
+    }
+  };
 
   return (
     <HomeContext.Provider
@@ -107,6 +166,11 @@ const HomeState = ({ children }) => {
         setVideoContainer,
         videoPreview,
         setVideoPreview,
+        selectedItem,
+        setSelectedItem,
+        handleDelete,
+        handleDeleteFolder,
+        fetchData
       }}
     >
       {children}

@@ -13,6 +13,7 @@ import path from "path"
 import archiver from "archiver";
 import { s3Client } from "../s3config.js";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import admin from "../index.js";
 
 const prefix = "users/";
 
@@ -273,7 +274,7 @@ export const listRoot = async (req, res, next) => {
         subfolder.LastModified = folderObject.LastModified;
       }
     }
-    // console.log("Got the meta data")
+    console.log("Got the meta data")
 
     const files = await Promise.all(
       (data.Contents || [])
@@ -308,6 +309,7 @@ export const listRoot = async (req, res, next) => {
           };
         })
     );
+    console.log("Got files")
     const folderSizes = await calculateFolderSizes(folders, "vidzspace", prefix + path);
     // Combine folders and files into a single array
     const result = {
@@ -623,3 +625,53 @@ export const downloadFolderFile = async (req, res, next) => {
   }
 };
 
+export const generationUploadUrl = async (req, res, next) => {
+  try {
+    const { filename, contentType, user_id, path } =
+      req.body;
+
+    const fullPath = `users/${path}/${filename}`
+    const owner_id = getOwnerIdFromObjectKey(fullPath); //for testing only
+    const ownerFirebaseData = await admin.auth().getUser(owner_id);
+    const ownerName = ownerFirebaseData.toJSON().displayName;
+
+    const {
+      "x-amz-meta-sharing": sharing,
+      "x-amz-meta-sharingtype": sharingType,
+      "x-amz-meta-sharingwith": sharingWith,
+      "x-amz-meta-progress": progress,
+    } = req.headers;
+    const command = new PutObjectCommand({
+      Bucket: "vidzspace",
+      Key: fullPath,
+      ContentType: contentType,
+      Metadata: {
+        sharing: sharing || "none",
+        sharingtype: sharingType || "none",
+        sharingwith: sharingWith || "[]",
+        progress: progress || "upcoming",
+        ownerName: ownerName || "cant read",
+      },
+    });
+    const url = await getSignedUrl(s3Client, command);
+    return res.status(201).json({
+      success: true,
+      url,
+    });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+function getOwnerIdFromObjectKey(Key) { //key = users/...
+  const parts = Key.split('/');
+  const prefixLength = prefix.split('/').length - 1;
+  // Ensure there are at least 2 parts (users, username)
+  if (parts.length > prefixLength) {
+      console.log(parts)
+      return parts[prefixLength];
+  } else {
+      return null;
+  }
+}
