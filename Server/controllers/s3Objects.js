@@ -675,3 +675,67 @@ function getOwnerIdFromObjectKey(Key) { //key = users/...
       return null;
   }
 }
+
+export const updateProgress = async (req, res, next) => {
+  const { type, path, newProgress, teamPath, filefoldername } = req.body;
+  const { userId } = req.query;
+
+  console.log(
+    "type",
+    type,
+    userId,
+    path,
+    newProgress,
+    teamPath,
+    filefoldername
+  );
+
+  let folprefix;
+  if (!path) {
+    folprefix = prefix + `${userId}/${teamPath}/${filefoldername}`;
+  } else {
+    folprefix = prefix + `${userId}/${teamPath}/${path}/${filefoldername}`;
+  }
+
+  console.log(folprefix);
+
+  if (type === "file") {
+    await updateObjectMetadata(folprefix, newProgress);
+
+    res.status(200).json({ message: "Metadata updated successfully" });
+  } else {
+    res.status(200).json({ message: "Object Type undefined" });
+  }
+};
+
+const updateObjectMetadata = async (key, newProgress) => {
+  try {
+    const fileCommand = new HeadObjectCommand({
+      Bucket: "vidzspace",
+      Key: key,
+    });
+
+    const { Metadata } = await s3Client.send(fileCommand);
+
+    const newMetadata = {
+      ...Metadata,
+      progress: newProgress,
+    };
+
+    //console.log(Metadata);
+
+    const newCommand = new CopyObjectCommand({
+      Bucket: "vidzspace",
+      CopySource: `/vidzspace/${key}`,
+      Key: key,
+      Metadata: newMetadata,
+      MetadataDirective: "REPLACE",
+    });
+
+    await s3Client.send(newCommand);
+
+    //console.log(Metadata);
+  } catch (error) {
+    console.log(error);
+  }
+};

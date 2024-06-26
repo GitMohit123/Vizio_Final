@@ -201,28 +201,51 @@ const TeamProjects = () => {
   return (
     <>
       <div className="flex flex-row w-full p-2 justify-between items-center">
-        <div className="flex flex-row gap-3 items-center  justify-center text-[#9B9DA0]">
-          <FaPhotoVideo />
-          <p
-            className="text-[#f8ff2a] cursor-pointer"
-            onClick={() => dispatch(setPathEmpty(""))}
-          >
-            {teamPath}
-          </p>
-          {display.map((part, index) => (
-            <div
-              key={index}
-              onClick={() =>
-                handleRouteClick(display.slice(0, index + 1).join("/"))
-              }
-              className="flex flex-row gap-2"
+        <div className="flex flex-row gap-3 items-center justify-between text-[#9B9DA0] w-full">
+          <div className="flex flex-row gap-3 justify-center items-center">
+            <FaPhotoVideo />
+            <p
+              className="text-[#f8ff2a] cursor-pointer"
+              onClick={() => dispatch(setPathEmpty(""))}
             >
-              {index < path.length - 1 && (
-                <span className="separator">{" / "}</span>
-              )}
-              <div className="cursor-pointer">{part}</div>
-            </div>
-          ))}
+              {teamPath}
+            </p>
+            {display.map((part, index) => (
+              <div
+                key={index}
+                onClick={() =>
+                  handleRouteClick(display.slice(0, index + 1).join("/"))
+                }
+                className="flex flex-row gap-2"
+              >
+                {index < path.length - 1 && (
+                  <span className="separator">{" / "}</span>
+                )}
+                <div className="cursor-pointer">{part}</div>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-row justify-center items-center px-2 gap-3">
+            <motion.div
+              className="p-1 px-4 rounded-xl text-black bg-[#f8ff2a]"
+              // onClick={handleCancelClick}
+            >
+              <div className="flex flex-row w-full justify-center items-center gap-2">
+                <p>Create Folder</p>
+                <TbCloudUpload />
+              </div>
+            </motion.div>
+            <motion.button
+              // onClick={handleCreateTeamClick}
+              // onClick={handleCreateProjectClick}
+              className={`p-1 px-4 rounded-xl text-black bg-[#f8ff2a]`}
+            >
+              <div className="flex flex-row w-full justify-center items-center gap-2">
+                <p>Upload Media</p>
+                <TbCloudUpload />
+              </div>
+            </motion.button>
+          </div>
         </div>
       </div>
       {load && <CMSLoader />}
@@ -279,7 +302,10 @@ const TeamProjects = () => {
                         ))}
                     </div>
                   ) : (
-                    <div className="h-40 w-full flex justify-center items-center" onClick={()=>handleRoute(folder.Key)}>
+                    <div
+                      className="h-40 w-full flex justify-center items-center"
+                      onClick={() => handleRoute(folder.Key)}
+                    >
                       <div className="flex flex-col justify-center items-center gap-3 text-gray-400">
                         <ImFilesEmpty className="text-5xl" />
                         <p>Empty Folder</p>

@@ -10,14 +10,16 @@ const Delete = () => {
   const handleDeleteClick = () => {
     if (deletedFiles.Type === "folder") {
         handleDeleteFolder(deletedFiles.Key);
-        setDeletePopup(false)
-        setDeletedFiles({})
+        handleCancelClick()
     }else{
         handleDelete(deletedFiles?.SignedUrl);
-        setDeletePopup(false)
-        setDeletedFiles({})
+        handleCancelClick()
     }
   };
+  const handleCancelClick = ()=>{
+    setDeletePopup(false);
+    setDeletedFiles({})
+  }
   return (
     <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-10 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
       <div className="relative popup bg-[#2f2f2f] w-5/12 h-44 p-5 flex flex-col rounded-sm border-2 border-[#4c4c4c]">
@@ -44,7 +46,7 @@ const Delete = () => {
         <div className="flex w-full flex-row justify-end items-center px-2 gap-2">
           <motion.div
             className="p-1 px-6 bg-[#8c8c8c] rounded-xl cursor-pointer hover:bg-[#747373] text-white"
-            onClick={() => setDeletePopup(false)}
+            onClick={() => handleCancelClick()}
           >
             Cancel
           </motion.div>

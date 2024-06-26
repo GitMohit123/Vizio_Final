@@ -229,7 +229,7 @@ export const getUploadPresignedUrl = async (
       sharing: "none",
       sharingType: "none",
       sharingWith:[],
-      progress: "upcoming",
+      progress: "Upcoming",
     };
     const response = await axios.post(
       `/vidzspaceApi/users/s3/generateUploadUrl`,
@@ -244,5 +244,44 @@ export const getUploadPresignedUrl = async (
   } catch (error) {
     console.error("Error:", error);
     throw error; // Re-throwing the error for handling elsewhere if needed
+  }
+};
+
+export const updateProgress = async (
+  type,
+  path,
+  teamPath,
+  userId,
+  filefoldername,
+  newProgress
+) => {
+  console.log(type, path, teamPath, userId, filefoldername, newProgress);
+  try {
+    const { data } = await axios.post(
+      `/vidzspaceApi/users/s3/updateprogress`,
+      {
+        type,
+        path,
+        newProgress,
+        teamPath,
+        filefoldername,
+      },
+
+      {
+        params: {
+          userId,
+        },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log(data);
+
+    return data;
+  } catch (error) {
+    console.log(error);
+    throw error;
   }
 };
