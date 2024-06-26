@@ -119,8 +119,8 @@ const Homepage = () => {
   return (
     <div className="h-screen w-screen bg-[#1B1B1B] flex flex-row">
       {/* Section1 */}
-      <div className="team-section flex h-full w-[4%] flex-col gap-5 p-1 px-2">
-        <img src="/icons/icon.png" alt="Vid" />
+      <div className="team-section flex h-full w-[5%] flex-col gap-5 py-3 px-2 items-center">
+        <img src="/icons/vizioLogo.png" alt="Vid" className="h-6 w-6"/>
         <div className="flex w-full flex-col gap-2">
           {team?.map((team, index) => {
             return (
