@@ -32,7 +32,7 @@ export const listTeams = async (userId) => {
 
 export const createTeam = async (teamName, userId) => {
   try {
-    const encodedTeamName = teamName.includes("/")
+    let encodedTeamName = teamName.includes("/")
       ? teamName.split("/")[0] // Extract the first part before the first slash
       : teamName;
     if (encodedTeamName === "") {
