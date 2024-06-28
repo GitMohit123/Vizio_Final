@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
-import { HomePage, LandingPage, Login, SignUp } from "./pages";
+import { CommentPage, HomePage, LandingPage, Login, SignUp } from "./pages";
 import FirebaseState from "./context/firebase/FirebaseState";
 import { useDispatch, useSelector } from "react-redux";
 import { setUserDetails, userLoading } from "./app/Actions/userAction";
@@ -50,6 +50,7 @@ const App = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/home" element={<HomePage />} />
+              <Route path="/feedback" element={<CommentPage/>}/>
             </Routes>
           </ProjectState>
         </HomeState>

@@ -38,6 +38,7 @@ const ProjectAdd = () => {
     setSelectedFilesWithUrls,
     projectName,
     setProjectName,
+    setVideoPercentageUploaded,
   } = useContext(ProjectContext);
 
   const uploadToPresignedUrl = async (
@@ -56,6 +57,7 @@ const ProjectAdd = () => {
           (progressEvent.loaded * 100) / progressEvent.total
         );
         console.log(`Upload Progress: ${percentCompleted}%`);
+        setVideoPercentageUploaded(percentCompleted);
       },
     });
     return uploadResponse.status;
@@ -125,7 +127,11 @@ const ProjectAdd = () => {
     const folderFiles = foldersList.filter((file) =>
       file.type.startsWith("video/")
     );
-    setSelectedFiles((prevFiles) => [...prevFiles, ...videoFiles]);
+    setSelectedFiles((prevFiles) => [
+      ...prevFiles,
+      ...videoFiles,
+      ...folderFiles,
+    ]);
     setSelectedFolders((prevFolders) => [...prevFolders, ...folderFiles]);
     setIsDragging(false);
   }, []);
@@ -190,14 +196,27 @@ const ProjectAdd = () => {
     setLoad(true);
 
     const ownerId = user?.uid; //for testing only
-    // const response = await generate(`${ownerId}/${teamPath}/${path}`)
-    const files =
-      selectedFiles.length > 0
-        ? [...selectedFiles, ...selectedFolders]
-        : selectedFolders;
+    const userId = user?.uid;
+    const files = selectedFiles;
+    await getUploadPresignedUrl({
+      fullPath: `${ownerId}/${teamPath}/${projectName}`,
+    });
+
+    var folderName = "";
+    const createFoldersPromises = selectedFolders.map(async (folder) => {
+      var folderName1 = folder.path.split("/")[1];
+      console.log(folderName1);
+      if (folderName1 !== folderName) {
+        folderName = folderName1;
+        await getUploadPresignedUrl({
+          fullPath: `${ownerId}/${teamPath}/${projectName}/${folderName}`,
+        });
+      }
+    });
+    await Promise.all(createFoldersPromises);
     const uploadPromises = files.map(async (file) => {
       const id = Date.now();
-      const videoFileName = `video_${id}_${file.name}`;
+      const fileName = `video_${id}_${file.name}`;
       const contentType = file.type;
       const isInAFolder = file.path && file.path.includes("/");
       const fullPath = isInAFolder
@@ -209,9 +228,9 @@ const ProjectAdd = () => {
       // const fullPath = `${ownerId}/${teamPath}/${path}/${projectName}`; //if want nested projects
       try {
         const result = await getUploadPresignedUrl(
-          videoFileName,
+          fileName,
           contentType,
-          ownerId,
+          userId,
           fullPath
         );
         console.log(result.url);
@@ -273,8 +292,9 @@ const ProjectAdd = () => {
     setLoad(false);
     setIsUploadingProgressOpen(false);
     setSelectedFilesWithUrls([]);
-    setSelectedFiles([])
-    setSelectedFolders([])
+    setSelectedFiles([]);
+    setSelectedFolders([]);
+    setVideoPercentageUploaded(0);
     // setRefresh((prev) => !prev);
   };
 
@@ -282,11 +302,11 @@ const ProjectAdd = () => {
     if (selectedFiles.length > 0 || selectedFolders.length > 0) {
       setIsUploadingProgressOpen(true);
     } else setIsUploadingProgressOpen(false);
-    console.log(selectedFiles, selectedFolders);
-  }, [selectedFiles, selectedFolders]);
+    console.log(selectedFiles, selectedFolders,selectedFilesWithUrls);
+  }, [selectedFiles, selectedFolders,selectedFilesWithUrls]);
 
   return (
-    <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-10 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
+    <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-20 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
       <div className="popup bg-[#383838] w-3/6 h-3/5 p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c]">
         {/* Title Section */}
         <div className="flex w-full px-2 mb-8">
@@ -299,7 +319,9 @@ const ProjectAdd = () => {
             <input
               type="text"
               className="bg-black border-2 border-white rounded-md p-1 "
-              onChange={(e)=>{setProjectName(e.target.value)}}
+              onChange={(e) => {
+                setProjectName(e.target.value);
+              }}
             />
           </div>
           <div className="flex flex-col gap-3 w-[40%] text-white">

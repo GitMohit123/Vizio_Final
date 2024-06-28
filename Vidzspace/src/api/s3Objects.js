@@ -217,14 +217,15 @@ export const download = async (filePath, teamPath, userId, fileName, type) => {
   }
 };
 
-export const getUploadPresignedUrl = async (
-  filename,
+export const getUploadPresignedUrl = async ({
+  fileName,
   contentType,
   user_id,
-  path
-) => {
+  fullPath
+}) => {
   try {
-    console.log("in api: ", filename, contentType, user_id, path);
+    const path = fullPath || "";
+    console.log("in api: ", fileName, contentType, user_id, path);
     const metaData = {
       sharing: "none",
       sharingType: "none",
@@ -234,7 +235,7 @@ export const getUploadPresignedUrl = async (
     const response = await axios.post(
       `/vidzspaceApi/users/s3/generateUploadUrl`,
       {
-        filename,
+        fileName,
         contentType,
         user_id,
         path,

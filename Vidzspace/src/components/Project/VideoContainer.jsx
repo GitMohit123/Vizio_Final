@@ -44,7 +44,7 @@ const VideoContainer = ({ url,index }) => {
             )}
           </div>
           <IoIosClose
-            className="fa-solid fa-square-xmark text-black  absolute z-10 top-4 right-4 cursor-pointer"
+            className="fa-solid fa-square-xmark text-[#f8ff2a]  absolute z-10 top-4 right-4 cursor-pointer"
             size={30}
             onClick={() => setVideoContainer(false)}
           />

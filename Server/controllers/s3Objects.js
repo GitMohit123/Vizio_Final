@@ -109,7 +109,7 @@ function getFilesForSubfolder(subfolderKey, objects) {
 
       // if (relativePath.endsWith("/"))
       //   subfolders.push({ Key: relativePath.slice(0, -1), Type: "folder" });
-      if(relativePath.endsWith('/') && relativePath.slice(0, -1).indexOf('/') === -1) subfolders.push({Key: relativePath.slice(0, -1), Type: "folder"});
+      if (relativePath.endsWith('/') && relativePath.slice(0, -1).indexOf('/') === -1) subfolders.push({ Key: relativePath.slice(0, -1), Type: "folder" });
 
       // if (relativePath.indexOf('/') === -1 && relativePath !== "") subFiles.push( { ...item, Key: relativePath }); //is a file
       if (relativePath.indexOf("/") === -1 && relativePath !== "")
@@ -316,7 +316,7 @@ export const listRoot = async (req, res, next) => {
       folders: folders.map((folder) => ({ ...folder, size: folderSizes.find((f) => f.Key === folder.Key)?.size || 0 })), // Add size to each folder object
       files: files,
       // sharingDetails: sharingDetails,
-      size:size
+      size: size
     };
 
     return res.json(result);
@@ -629,7 +629,17 @@ export const generationUploadUrl = async (req, res, next) => {
   try {
     const { filename, contentType, user_id, path } =
       req.body;
-
+    if(!filename){
+      const command = new PutObjectCommand({
+        Bucket:"vidzspace",
+        Key:`users/${path}`
+      });
+      const response = await s3Client.send(command);
+      return res.status(201).json({
+        succcess:true,
+        response
+      })
+    }
     const fullPath = `users/${path}/${filename}`
     const owner_id = getOwnerIdFromObjectKey(fullPath); //for testing only
     const ownerFirebaseData = await admin.auth().getUser(owner_id);
@@ -669,10 +679,10 @@ function getOwnerIdFromObjectKey(Key) { //key = users/...
   const prefixLength = prefix.split('/').length - 1;
   // Ensure there are at least 2 parts (users, username)
   if (parts.length > prefixLength) {
-      console.log(parts)
-      return parts[prefixLength];
+    console.log(parts)
+    return parts[prefixLength];
   } else {
-      return null;
+    return null;
   }
 }
 

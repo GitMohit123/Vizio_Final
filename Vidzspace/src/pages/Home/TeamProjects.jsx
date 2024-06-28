@@ -53,7 +53,7 @@ const TeamProjects = () => {
     handleDelete,
     handleDeleteFolder,
   } = useContext(HomeContext);
-  const { deletePopup, setDeletePopup, deletedFiles, setDeletedFiles } =
+  const { deletePopup, setDeletePopup, deletedFiles, setDeletedFiles,getDifferenceText } =
     useContext(ProjectContext);
   const display = path.split("/");
   const dispatch = useDispatch();
@@ -73,30 +73,6 @@ const TeamProjects = () => {
       return convertedMB.toFixed(2) + " MB";
     } else {
       return convertedGB.toFixed(2) + " GB";
-    }
-  };
-  const getDifferenceText = (pastTimeString) => {
-    const currentDate = new Date();
-    const timeDifference =
-      currentDate.getTime() - new Date(pastTimeString).getTime();
-    const millisecondsInSecond = 1000;
-    const secondsInMinute = 60;
-    const minutesInHour = 60;
-    const hoursInDay = 24;
-
-    const seconds = Math.floor(timeDifference / millisecondsInSecond);
-    const minutes = Math.floor(seconds / secondsInMinute);
-    const hours = Math.floor(minutes / minutesInHour);
-    const days = Math.floor(hours / hoursInDay);
-
-    if (days > 0) {
-      return `${days} days ago`;
-    } else if (hours > 0) {
-      return `${hours} hours ago`;
-    } else if (minutes > 0) {
-      return `${minutes} minutes ago`;
-    } else {
-      return "now";
     }
   };
   const handleRoute = async (file_path) => {
@@ -198,6 +174,13 @@ const TeamProjects = () => {
       });
   };
 
+  const handleDoubleClick = (file)=>{
+    navigate("/feedback",{state:{file:file}})
+    setTimeout(() => {
+      setVideoContainer(false);
+    }, 2000);
+  }
+
   return (
     <>
       <div className="flex flex-row w-full p-2 justify-between items-center">
@@ -250,7 +233,7 @@ const TeamProjects = () => {
       </div>
       {load && <CMSLoader />}
       {renamePopup && <Rename />}
-      {files.length === 0 && folders.length === 0 && !path ? (
+      {files?.length === 0 && folders?.length === 0 && !path ? (
         <div className="h-full w-full flex justify-center items-center">
           <motion.div
             onClick={() => dispatch(setProjectState(true))}
@@ -274,12 +257,12 @@ const TeamProjects = () => {
                   folder?.innerFolders.length !== 0 ? (
                     <div
                       className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-3 gap-4 h-40 overflow-y-auto no-scrollbar"
-                      key={folders}
+                      key={folder.Key}
                       onClick={() => handleRoute(folder.Key)}
                     >
                       {folder?.innerFiles &&
                         folder?.innerFiles.map((file, index) => (
-                          <div className="rounded-lg" key={index}>
+                          <div className="rounded-lg" key={file?.SignedUrl}>
                             <video
                               className="rounded-lg object-cover aspect-square w-full"
                               key={index}
@@ -378,6 +361,10 @@ const TeamProjects = () => {
               <div
                 key={index}
                 className="p-4 bg-[#35353a] rounded-lg text-white relative cursor-pointer"
+                onDoubleClick={()=>{
+                  console.log("DOUBLE");
+                  handleDoubleClick(file);
+                }}
               >
                 <ProgressBar document={file} />
                 <motion.div className="flex flex-col h-full w-full gap-2">
@@ -390,7 +377,9 @@ const TeamProjects = () => {
                       onMouseLeave={handleMouseLeave}
                       onClick={() => {
                         setVideoPreview(index);
-                        setVideoContainer(true);
+                        setTimeout(() => {
+                          setVideoContainer(true);
+                      }, 1000);
                       }}
                     ></video>
                   </motion.div>
