@@ -14,6 +14,7 @@ import archiver from "archiver";
 import { s3Client } from "../s3config.js";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import admin from "../index.js";
+import { log } from "console";
 
 const prefix = "users/";
 
@@ -627,20 +628,22 @@ export const downloadFolderFile = async (req, res, next) => {
 
 export const generationUploadUrl = async (req, res, next) => {
   try {
-    const { filename, contentType, user_id, path } =
-      req.body;
-    if(!filename){
+    const { fileName, contentType, user_id, path } = req.body;
+
+    if(!fileName){ //empty folder
+      console.log(path)
       const command = new PutObjectCommand({
-        Bucket:"vidzspace",
-        Key:`users/${path}`
+        Bucket: "vidzspace",
+        Key: `users/${path}/`,
       });
       const response = await s3Client.send(command);
       return res.status(201).json({
-        succcess:true,
-        response
-      })
+        success: true,
+        response,
+      });
     }
-    const fullPath = `users/${path}/${filename}`
+
+    const fullPath = `users/${path}/${fileName}`;
     const owner_id = getOwnerIdFromObjectKey(fullPath); //for testing only
     const ownerFirebaseData = await admin.auth().getUser(owner_id);
     const ownerName = ownerFirebaseData.toJSON().displayName;
@@ -674,12 +677,13 @@ export const generationUploadUrl = async (req, res, next) => {
   }
 };
 
-function getOwnerIdFromObjectKey(Key) { //key = users/...
-  const parts = Key.split('/');
-  const prefixLength = prefix.split('/').length - 1;
+function getOwnerIdFromObjectKey(Key) {
+  //key = users/...
+  const parts = Key.split("/");
+  const prefixLength = prefix.split("/").length - 1;
   // Ensure there are at least 2 parts (users, username)
   if (parts.length > prefixLength) {
-    console.log(parts)
+    console.log(parts);
     return parts[prefixLength];
   } else {
     return null;

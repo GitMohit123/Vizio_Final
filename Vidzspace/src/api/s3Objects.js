@@ -226,12 +226,6 @@ export const getUploadPresignedUrl = async ({
   try {
     const path = fullPath || "";
     console.log("in api: ", fileName, contentType, user_id, path);
-    const metaData = {
-      sharing: "none",
-      sharingType: "none",
-      sharingWith:[],
-      progress: "Upcoming",
-    };
     const response = await axios.post(
       `/vidzspaceApi/users/s3/generateUploadUrl`,
       {
@@ -239,14 +233,26 @@ export const getUploadPresignedUrl = async ({
         contentType,
         user_id,
         path,
-      },
+      }
+      // {
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //     Authorization: `Bearer ${idToken}`,
+      //     ...Object.keys(metaData).reduce((acc, key) => {
+      //       acc[`x-amz-meta-${key.toLowerCase()}`] = JSON.stringify(metaData[key]);
+      //       return acc;
+      //     }, {}),
+      //   },
+      //   withCredentials: true,
+      // }
     );
-   return response.data; // Returning the response data
+    return response.data; // Returning the response data
   } catch (error) {
     console.error("Error:", error);
     throw error; // Re-throwing the error for handling elsewhere if needed
   }
 };
+
 
 export const updateProgress = async (
   type,

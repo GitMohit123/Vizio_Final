@@ -41,7 +41,7 @@ app.use("/vidzspaceApi/users/s3",s3router);
 app.get("/", (req,res,next) => {
   res.send("anurag");
 });
-app.listen(5000, (req, res) => {
+app.listen(5001, (req, res) => {
     console.log(`Server initialized at 6000`);
   });
 
