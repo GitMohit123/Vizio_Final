@@ -5,13 +5,13 @@ import { useDispatch } from "react-redux";
 import { motion } from "framer-motion";
 import { TbCloudUpload } from "react-icons/tb";
 import { cloudOptions } from "../../constants/homePage";
-import { setProjectState } from "../../app/Actions/cmsAction";
+import { setCMSData, setProjectState } from "../../app/Actions/cmsAction";
 import { useDropzone } from "react-dropzone";
 import HomeContext from "../../context/homePage/HomeContext";
 import useDrivePicker from "react-google-drive-picker";
 import ProjectContext from "../../context/project/ProjectContext";
 import axios from "axios";
-import { getUploadPresignedUrl } from "../../api/s3Objects";
+import { fetchTeamsData, getUploadPresignedUrl } from "../../api/s3Objects";
 
 const ProjectAdd = () => {
   const dispatch = useDispatch();
@@ -30,6 +30,7 @@ const ProjectAdd = () => {
     path,
     user,
     setLoad,
+    currentTeam
   } = useContext(HomeContext);
   const {
     setIsUploadingProgressOpen,
@@ -305,7 +306,6 @@ const ProjectAdd = () => {
       if (!selectedFilesWithUrls) {
         console.log("Files not found");
       }
-      
       setIsUploadingFiles(false);
       // dispatch(setLoader(false));
       setLoad(false);
@@ -314,8 +314,24 @@ const ProjectAdd = () => {
       setSelectedFiles([]);
       setSelectedFolders([]);
       setVideoPercentageUploaded(0);
+      await fetchData();
       // setRefresh((prev) => !prev);
       
+    };
+    const fetchData = async () => {
+      const currentTeamPath = currentTeam;
+      try {
+        const userId = user?.uid;
+        const response = await fetchTeamsData(
+          `${userId}/${currentTeamPath}/${path}`,
+          userId
+        );
+        const filesData = response?.files || [];
+        const folderData = response?.folders || [];
+        dispatch(setCMSData(filesData, folderData));
+      } catch (err) {
+        console.log("Unable to fetch data");
+      }
     };
 
   // const handleCreateProjectClick = async () => {
