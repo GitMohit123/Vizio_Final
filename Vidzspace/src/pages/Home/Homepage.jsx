@@ -27,6 +27,7 @@ import FirebaseContext from "../../context/firebase/FirebaseContext";
 import ProjectContext from "../../context/project/ProjectContext";
 import UploadProgress from "../../components/PopUp/UploadProgress";
 import Delete from "../../components/PopUp/Delete";
+import FolderAdd from "../../components/PopUp/FolderAdd";
 
 const Homepage = () => {
   const dispatch = useDispatch();
@@ -48,7 +49,7 @@ const Homepage = () => {
     path,
     load
   } = useContext(HomeContext);
-  const {isUploadingProgressOpen,deletePopup} = useContext(ProjectContext);
+  const {isUploadingProgressOpen,deletePopup,addFolder} = useContext(ProjectContext);
 
   const {handleSignOut} = useContext(FirebaseContext)
   // console.log(path)
@@ -73,7 +74,7 @@ const Homepage = () => {
       }
     }
     fetchData()
-  },[currentTeam,user,path,load])
+  },[currentTeam,user,path])
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -251,6 +252,7 @@ const Homepage = () => {
           {projectState && <ProjectAdd />}
           {deletePopup && <Delete/>}
           {isUploadingProgressOpen && <UploadProgress/>}
+          {addFolder && <FolderAdd/>}
           {teamState && <TeamAdd />}
           {optionState === "Team Projects" && <TeamProjects />}
           {optionState === "Team Info" && <TeamInfo />}

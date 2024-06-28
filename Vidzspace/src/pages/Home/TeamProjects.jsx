@@ -59,7 +59,8 @@ const TeamProjects = () => {
     deletedFiles,
     setDeletedFiles,
     getDifferenceText,
-    addPopUp,setAddPopUp
+    addPopUp,setAddPopUp,
+    setAddFolder
   } = useContext(ProjectContext);
   const display = path.split("/");
   const dispatch = useDispatch();
@@ -187,6 +188,12 @@ const TeamProjects = () => {
     }, 2000);
   };
 
+  const handleNewFolderClick =()=>{
+    console.log("clicked")
+    setAddFolder((prev)=>!prev);
+    // setAddPopUp(false);
+  }
+
   return (
     <>
       <div className="flex flex-row w-full p-2 justify-between items-center">
@@ -226,10 +233,10 @@ const TeamProjects = () => {
                 </p>
 
                 {addPopUp && (
-                  <div className="dropdown absolute w-36 top-10 bg-white rounded-lg shadow-lg z-10">
+                  <div className="dropdown absolute w-36 top-10 bg-white rounded-lg shadow-lg z-20">
                     {/* Dropdown content */}
                     <ul className="py-1">
-                      <li className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100">
+                      <li onClick={handleNewFolderClick} className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100">
                         Create Folder
                       </li>
                       <li className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100">
@@ -341,7 +348,7 @@ const TeamProjects = () => {
                       {selectedItem?.type === "folder" &&
                         selectedItem?.index === `folder-${index}` &&
                         selectedItem?.path === folder?.Key && (
-                          <div className="absolute left-2 top-10 h-50 bg-gray-900 z-10 py-1 rounded-xl">
+                          <div className="absolute left-2 top-10 h-50 bg-gray-900 z-30 py-1 rounded-xl">
                             <div className="flex flex-col text-left">
                               <p
                                 className="text-[#f8ff2a] hover:bg-slate-800 py-1 px-6 rounded-xl"
@@ -429,7 +436,7 @@ const TeamProjects = () => {
                       {selectedItem?.type === "file" &&
                         selectedItem?.index === `file-${index}` &&
                         selectedItem?.path === file.Key && (
-                          <div className="absolute left-2 top-10 h-50 bg-gray-900 z-10 py-1 rounded-xl">
+                          <div className="absolute left-2 top-10 h-50 bg-gray-900 z-30 py-1 rounded-xl">
                             <div className="flex flex-col text-left">
                               <p
                                 className="text-[#f8ff2a] hover:bg-slate-800 py-1 px-6 rounded-xl"

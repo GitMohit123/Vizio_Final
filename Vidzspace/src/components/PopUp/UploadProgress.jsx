@@ -19,7 +19,7 @@ const UploadProgress = () => {
   } = useContext(ProjectContext);
 
   return (
-    <div className="absolute w-1/5 max-h-[167.2px] flex justify-end items-end z-20 right-5 bottom-5">
+    <div className="absolute w-1/5 max-h-[167.2px] flex justify-end items-end z-30 right-5 bottom-5">
       <div className="popup bg-[#383838] h-full max-h-[167.2px] overflow-auto no-scrollbar w-full p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c] text-white">
         <h3 className="text-lg text-center w-full">Uploading files</h3>
         {selectedFiles?.map((file, index) => (

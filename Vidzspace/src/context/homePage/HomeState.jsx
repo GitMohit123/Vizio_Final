@@ -74,6 +74,7 @@ const HomeState = ({ children }) => {
       .then(async(data) => {
         console.log(data);
         await fetchData();
+        setLoad(false);
       })
       .catch((error) => {
         console.log(error);
@@ -95,6 +96,7 @@ const HomeState = ({ children }) => {
         console.log(data);
 
         await fetchData();
+        setLoad(false)
       })
       .catch((error) => {
         console.log(error);

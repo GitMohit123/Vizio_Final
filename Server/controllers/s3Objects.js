@@ -107,12 +107,7 @@ function getFilesForSubfolder(subfolderKey, objects) {
   objects.map((item) => {
     if (item.Key.startsWith(subfolderKey)) {
       const relativePath = item.Key.slice(subfolderKey.length);
-
-      // if (relativePath.endsWith("/"))
-      //   subfolders.push({ Key: relativePath.slice(0, -1), Type: "folder" });
       if (relativePath.endsWith('/') && relativePath.slice(0, -1).indexOf('/') === -1) subfolders.push({ Key: relativePath.slice(0, -1), Type: "folder" });
-
-      // if (relativePath.indexOf('/') === -1 && relativePath !== "") subFiles.push( { ...item, Key: relativePath }); //is a file
       if (relativePath.indexOf("/") === -1 && relativePath !== "")
         subFiles.push(item); //is a file
     }
@@ -241,8 +236,6 @@ export const listRoot = async (req, res, next) => {
       LastModified: null,
     }));
 
-    console.log("reached here");
-
     //inner files
     // folders.forEach(subfolder => {
     //   const innerStuff = getFilesForSubfolder(params.Prefix + subfolder.Key + '/', data2.Contents);
@@ -275,7 +268,6 @@ export const listRoot = async (req, res, next) => {
         subfolder.LastModified = folderObject.LastModified;
       }
     }
-    console.log("Got the meta data")
 
     const files = await Promise.all(
       (data.Contents || [])
@@ -310,9 +302,7 @@ export const listRoot = async (req, res, next) => {
           };
         })
     );
-    console.log("Got files")
     const folderSizes = await calculateFolderSizes(folders, "vidzspace", prefix + path);
-    // Combine folders and files into a single array
     const result = {
       folders: folders.map((folder) => ({ ...folder, size: folderSizes.find((f) => f.Key === folder.Key)?.size || 0 })), // Add size to each folder object
       files: files,
@@ -400,7 +390,7 @@ export const renameFolderFile = async (req, res, next) => {
   const { type, newName, teamPath, path, filefoldername } = req.body;
   const { userId } = req.query;
 
-  console.log("type", type, newName, path, userId, teamPath, filefoldername);
+  // console.log("type", type, newName, path, userId, teamPath, filefoldername);
 
   let folprefix;
   if (!path) {
@@ -409,7 +399,7 @@ export const renameFolderFile = async (req, res, next) => {
     folprefix = prefix + `${userId}/${teamPath}/${path}/`;
   }
 
-  console.log(folprefix);
+  // console.log(folprefix);
 
   try {
     if (type === "file") {
@@ -419,7 +409,7 @@ export const renameFolderFile = async (req, res, next) => {
         Key: `${folprefix}${newName}.mp4`,
       };
 
-      console.log("Key", copyParams?.CopySource, copyParams?.Key);
+      // console.log("Key", copyParams?.CopySource, copyParams?.Key);
 
       let tags = [];
       try {
@@ -751,5 +741,33 @@ const updateObjectMetadata = async (key, newProgress) => {
     //console.log(Metadata);
   } catch (error) {
     console.log(error);
+  }
+};
+
+export const createFolder = async (req, res, next) => {
+  try {
+    const { folderPath, teamPath, folderName } = req.body;
+    const { userId } = req.query;
+
+    //console.log(userId, teamPath, folderPath, folderName);
+
+    if (folderPath != "" && folderPath != undefined) {
+      const folderKey =
+        prefix + `${userId}/${teamPath}/${folderPath}/${folderName}/`;
+      const params = {
+        Bucket: "vidzspace",
+        Key: folderKey,
+      };
+
+      const command = new PutObjectCommand(params);
+      await s3Client.send(command);
+
+      res.status(200).send("Folder Created")
+    } else {
+      res.status(200).send("Folder cannot be created");
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
 };

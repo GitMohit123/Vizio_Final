@@ -67,7 +67,7 @@ const RectBar = ({document}) => {
     <div>
       <motion.div
         style={insetBorderStyle}
-        className="absolute flex gap-2 rounded-md top-[2px] right-2 text-black items-center justify-center px-3 py-1 bg-[#7A7B99] bg-opacity-60 backdrop-blur-3xl z-10"
+        className="absolute flex gap-2 rounded-md top-[4px] right-2 text-black items-center justify-center px-3 py-1 bg-[#7A7B99] bg-opacity-60 backdrop-blur-3xl z-10"
       >
         <div className="flex items-center gap-2 justify-center">
           <FaCircle size={20} className={getStatusColor(progress)} />

@@ -31,11 +31,10 @@ const VideoBox = ({ file }) => {
         <div className="w-full h-full lg:h-[27rem] flex justify-center shadow-lg relative rounded-full">
           <video
             className="w-full h-full object-cover"
-            muted
             ref={videoRef}
-            onClick={togglePlayPause}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
+            // onClick={togglePlayPause}
+            // onPlay={() => setIsPlaying(true)}
+            // onPause={() => setIsPlaying(false)}
             controls
           >
             <source src={file?.SignedUrl} type="video/mp4" />

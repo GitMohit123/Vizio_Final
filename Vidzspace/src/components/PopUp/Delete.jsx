@@ -21,7 +21,7 @@ const Delete = () => {
     setDeletedFiles({})
   }
   return (
-    <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-10 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
+    <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-30 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
       <div className="relative popup bg-[#2f2f2f] w-5/12 h-44 p-5 flex flex-col rounded-sm border-2 border-[#4c4c4c]">
         <div className="absolute top-[-25px] left-1/2 transform -translate-x-1/2">
           <img

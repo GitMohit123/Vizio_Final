@@ -11,6 +11,8 @@ const ProjectState = ({ children }) => {
   const [deletedFiles, setDeletedFiles] = useState({});
   const [videoPercentageUploaded, setVideoPercentageUploaded] = useState(0);
   const [addPopUp, setAddPopUp] = useState(false);
+  const [addFolder,setAddFolder] = useState(false);
+  const [newFolderName,setNewFolderName] = useState("");
   const getDifferenceText = (pastTimeString) => {
     const currentDate = new Date();
     const timeDifference =
@@ -58,6 +60,10 @@ const ProjectState = ({ children }) => {
         getDifferenceText,
         addPopUp,
         setAddPopUp,
+        addFolder,
+        setAddFolder,
+        newFolderName,
+        setNewFolderName
       }}
     >
       {children}

@@ -292,3 +292,36 @@ export const updateProgress = async (
     throw error;
   }
 };
+
+export const createFolder = async (
+  folderPath,
+  teamPath,
+  userId,
+  folderName
+) => {
+  try {
+    const { data } = await axios.post(
+      "/vidzspaceApi/users/s3/createFolder",
+      {
+        folderPath,
+        teamPath,
+        folderName,
+      },
+      {
+        params: {
+          userId,
+        },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log(data);
+
+    return data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
