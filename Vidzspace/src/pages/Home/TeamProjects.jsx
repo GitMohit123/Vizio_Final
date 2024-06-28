@@ -1,5 +1,5 @@
 import React, { useContext, useRef, useState } from "react";
-import { FaPhotoVideo } from "react-icons/fa";
+import { FaPhotoVideo, FaPlus } from "react-icons/fa";
 import HomeContext from "../../context/homePage/HomeContext";
 import { TbCloudUpload } from "react-icons/tb";
 import { motion } from "framer-motion";
@@ -53,8 +53,14 @@ const TeamProjects = () => {
     handleDelete,
     handleDeleteFolder,
   } = useContext(HomeContext);
-  const { deletePopup, setDeletePopup, deletedFiles, setDeletedFiles,getDifferenceText } =
-    useContext(ProjectContext);
+  const {
+    deletePopup,
+    setDeletePopup,
+    deletedFiles,
+    setDeletedFiles,
+    getDifferenceText,
+    addPopUp,setAddPopUp
+  } = useContext(ProjectContext);
   const display = path.split("/");
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -174,12 +180,12 @@ const TeamProjects = () => {
       });
   };
 
-  const handleDoubleClick = (file)=>{
-    navigate("/feedback",{state:{file:file}})
+  const handleDoubleClick = (file) => {
+    navigate("/feedback", { state: { file: file } });
     setTimeout(() => {
       setVideoContainer(false);
     }, 2000);
-  }
+  };
 
   return (
     <>
@@ -208,27 +214,37 @@ const TeamProjects = () => {
               </div>
             ))}
           </div>
-          <div className="flex flex-row justify-center items-center px-2 gap-3">
-            <motion.div
-              className="p-1 px-4 rounded-xl text-black bg-[#f8ff2a]"
-              // onClick={handleCancelClick}
-            >
-              <div className="flex flex-row w-full justify-center items-center gap-2">
-                <p>Create Folder</p>
-                <TbCloudUpload />
-              </div>
-            </motion.div>
+          {path!=="" && (
+            <div className="flex justify-center items-center px-2 gap-3">
             <motion.button
-              // onClick={handleCreateTeamClick}
-              // onClick={handleCreateProjectClick}
               className={`p-1 px-4 rounded-xl text-black bg-[#f8ff2a]`}
             >
-              <div className="flex flex-row w-full justify-center items-center gap-2">
-                <p>Upload Media</p>
-                <TbCloudUpload />
+              <div className="flex relative flex-row w-full justify-center items-center gap-2" onClick={()=>setAddPopUp((prev)=>!prev)}>
+                <FaPlus />
+                <p className="cursor-pointer" >
+                  Add
+                </p>
+
+                {addPopUp && (
+                  <div className="dropdown absolute w-36 top-10 bg-white rounded-lg shadow-lg z-10">
+                    {/* Dropdown content */}
+                    <ul className="py-1">
+                      <li className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100">
+                        Create Folder
+                      </li>
+                      <li className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100">
+                        Upload Files
+                      </li>
+                      <li className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100">
+                        Upload Folder
+                      </li>
+                    </ul>
+                  </div>
+                )}
               </div>
             </motion.button>
           </div>
+          )}
         </div>
       </div>
       {load && <CMSLoader />}
@@ -361,7 +377,7 @@ const TeamProjects = () => {
               <div
                 key={index}
                 className="p-4 bg-[#35353a] rounded-lg text-white relative cursor-pointer"
-                onDoubleClick={()=>{
+                onDoubleClick={() => {
                   console.log("DOUBLE");
                   handleDoubleClick(file);
                 }}
@@ -379,7 +395,7 @@ const TeamProjects = () => {
                         setVideoPreview(index);
                         setTimeout(() => {
                           setVideoContainer(true);
-                      }, 1000);
+                        }, 1000);
                       }}
                     ></video>
                   </motion.div>
