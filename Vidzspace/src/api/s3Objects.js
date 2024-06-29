@@ -325,3 +325,18 @@ export const createFolder = async (
     throw error;
   }
 };
+
+export const copyObject = async ({srcKey, destPath, type, user_id}) => {
+  try {
+    const response = await axios.post(`/vidzspaceApi/users/s3/copyObject`, {
+        requester_id: user_id,
+        srcKey,
+        destPath,
+        type,
+    });
+    console.log(response.data);
+    return response.data;
+  } catch (err) {
+    console.log(err);
+  }
+};

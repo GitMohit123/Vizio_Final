@@ -14,7 +14,8 @@ import archiver from "archiver";
 import { s3Client } from "../s3config.js";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import admin from "../index.js";
-import { log } from "console";
+import { params } from "firebase-functions";
+import { PassThrough } from "stream";
 
 const prefix = "users/";
 
@@ -652,7 +653,7 @@ export const generationUploadUrl = async (req, res, next) => {
         sharing: sharing || "none",
         sharingtype: sharingType || "none",
         sharingwith: sharingWith || "[]",
-        progress: progress || "upcoming",
+        progress: progress || "Upcoming",
         ownerName: ownerName || "cant read",
       },
     });
@@ -771,3 +772,103 @@ export const createFolder = async (req, res, next) => {
     next(error);
   }
 };
+
+async function copyFolder({ fromBucket, fromLocation, toBucket = fromBucket, toLocation }) {
+  let count = 0;
+  const recursiveCopy = async function(token) {
+    const listCommand = new ListObjectsV2Command({
+      Bucket: fromBucket,
+      Prefix: fromLocation,
+      ContinuationToken: token
+    });
+    let list = await s3Client.send(listCommand); // get the list
+    if (list.KeyCount) { // if items to copy
+      const fromObjectKeys = list.Contents.map(content => content.Key); // get the existing object keys
+      for (let fromObjectKey of fromObjectKeys) { // loop through items and copy each one
+        const toObjectKey = fromObjectKey.replace(fromLocation, toLocation); // replace with the destination in the key
+        // copy the file
+        const copyCommand = new CopyObjectCommand({
+          // ACL: 'public-read',
+          Bucket: toBucket,
+          CopySource: `${fromBucket}/${fromObjectKey}`,
+          Key: toObjectKey
+        });
+        await s3Client.send(copyCommand);
+        count += 1;
+      }
+    }
+    if (list.NextContinuationToken) {
+      recursiveCopy(list.NextContinuationToken);
+    }
+    return `${count} files copied.`;
+  };
+  return recursiveCopy();
+};
+
+export const copyObject = async (req, res) => {
+  //destPath = path after 'users/'
+  console.log("hi");
+  const { srcKey, destPath, type } = req.body;
+
+  try {
+    const sourceKey = prefix + srcKey;
+    const owner_id = getOwnerIdFromObjectKey(sourceKey);
+    console.log(owner_id);
+    const ownerFirebaseData = await admin.auth().getUser(owner_id);
+    const ownerEmail = ownerFirebaseData.toJSON().email;
+
+    const newMetadata = {
+      sharing: "none",
+      sharingType: "none",
+      sharingWith: "[]",
+      ownerId: owner_id,
+      ownerEmail: ownerEmail,
+      progress: "Upcoming",
+    };
+
+    if (type === "folder") {
+      // const folderName = srcKey.split('/').pop();
+      // const emptyFolderResponse = await generationUploadUrl({path: destPath+'/'+folderName, user_id: owner_id});
+
+      const newDestPath = destPath + "/" + srcKey.split("/").pop();
+      const emptyFolderResponse = await createEmptyFolder(
+        newDestPath,
+      )
+      if(emptyFolderResponse) console.log("Folder created");
+
+      const response = await copyFolder({
+        fromBucket: "vidzspace",
+        fromLocation: sourceKey,
+        toBucket: "vidzspace",
+        toLocation: `${prefix + newDestPath}`
+      });
+
+      return res.json({ success: true, response });
+    }
+
+    const command = new CopyObjectCommand({
+      Bucket: "vidzspace",
+      CopySource: `/vidzspace/${sourceKey}`,
+      Key: `${prefix + destPath}/${sourceKey.split("/").pop()}`,
+      Metadata: newMetadata,
+      MetadataDirective: "REPLACE",
+    });
+    const response = await s3Client.send(command);
+
+    res.json({
+      success: true,
+      newKey: `${prefix + destPath}/${sourceKey.split("/").pop()}`,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const createEmptyFolder = async (path, user_id) => {
+  const command = new PutObjectCommand({
+    Bucket: "vidzspace",
+    Key: `users/${path}/`,
+  });
+  const response = await s3Client.send(command);
+  return response;
+}

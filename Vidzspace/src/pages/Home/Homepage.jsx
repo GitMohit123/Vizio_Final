@@ -3,7 +3,12 @@ import { FaArrowRightLong } from "react-icons/fa6";
 import { teamProjectsInfoList } from "../../constants/homePage";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import { createTeam, fetchTeamsData, listTeams } from "../../api/s3Objects";
+import {
+  createTeam,
+  fetchTeamsData,
+  listTeams,
+  copyObject,
+} from "../../api/s3Objects";
 import { CgProfile } from "react-icons/cg";
 import { FiLogOut } from "react-icons/fi";
 import {
@@ -18,7 +23,11 @@ import { FaPlus } from "react-icons/fa";
 import TeamAdd from "../../components/PopUp/TeamAdd";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { FaSearch } from "react-icons/fa";
-import { setCMSData, setProjectState, setTeamPath } from "../../app/Actions/cmsAction";
+import {
+  setCMSData,
+  setProjectState,
+  setTeamPath,
+} from "../../app/Actions/cmsAction";
 import TeamProjects from "./TeamProjects";
 import TeamInfo from "./TeamInfo";
 import UpgradePlan from "./UpgradePlan";
@@ -47,11 +56,19 @@ const Homepage = () => {
     isTeamDropDownOpen,
     setIsTeamDropDownOpen,
     path,
-    load
+    load,
   } = useContext(HomeContext);
-  const {isUploadingProgressOpen,deletePopup,addFolder} = useContext(ProjectContext);
+  const {
+    isUploadingProgressOpen,
+    deletePopup,
+    addFolder,
+    isPastingObject,
+    setIsPastingObject,
+    copiedObject,
+    setCopiedObject,
+  } = useContext(ProjectContext);
 
-  const {handleSignOut} = useContext(FirebaseContext)
+  const { handleSignOut } = useContext(FirebaseContext);
   // console.log(path)
 
   useEffect(() => {
@@ -60,21 +77,24 @@ const Homepage = () => {
     }
   }, [team]);
 
-  useEffect(()=>{
-    const currentTeamPath = currentTeam
-    const fetchData = async()=>{
-      try{
+  useEffect(() => {
+    const currentTeamPath = currentTeam;
+    const fetchData = async () => {
+      try {
         const userId = user?.uid;
-        const response = await fetchTeamsData(`${userId}/${currentTeamPath}/${path}`,userId);
+        const response = await fetchTeamsData(
+          `${userId}/${currentTeamPath}/${path}`,
+          userId
+        );
         const filesData = response?.files;
         const folderData = response?.folders;
-        dispatch(setCMSData(filesData,folderData));
-      }catch(err){
-        console.log("Unable to fetch data")
+        dispatch(setCMSData(filesData, folderData));
+      } catch (err) {
+        console.log("Unable to fetch data");
       }
-    }
-    fetchData()
-  },[currentTeam,user,path])
+    };
+    fetchData();
+  }, [currentTeam, user, path]);
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -121,7 +141,7 @@ const Homepage = () => {
     <div className="h-screen w-screen bg-[#1B1B1B] flex flex-row">
       {/* Section1 */}
       <div className="team-section flex h-full w-[5%] flex-col gap-5 py-3 px-2 items-center">
-        <img src="/icons/vizioLogo.png" alt="Vid" className="h-6 w-6"/>
+        <img src="/icons/vizioLogo.png" alt="Vid" className="h-6 w-6" />
         <div className="flex w-full flex-col gap-2">
           {team?.map((team, index) => {
             return (
@@ -152,7 +172,7 @@ const Homepage = () => {
       </div>
 
       {/* Section 2 */}
-      <div className="team-projects-info flex bg-[#242426] h-full w-1/6 p-2 rounded-lg flex-col gap-4 relative">
+      <div className={`team-projects-info flex bg-[#242426] h-full w-1/6 p-2 rounded-lg flex-col gap-4 relative ${isPastingObject?'hidden':""}`}>
         <motion.div
           onClick={handleDropDownClick}
           className="bg-[#2f2f2f] flex w-full h-fit p-2 rounded-lg justify-center items-center text-[#f8ff2a] cursor-pointer "
@@ -250,9 +270,9 @@ const Homepage = () => {
         {/* Projects */}
         <div className="relative flex flex-col w-full h-full bg-[#242426] rounded-lg p-5 overflow-y-auto">
           {projectState && <ProjectAdd />}
-          {deletePopup && <Delete/>}
-          {isUploadingProgressOpen && <UploadProgress/>}
-          {addFolder && <FolderAdd/>}
+          {deletePopup && <Delete />}
+          {isUploadingProgressOpen && <UploadProgress />}
+          {addFolder && <FolderAdd />}
           {teamState && <TeamAdd />}
           {optionState === "Team Projects" && <TeamProjects />}
           {optionState === "Team Info" && <TeamInfo />}

@@ -24,6 +24,7 @@ import {
   deleteVideoFolder,
   download,
   fetchTeamsData,
+  copyObject,
 } from "../../api/s3Objects";
 import Rename from "../../components/PopUp/Rename";
 import ProjectContext from "../../context/project/ProjectContext";
@@ -59,12 +60,62 @@ const TeamProjects = () => {
     deletedFiles,
     setDeletedFiles,
     getDifferenceText,
-    addPopUp,setAddPopUp,
-    setAddFolder
+    addPopUp,
+    setAddPopUp,
+    setAddFolder,
+    isPastingObject,
+    setIsPastingObject,
+    copiedObject,
+    setCopiedObject,
   } = useContext(ProjectContext);
   const display = path.split("/");
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const fetchData = async () => {
+    const currentTeamPath = currentTeam;
+    try {
+      const userId = user?.uid;
+      const response = await fetchTeamsData(
+        `${userId}/${currentTeamPath}/${path}`,
+        userId
+      );
+      const filesData = response?.files || [];
+      const folderData = response?.folders || [];
+      dispatch(setCMSData(filesData, folderData));
+    } catch (err) {
+      console.log("Unable to fetch data");
+    }
+  };
+
+  const handlePasteObject = async () => {
+    setLoad(true);
+    setIsPastingObject(false);
+    const ownerId = user?.uid; //for testing only
+    console.log("pasting object at: ", ownerId + "/" + teamPath + "/" + path);
+    try {
+      const response = await copyObject({
+        srcKey: copiedObject?.key,
+        destPath: `${ownerId}/${teamPath}/${path}`,
+        type: copiedObject?.type,
+        user_id: user?.uid,
+      });
+      console.log(response);
+      await fetchData();
+      setLoad(false);
+      setCopiedObject({});
+    } catch (error) {
+      console.log("error during pasting: ", error);
+    }
+  };
+  const handleCopy = ({ name, type }) => {
+    const ownerId = user?.uid; //for testing only
+    const fullSrcKey =
+      ownerId + "/" + teamPath + "/" + (path ? path + "/" : "") + name;
+    console.log("fullsrcpath: ", fullSrcKey);
+    setCopiedObject({ key: fullSrcKey, type: type });
+    setIsPastingObject(true);
+  };
 
   const extractName = (filename) => {
     const match = filename.match(/.*_(.+)$/);
@@ -135,6 +186,8 @@ const TeamProjects = () => {
     if (option_passed === "Share") {
     }
     if (option_passed === "Copy") {
+      handleCopy({ name: file?.Key, type: "file" });
+      closeSidebar();
     }
     if (option_passed === "Download") {
       handleDownload(path, file?.Key, "file");
@@ -161,6 +214,8 @@ const TeamProjects = () => {
     if (option_passed === "Share") {
     }
     if (option_passed === "Copy") {
+      handleCopy({ name: folder?.Key, type: "folder" });
+      closeSidebar();
     }
     if (option_passed === "Download") {
       handleDownload(path, folder?.Key, "folder");
@@ -188,11 +243,11 @@ const TeamProjects = () => {
     }, 2000);
   };
 
-  const handleNewFolderClick =()=>{
-    console.log("clicked")
-    setAddFolder((prev)=>!prev);
+  const handleNewFolderClick = () => {
+    console.log("clicked");
+    setAddFolder((prev) => !prev);
     // setAddPopUp(false);
-  }
+  };
 
   return (
     <>
@@ -221,37 +276,48 @@ const TeamProjects = () => {
               </div>
             ))}
           </div>
-          {path!=="" && (
-            <div className="flex justify-center items-center px-2 gap-3">
-            <motion.button
-              className={`p-1 px-4 rounded-xl text-black bg-[#f8ff2a]`}
-            >
-              <div className="flex relative flex-row w-full justify-center items-center gap-2" onClick={()=>setAddPopUp((prev)=>!prev)}>
-                <FaPlus />
-                <p className="cursor-pointer" >
-                  Add
-                </p>
-
-                {addPopUp && (
-                  <div className="dropdown absolute w-36 top-10 bg-white rounded-lg shadow-lg z-20">
-                    {/* Dropdown content */}
-                    <ul className="py-1">
-                      <li onClick={handleNewFolderClick} className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100">
-                        Create Folder
-                      </li>
-                      <li className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100">
-                        Upload Files
-                      </li>
-                      <li className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100">
-                        Upload Folder
-                      </li>
-                    </ul>
-                  </div>
-                )}
+          <div className="flex flex-row gap-3 justify-center items-center">
+            {isPastingObject && (
+              <div
+                className="bg-[#f8ff2a] text-black rounded-xl p-1 px-4 z-20 cursor-pointer"
+                onClick={() => handlePasteObject()}
+              >
+                Paste
               </div>
-            </motion.button>
+            )}
+            {path !== "" && (
+              <div className="flex justify-center items-center px-2 gap-3">
+                <motion.button className="p-1 px-4 rounded-xl text-black bg-[#f8ff2a]">
+                  <div
+                    className="flex relative flex-row w-full justify-center items-center gap-2"
+                    onClick={() => setAddPopUp((prev) => !prev)}
+                  >
+                    <FaPlus />
+                    <p className="cursor-pointer">Add</p>
+                    {addPopUp && (
+                      <div className="dropdown absolute w-36 top-10 bg-white rounded-lg shadow-lg z-20">
+                        {/* Dropdown content */}
+                        <ul className="py-1">
+                          <li
+                            onClick={handleNewFolderClick}
+                            className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100"
+                          >
+                            Create Folder
+                          </li>
+                          <li className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100">
+                            Upload Files
+                          </li>
+                          <li className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100">
+                            Upload Folder
+                          </li>
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </motion.button>
+              </div>
+            )}
           </div>
-          )}
         </div>
       </div>
       {load && <CMSLoader />}
@@ -267,7 +333,11 @@ const TeamProjects = () => {
           </motion.div>
         </div>
       ) : (
-        <div className="h-full w-full p-4">
+        <div
+          className={`h-full w-full p-4 ${
+            isPastingObject ? "filter brightness-75" : ""
+          }`}
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6">
             {folders?.map((folder, index) => (
               <div

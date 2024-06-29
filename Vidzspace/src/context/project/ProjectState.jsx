@@ -37,6 +37,8 @@ const ProjectState = ({ children }) => {
       return "now";
     }
   };
+  const [isPastingObject, setIsPastingObject] = useState(false);
+  const [copiedObject, setCopiedObject] = useState({});
 
   return (
     <ProjectContext.Provider
@@ -63,7 +65,11 @@ const ProjectState = ({ children }) => {
         addFolder,
         setAddFolder,
         newFolderName,
-        setNewFolderName
+        setNewFolderName,
+        isPastingObject,
+        setIsPastingObject,
+        copiedObject,
+        setCopiedObject,
       }}
     >
       {children}
