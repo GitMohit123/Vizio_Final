@@ -26,19 +26,56 @@ const ProjectState = ({ children }) => {
     const minutes = Math.floor(seconds / secondsInMinute);
     const hours = Math.floor(minutes / minutesInHour);
     const days = Math.floor(hours / hoursInDay);
-
+    if (days > 0) {
+      if(days===1){
+        return `${days} day ago`;
+      }else{
+        return `${days} days ago`;
+      }
+    } else if (hours > 0) {
+      if(hours===1){
+        return `${hours} hour ago`;
+      }else{
+        return `${hours} hours ago`;
+      }
+    } else if (minutes > 0) {
+      return `${minutes} mins ago`;
+    } else {
+      return "now";
+    }
+  };
+  const getDifferenceTextFromTimestamp = (pastTimestamp) => {
+    const currentDate = new Date();
+    const timeDifference = currentDate.getTime() - pastTimestamp;
+    const millisecondsInSecond = 1000;
+    const secondsInMinute = 60;
+    const minutesInHour = 60;
+    const hoursInDay = 24;
+  
+    const seconds = Math.floor(timeDifference / millisecondsInSecond);
+    const minutes = Math.floor(seconds / secondsInMinute);
+    const hours = Math.floor(minutes / minutesInHour);
+    const days = Math.floor(hours / hoursInDay);
+  
     if (days > 0) {
       return `${days} days ago`;
     } else if (hours > 0) {
-      return `${hours} hours ago`;
+      if(hours===1){
+        return `${hours} hour ago`;
+      }
+      else{
+        return `${hours} hours ago`;
+      }
     } else if (minutes > 0) {
-      return `${minutes} minutes ago`;
+      return `${minutes} mins ago`;
     } else {
       return "now";
     }
   };
   const [isPastingObject, setIsPastingObject] = useState(false);
   const [copiedObject, setCopiedObject] = useState({});
+  const [videoTimeSec, setVideoTimeSec] = useState(0);
+  const [videoTimeMin, setVideoTimeMin] = useState(0);
 
   return (
     <ProjectContext.Provider
@@ -70,6 +107,11 @@ const ProjectState = ({ children }) => {
         setIsPastingObject,
         copiedObject,
         setCopiedObject,
+        getDifferenceTextFromTimestamp,
+        videoTimeMin,
+        videoTimeSec,
+        setVideoTimeMin,
+        setVideoTimeSec
       }}
     >
       {children}

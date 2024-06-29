@@ -6,6 +6,7 @@ import admin from "firebase-admin";
 import { serviceAccountKey } from "./firebaseServiceAccountKey.js";
 import userRouter from "./routes/userAuth.js"
 import s3router from "./routes/s3Objects.js";
+import commentsrouter from "./routes/comments.js";
 admin.initializeApp({
     credential:admin.credential.cert(serviceAccountKey)
 });
@@ -35,6 +36,7 @@ app.get("/", (req, res) => {
 
 app.use("/vidzspaceApi/users/auth", userRouter);
 app.use("/vidzspaceApi/users/s3",s3router);
+app.use("/vidzspaceApi/users/comments",commentsrouter);
 // // app.use("/server/api", userRouter)
 // app.use("/api/commentSection", commentRouter);
 
