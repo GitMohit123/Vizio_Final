@@ -14,7 +14,7 @@ const CMSLoader = () => {
             visible={true} // Assuming you want it visible by default
           />
         </div>
-        <p className="text-[#AEA00D] text-xl">Vidzspace</p>
+        <p className="text-[#AEA00D] text-xl">Vizio</p>
       </div>
     </div>
   );

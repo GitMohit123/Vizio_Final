@@ -53,3 +53,50 @@ export const deleteComment = async(userId,commentId)=>{
       console.log("Error : ", err)
     }
   }
+
+  export const editComment = async(userId,video_comment_id,newMessage)=>{
+    try{
+      const response = await axios.post(`/vidzspaceApi/users/comments/editComment`,
+        {
+          userId:userId,
+          commentId:video_comment_id,
+          newMessage:newMessage
+        }
+      );
+      console.log(response.data);
+      return response.data;
+    }catch(err){
+      console.log("Unable to edit the comment",err);
+    }
+  }
+
+  export const likeComment = async(userId,video_comment_id,visibility)=>{
+    try{
+      const response = await axios.post(`/vidzspaceApi/users/comments/likeComment`,
+        {
+          userId:userId,
+          commentId:video_comment_id,
+          visibility:visibility
+        }
+      );
+      console.log(response.data);
+      return response.data;
+    }catch(err){
+      console.log("Unable to like the comment",err);
+    }
+  }
+  export const updateProgress = async(userId,video_comment_id,progress)=>{
+    try{
+      const response = await axios.post(`/vidzspaceApi/users/comments/updateCommentProgress`,
+        {
+          userId:userId,
+          commentId:video_comment_id,
+          progress:progress
+        }
+      );
+      console.log(response.data);
+      return response.data;
+    }catch(err){
+      console.log("Unable to update the comment progress",err);
+    }
+  }

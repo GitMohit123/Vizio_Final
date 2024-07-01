@@ -3,6 +3,8 @@ import HomeContext from "../../context/homePage/HomeContext";
 import ProjectContext from "../../context/project/ProjectContext";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
+import { ImCross } from "react-icons/im";
+import { FaFolder, FaPhotoVideo } from "react-icons/fa";
 
 const UploadProgress = () => {
   const {
@@ -18,16 +20,40 @@ const UploadProgress = () => {
     videoPercentageUploaded,
   } = useContext(ProjectContext);
 
+  const getFolderName = (path) => {
+    const parts = path.split("/");
+    if (parts.length > 1) {
+      return parts.slice(0, -1).join("/");
+    }
+    return path;
+  };
+
   return (
-    <div className="absolute w-1/5 max-h-[167.2px] flex justify-end items-end z-30 right-5 bottom-5">
-      <div className="popup bg-[#383838] h-full max-h-[167.2px] overflow-auto no-scrollbar w-full p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c] text-white">
-        <h3 className="text-lg text-center w-full">Uploading files</h3>
+    <div className="absolute w-1/5 max-h-[167.2px] flex flex-col justify-end items-end z-30 right-5 bottom-5 rounded-lg">
+      <h3 className="text-lg w-full text-black bg-gray-200 p-2 rounded-tr-lg px-3 rounded-tl-lg">
+        Uploading files
+      </h3>
+      <div className="bg-white popup h-full max-h-[167.2px] overflow-auto no-scrollbar w-full flex flex-col text-black p-2 px-3 rounded-b-lg gap-2">
         {selectedFiles?.map((file, index) => (
           <div
             key={index}
             className="flex flex-row gap-3 items-center justify-between py-1"
           >
-            <p className="text-sm truncate max-w-[75%]">{file.path}</p>
+            <div className="flex flexe-row gap-2 justify-center items-center">
+              {file.path.includes("/") ? (
+                <>
+                  <FaFolder />
+                  <p className="text-sm truncate max-w-full">
+                    {getFolderName(file.path)}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <FaPhotoVideo />
+                  <p className="text-sm truncate max-w-full">{file.path}</p>
+                </>
+              )}
+            </div>
             {
               //  isUploadingFiles?
               selectedFilesWithUrls.length >= index &&
@@ -38,6 +64,10 @@ const UploadProgress = () => {
                     text={`${videoPercentageUploaded}%`}
                     styles={buildStyles({
                       // textSize: '20px',
+                      pathColor: videoPercentageUploaded < 50 ? "red" : "black", // Change path color based on percentage
+                      textColor: "black", // Text color
+                      trailColor: "gray", // Trail color
+                      backgroundColor: "blue", // Background color
                       pathTransition: "none",
                     })}
                   />
@@ -55,28 +85,12 @@ const UploadProgress = () => {
                   }}
                   className="cursor-pointer"
                 >
-                  x
+                  <ImCross className="text-xs" />
                 </p>
               )
             }
           </div>
         ))}
-        {/* {selectedFolders?.map((folder, index) => (
-                  <div
-                    key={index}
-                    className="flex flex-row gap-3 items-center justify-between py-1"
-                  >
-                    <p className="text-sm truncate max-w-[75%]">{folder.name}</p>
-                    {
-                    //  isUploadingFiles?
-                    selectedFilesWithUrls.length>=index + selectedFiles.length && selectedFilesWithUrls[index + selectedFiles.length]?.isUploading===true?
-                     <div className="w-6 h-6 rounded-full animate-spin border border-solid border-yellow-500 border-t-transparent shadow-md"></div>
-                    :
-                     <p onClick={()=>{setSelectedFolders((currFiles)=>currFiles.filter((currFile)=>currFile.path !== file.path || currFile.size !== file.size))}} className="cursor-pointer">
-                      x</p>
-                    }
-                  </div>
-        ))} */}
       </div>
     </div>
   );

@@ -13,7 +13,6 @@ const VideoBox = ({ file }) => {
   // const video = document.getElementById("myVideo")
   const {setVideoTimeMin,setVideoTimeSec} = useContext(ProjectContext);
     const video = document.getElementById('myVideo');
-  
     video?.addEventListener('seeked', () => {
       const currentTime = Math.floor(video?.currentTime);
       const mins = Math.floor(currentTime/60);

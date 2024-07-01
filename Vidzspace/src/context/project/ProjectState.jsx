@@ -111,7 +111,7 @@ const ProjectState = ({ children }) => {
         videoTimeMin,
         videoTimeSec,
         setVideoTimeMin,
-        setVideoTimeSec
+        setVideoTimeSec,
       }}
     >
       {children}
