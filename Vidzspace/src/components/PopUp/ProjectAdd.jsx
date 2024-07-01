@@ -453,7 +453,7 @@ const ProjectAdd = () => {
   }, [selectedFiles, selectedFolders, selectedFilesWithUrls]);
 
   return (
-    <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-30 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
+    <div className="absolute h-[95%] w-full flex justify-center items-center z-30 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
       <div className="popup bg-[#383838] w-3/6 h-3/5 p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c]">
         {/* Title Section */}
         <div className="flex w-full px-2 mb-8">

@@ -573,7 +573,7 @@ const downloadFolder = async (key, res) => {
 
       const { Body } = await s3Client.send(fileCommand);
       //console.log(Body);
-      return { body: Body, name: path.relative(key, item.Key) };
+      return { body: Body, name: path.relative(key, item.Key),size:item.Size };
     };
 
     const fetchPromises = Contents?.map((item) => fetchFile(item));
@@ -581,7 +581,7 @@ const downloadFolder = async (key, res) => {
 
     for (const file of files) {
       // console.log("file", file.body, file.name);
-      if (!file.name) {
+      if (!file.name || file.size===0) {
         console.error(`Error: File name is empty for key`);
         continue; // Skip this file
       }

@@ -40,7 +40,7 @@ const UploadProgress = () => {
             className="flex flex-row gap-3 items-center justify-between py-1"
           >
             <div className="flex flexe-row gap-2 justify-center items-center">
-              {file.path.includes("/") ? (
+              {file?.path && file.path.includes("/") ? (
                 <>
                   <FaFolder />
                   <p className="text-sm truncate max-w-full">
@@ -52,6 +52,16 @@ const UploadProgress = () => {
                   <FaPhotoVideo />
                   <p className="text-sm truncate max-w-full">{file.path}</p>
                 </>
+              )}
+              {(file?.name) && (
+                <p className="text-sm truncate max-w-full">
+                  {file.path || file?.name}
+                </p>
+              )}
+              {file?.webkitRelativePath && (
+                <p className="text-sm truncate max-w-full">
+                {getFolderName(file?.webkitRelativePath)}
+              </p>
               )}
             </div>
             {

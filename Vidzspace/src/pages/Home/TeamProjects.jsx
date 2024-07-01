@@ -25,9 +25,11 @@ import {
   download,
   fetchTeamsData,
   copyObject,
+  getUploadPresignedUrl,
 } from "../../api/s3Objects";
 import Rename from "../../components/PopUp/Rename";
 import ProjectContext from "../../context/project/ProjectContext";
+import axios from "axios";
 
 const TeamProjects = () => {
   const {
@@ -53,6 +55,8 @@ const TeamProjects = () => {
     setSelectedItem,
     handleDelete,
     handleDeleteFolder,
+    selectedFiles,
+    setSelectedFiles,
   } = useContext(HomeContext);
   const {
     deletePopup,
@@ -68,7 +72,12 @@ const TeamProjects = () => {
     copiedObject,
     setCopiedObject,
     extractName,
-    convertBytesToGB
+    convertBytesToGB,
+    setSelectedFilesWithUrls,
+    selectedFilesWithUrls,
+    setIsUploadingProgressOpen,
+    setVideoPercentageUploaded,
+    setIsUploadingFiles,
   } = useContext(ProjectContext);
   const display = path.split("/");
   const dispatch = useDispatch();
@@ -235,6 +244,155 @@ const TeamProjects = () => {
     // setAddPopUp(false);
   };
 
+  const handleFileChange = async (e) => {
+    const files = Array.from(e.target.files);
+    console.log(files);
+    setSelectedFiles(files);
+    setIsUploadingProgressOpen(true);
+    const uploadPromises = files.map(async (file) => {
+      try {
+        const id = Date.now();
+        const fileName = `video_${id}_${file.name}`;
+        const contentType = file.type;
+        const user_id = user?.uid;
+        const fullPath = `${user_id}/${teamPath}/${path}`;
+        //
+        const result = await getUploadPresignedUrl({
+          fileName,
+          contentType,
+          user_id,
+          fullPath,
+        });
+        console.log(result.url);
+        return { file, presignedUrl: result.url };
+      } catch (error) {
+        console.log("Error uploading file", error);
+        return null;
+      }
+    });
+    try {
+      const validFilesWithUrls = (await Promise.all(uploadPromises)).filter(
+        (fileWithUrl) => fileWithUrl !== null
+      );
+      console.log("va;lid", validFilesWithUrls);
+      const filesWithUrls = [...validFilesWithUrls, ...selectedFilesWithUrls];
+      setSelectedFilesWithUrls((prevSelectedFiles) => [
+        ...prevSelectedFiles,
+        ...validFilesWithUrls,
+      ]);
+      console.log("All files uploaded successfully");
+      uploadFile(filesWithUrls);
+    } catch (error) {
+      console.log("Error uploading files", error);
+    }
+  };
+  const uploadToPresignedUrl = async (
+    //direct api call
+    presignedUrl,
+    file
+  ) => {
+    console.log("in apii: ", presignedUrl, file);
+    // Upload file to pre-signed URL
+    const uploadResponse = await axios.put(presignedUrl, file, {
+      headers: {
+        "Content-Type": "video/mp4",
+      },
+      onUploadProgress: (progressEvent) => {
+        const percentCompleted = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
+        console.log(`Upload Progress: ${percentCompleted}%`);
+        setVideoPercentageUploaded(percentCompleted);
+      },
+    });
+    return uploadResponse.status;
+  };
+  const uploadFile = async (filesWithUrls) => {
+    const sharing = "none";
+    const sharing_type = "none";
+    const sharing_with = [];
+    const progress = "Upcoming";
+    for (let i = 0; i < filesWithUrls.length; i++) {
+      const { file, presignedUrl } = filesWithUrls[i];
+      setSelectedFilesWithUrls((files) => {
+        files[i].isUploading = true;
+        return files;
+      });
+      try {
+        const data = await uploadToPresignedUrl(presignedUrl, file);
+        console.log("File uploaded successfully", data);
+        setSelectedFilesWithUrls((files) => {
+          files[i].isUploading = false;
+          return files;
+        });
+      } catch (error) {
+        console.log("Error uploading file", file.name, error);
+        // Handle error if required
+      }
+    }
+    if (!selectedFilesWithUrls) {
+      console.log("Files not found");
+    }
+    setIsUploadingFiles(false);
+    setLoad(false);
+    setIsUploadingProgressOpen(false);
+    setSelectedFilesWithUrls([]);
+    setSelectedFiles([]);
+    setVideoPercentageUploaded(0);
+    setAddPopUp(false);
+    await fetchData();
+  };
+  const handleFolderChange = async (e) => {
+    console.log(e.target.files);
+    const listedFiles = Array.from(e.target.files);
+    setIsUploadingProgressOpen(true);
+    setSelectedFiles(listedFiles);
+    const uploadPromises = listedFiles.map(async (file) => {
+      const id = Date.now();
+      const fileName = `video_${id}_${file.name}`;
+      const contentType = file.type;
+      const user_id = user?.uid;
+      const fullPath = `${user_id}/${teamPath}/${path}/${file?.webkitRelativePath?.substring(
+        0,
+        file?.webkitRelativePath.lastIndexOf("/")
+      )}`;
+      console.log("fup", fullPath);
+      try {
+        const result = await getUploadPresignedUrl({
+          fileName,
+          contentType,
+          user_id,
+          fullPath,
+        });
+        console.log(result.url);
+        return {
+          file,
+          presignedUrl: result.url,
+          lastModified: file.lastModified,
+        };
+      } catch (error) {
+        console.log("Error uploading file", error);
+        return null;
+      }
+    });
+    //
+    try {
+      const validFilesWithUrls = (await Promise.all(uploadPromises)).filter(
+        (fileWithUrl) => fileWithUrl !== null
+      );
+      const filesWithUrls = [...validFilesWithUrls, ...selectedFilesWithUrls];
+      setSelectedFilesWithUrls((prevSelectedFolder) => [
+        ...prevSelectedFolder,
+        ...validFilesWithUrls,
+      ]);
+      console.log("All files uploaded successfully");
+      console.log("fileswithurl", filesWithUrls);
+      uploadFile(filesWithUrls);
+    } catch (error) {
+      console.log("Error uploading files", error);
+    }
+  };
+
   return (
     <>
       <div className="flex flex-row w-full p-2 justify-between items-center">
@@ -273,15 +431,16 @@ const TeamProjects = () => {
             )}
             {path !== "" && (
               <div className="flex justify-center items-center px-2 gap-3">
-                <motion.button className="p-1 px-4 rounded-xl text-black bg-[#f8ff2a]">
+                <motion.button className="p-1 px-4 rounded-xl text-black bg-[#f8ff2a] relative">
                   <div
-                    className="flex relative flex-row w-full justify-center items-center gap-2"
+                    className="flex flex-row w-full justify-center items-center gap-2"
                     onClick={() => setAddPopUp((prev) => !prev)}
                   >
                     <FaPlus />
                     <p className="cursor-pointer">Add</p>
-                    {addPopUp && (
-                      <div className="dropdown absolute w-36 top-10 bg-white rounded-lg shadow-lg z-20">
+                  </div>
+                  {addPopUp && (
+                      <div className="dropdown absolute w-36 top-10 -right-8 bg-white rounded-lg shadow-lg z-20">
                         {/* Dropdown content */}
                         <ul className="py-1">
                           <li
@@ -291,15 +450,35 @@ const TeamProjects = () => {
                             Create Folder
                           </li>
                           <li className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100">
-                            Upload Files
+                            <label>
+                              Upload Files
+                              <input
+                                type="file"
+                                name="upload-video"
+                                accept="video/*"
+                                onChange={handleFileChange}
+                                className="hidden"
+                                multiple
+                              />
+                            </label>
                           </li>
                           <li className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100">
-                            Upload Folder
+                            <label>
+                              Upload Folder
+                              <input
+                                type="file"
+                                webkitdirectory="true"
+                                mozdirectory="true"
+                                directory=""
+                                multiple
+                                onChange={handleFolderChange}
+                                className="hidden"
+                              />
+                            </label>
                           </li>
                         </ul>
                       </div>
                     )}
-                  </div>
                 </motion.button>
               </div>
             )}
