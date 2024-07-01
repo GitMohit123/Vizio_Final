@@ -4,8 +4,15 @@ import { FaCheck, FaRegHeart } from "react-icons/fa";
 import { FaHeart } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { FaPencil } from "react-icons/fa6";
-import { deleteComment, editComment, likeComment, updateProgress } from "../../api/Comments";
+import {
+  createComment,
+  deleteComment,
+  editComment,
+  likeComment,
+  updateProgress,
+} from "../../api/Comments";
 import HomeContext from "../../context/homePage/HomeContext";
+import ReplyForm from "./ReplyForm";
 const Comment = ({
   commentObject,
   replies,
@@ -14,8 +21,13 @@ const Comment = ({
   setActiveComments,
 }) => {
   const { load, setLoad, user } = useContext(HomeContext);
+  const { videoTimeMin, videoTimeSec } = useContext(ProjectContext);
   const [isEditing, setIsEditing] = useState(false);
   const [editedComment, setEditedComment] = useState(commentObject?.comment);
+  const [clickCount, setClickCount] = useState(0);
+
+  const isReplying =
+    activeComments && activeComments.id === commentObject?.video_comment_id;
 
   const handleEditClick = () => {
     setIsEditing(!isEditing);
@@ -49,6 +61,37 @@ const Comment = ({
     const secondsInMins = seconds % 60;
     return `${mins}:${secondsInMins}`;
   };
+  const extractParts = (str) => {
+    const lastDashIndex = str.lastIndexOf("-");
+    const videoName = str.substring(0, lastDashIndex);
+    const reply_id = str.substring(lastDashIndex + 1);
+    return { videoName, reply_id };
+  };
+  const handleReply = async (text, video_comment_id) => {
+    setLoad(true);
+    console.log(text, video_comment_id);
+    const { videoName, reply_id } = extractParts(video_comment_id);
+    console.log(videoName, reply_id);
+    try {
+      const userId = user?.uid;
+      const territory_id = user?.name;
+      const videoTime = videoTimeMin * 60 + videoTimeSec;
+      const response = await createComment(
+        text,
+        userId,
+        territory_id,
+        videoName,
+        reply_id,
+        videoTime
+      );
+      console.log("Reply Created : Message from Frontend");
+      console.log(response);
+      setActiveComments(null);
+      setLoad(false);
+    } catch (err) {
+      console.log("Unable to reply Comment");
+    }
+  };
   const handleEditComment = async (video_comment_id) => {
     handleEditClick();
     setLoad(true);
@@ -56,8 +99,8 @@ const Comment = ({
       const userId = user?.uid;
       const commentId = video_comment_id;
       const response = await editComment(userId, commentId, editedComment);
-      const progressResponse = await updateProgress(userId,commentId,false);
-      console.log(response,progressResponse);
+      const progressResponse = await updateProgress(userId, commentId, false);
+      console.log(response, progressResponse);
       setLoad(false);
     } catch (err) {
       console.log("Error in editing comment", err);
@@ -90,6 +133,17 @@ const Comment = ({
       setLoad(false);
     }
   };
+  const handleReplyClick = () => {
+    setClickCount((prevCount) => {
+      const newCount = prevCount + 1;
+      if (newCount % 2 !== 0) {
+        setActiveComments({ id: commentObject?.video_comment_id });
+      } else {
+        setActiveComments(null);
+      }
+      return newCount;
+    });
+  };
 
   const firstLetter = commentObject?.territory_id?.charAt(0).toUpperCase();
   const { getDifferenceTextFromTimestamp } = useContext(ProjectContext);
@@ -102,11 +156,21 @@ const Comment = ({
       >
         <div className="absolute -top-0 right-2 transform translate-x-1/2 -translate-y-1/2">
           {commentObject?.progress === true ? (
-            <div onClick={() => handleProgress(commentObject?.video_comment_id, false)} className="w-4 h-4 bg-gray-700 border border-gray-600 flex items-center justify-center">
+            <div
+              onClick={() =>
+                handleProgress(commentObject?.video_comment_id, false)
+              }
+              className="w-4 h-4 bg-gray-700 border border-gray-600 flex items-center justify-center"
+            >
               <FaCheck className="text-green-500" />
             </div>
           ) : (
-            <div onClick={() => handleProgress(commentObject?.video_comment_id, true)} className="w-4 h-4 bg-gray-700 border border-gray-600"></div>
+            <div
+              onClick={() =>
+                handleProgress(commentObject?.video_comment_id, true)
+              }
+              className="w-4 h-4 bg-gray-700 border border-gray-600"
+            ></div>
           )}
         </div>
         {/* Subheading */}
@@ -167,7 +231,9 @@ const Comment = ({
         </div>
 
         <div className="flex flex-row justify-between items-center w-full px-2 pt-3">
-          <p className="text-sm text-gray-400">Reply</p>
+          <p className="text-sm text-gray-400" onClick={handleReplyClick}>
+            Reply
+          </p>
           <div className="flex flex-row gap-4 justify-center items-center">
             {/* <FaPencil className="cursor-pointer text-sm text-gray-400" /> */}
             {isEditing ? (
@@ -192,7 +258,11 @@ const Comment = ({
           </div>
         </div>
       </div>
-
+      {isReplying && (
+        <div className="ml-10 my-1">
+          <ReplyForm handleReply={handleReply} parentId={activeComments?.id} />
+        </div>
+      )}
       {replies.length > 0 && (
         <div className="ml-10 my-1">
           {replies.map((reply, index) => (
