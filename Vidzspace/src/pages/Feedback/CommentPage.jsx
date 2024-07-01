@@ -3,35 +3,43 @@ import VideoBox from "../../components/FeedBack/VideoBox";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MdOutlineAccountCircle } from "react-icons/md";
 import { IoMdArrowRoundBack } from "react-icons/io";
-import { FaSearch } from "react-icons/fa";
+import { FaPhotoVideo, FaSearch } from "react-icons/fa";
 import CommentSection from "../../components/FeedBack/CommentSection";
 import { fetchCommentsApi } from "../../api/Comments";
 import HomeContext from "../../context/homePage/HomeContext";
+import ProjectContext from "../../context/project/ProjectContext";
+import { setCurrentTeam } from "../../app/Actions/teamActions";
 
 const CommentPage = () => {
   const location = useLocation();
   const { file } = location.state || {};
   const navigate = useNavigate();
-  const {user} = useContext(HomeContext);
+  const { user } = useContext(HomeContext);
   const firstLetter = user?.name.charAt(0).toUpperCase();
-  const {load} = useContext(HomeContext);
+  const { load,path,teamPath,handleTeamClick,currentTeam } = useContext(HomeContext);
+  const {extractName} = useContext(ProjectContext);
 
-  const [backendComments,setBackendComments] = useState([]);
+  const [backendComments, setBackendComments] = useState([]);
 
-  useEffect(()=>{
-   const fetchCommentsData = async()=>{
-    try{
-      const videoName = file?.Key;
-      const userId = user?.uid;
-      const response = await fetchCommentsApi(userId,videoName);
-      setBackendComments(response);
-      console.log(response);
-    }catch(err){
-      console.log("Unable to fetch comments in Api",err);
-    }
-   }
-   fetchCommentsData();
-  },[load])
+  useEffect(() => {
+    const fetchCommentsData = async () => {
+      try {
+        const videoName = file?.Key;
+        const userId = user?.uid;
+        const response = await fetchCommentsApi(userId, videoName);
+        setBackendComments(response);
+        console.log(response);
+      } catch (err) {
+        console.log("Unable to fetch comments in Api", err);
+      }
+    };
+    fetchCommentsData();
+  }, [load]);
+  const handleBack = ()=>{
+    navigate("/home");
+    console.log(currentTeam)
+    handleTeamClick(currentTeam);
+  }
   return (
     <>
       <div className=" bg-[#1B1B1B] min-h-screen p-[1px]">
@@ -39,10 +47,19 @@ const CommentPage = () => {
           {/* Header */}
           <div className="flex flex-row w-full bg-[#242426] gap-5 rounded-lg py-1 px-2 justify-between items-center">
             <div className="flex flex-row gap-6 p-2 justify-center items-center rounded-xl text-white text-lg">
-              <div className="cursor-pointer" onClick={() => navigate("/home")}>
+              <div className="cursor-pointer" onClick={handleBack}>
                 <IoMdArrowRoundBack />
               </div>
-              <div>@ {file.Key}</div>
+              <div>@ {extractName(file.Key)}</div>
+            </div>
+
+            <div className="flex flex-row gap-3 justify-center items-center text-gray-500 ">
+              <FaPhotoVideo />
+              <p
+                className="cursor-pointer"
+              >
+                {teamPath} / {path}
+              </p>
             </div>
 
             <div className="flex flex-row gap-4 justify-center items-center cursor-pointer ">
@@ -54,17 +71,17 @@ const CommentPage = () => {
               </p>
 
               <div className="relative w-8 h-8">
-              <img
-                src="/icons/Profile.png"
-                alt="User"
-                className="w-full h-full rounded-full"
-              />
-              {firstLetter && (
-                <div className="absolute inset-0 flex items-center justify-center font-bold text-blue-400 bg-opacity-75 rounded-full">
-                  {firstLetter}
-                </div>
-              )}
-            </div>
+                <img
+                  src="/icons/Profile.png"
+                  alt="User"
+                  className="w-full h-full rounded-full"
+                />
+                {firstLetter && (
+                  <div className="absolute inset-0 flex items-center justify-center font-bold text-blue-400 bg-opacity-75 rounded-full">
+                    {firstLetter}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -83,7 +100,7 @@ const CommentPage = () => {
                   className="w-full bg-transparent border-none outline-none"
                 />
               </div>
-              <CommentSection backendComments={backendComments}/> 
+              <CommentSection backendComments={backendComments} />
             </div>
           </div>
         </div>

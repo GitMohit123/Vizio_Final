@@ -7,7 +7,7 @@ const ReplyForm = ({handleReply,parentId}) => {
     const [text,setText] = useState("");
     const isTextAreaDisabled = text.length===0;
   return (
-    <div className="bg-white w-full flex items-center gap-4 px-3 py-2 rounded-lg justify-center">
+    <div className="bg-white w-full flex items-center gap-4 px-3 py-1 rounded-lg justify-center">
     <input
       type="text"
       placeholder="Reply"

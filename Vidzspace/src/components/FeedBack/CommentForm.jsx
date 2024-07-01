@@ -37,9 +37,9 @@ const CommentForm = ({ file }) => {
   const { getDifferenceText } = useContext(ProjectContext);
   return (
     <div className="bg-[#242426] w-full rounded-md px-2 py-2">
-      <div className="flex flex-col gap-8 p-2">
+      <div className="flex flex-col gap-6 p-2">
         <div className="flex flex-row gap-3 items-center justify-start">
-          <div className="relative w-8 h-8">
+          {/* <div className="relative w-8 h-8">
             <img
               src="/icons/Profile.png"
               alt="User"
@@ -50,7 +50,7 @@ const CommentForm = ({ file }) => {
                 {firstLetter}
               </div>
             )}
-          </div>
+          </div> */}
           <p className="text-sm text-gray-400">{file?.Metadata?.ownername}</p>
           <p className="text-sm text-gray-400">
             {getDifferenceText(file?.LastModified)}
@@ -70,7 +70,7 @@ const CommentForm = ({ file }) => {
                 </div>
               )}
             </div>
-            <div className="bg-gray-800 w-full flex items-center gap-4 p-3 rounded-lg justify-center">
+            <div className="bg-white w-full flex items-center gap-4 py-1 px-2 rounded-lg justify-center">
               <div className="flex px-1 py-[2px] rounded-lg justify-center items-center gap-2">
                 <IoIosTime size={23} className="text-yellow-300" />
                 <span className="text-blue-700 font-bold">{`${videoTimeMin}:${videoTimeSec}`}</span>
@@ -78,7 +78,7 @@ const CommentForm = ({ file }) => {
               <input
                 type="text"
                 placeholder="Type your Comment"
-                className="w-full bg-transparent border-none focus:outline-none text-gray-300"
+                className="w-full bg-transparent border-none focus:outline-none text-gray-800"
                 value={text}
                 onChange={(e)=>setText(e.target.value)}
                 onKeyDown={(e)=>{if(e.key==="Enter"){
@@ -90,7 +90,7 @@ const CommentForm = ({ file }) => {
                 disabled={isTextAreaDisabled}
                 onClick={handleCreateComment}
               >
-                <FaLocationArrow className="text-xl text-white" />
+                <FaLocationArrow className="text-xl text-black" />
               </motion.button>
             </div>
           </div>

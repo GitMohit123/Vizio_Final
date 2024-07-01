@@ -76,6 +76,22 @@ const ProjectState = ({ children }) => {
   const [copiedObject, setCopiedObject] = useState({});
   const [videoTimeSec, setVideoTimeSec] = useState(0);
   const [videoTimeMin, setVideoTimeMin] = useState(0);
+  const extractName = (filename) => {
+    const match = filename.match(/.*_(.+)$/);
+    return match ? match[1] : filename;
+  };
+  const convertBytesToGB = (bytes) => {
+    const megabyte = 1024 * 1024;
+    const gigabyte = 1024 * 1024 * 1024;
+    const convertedGB = bytes / gigabyte;
+
+    if (convertedGB < 0.1) {
+      const convertedMB = bytes / megabyte;
+      return convertedMB.toFixed(2) + " MB";
+    } else {
+      return convertedGB.toFixed(2) + " GB";
+    }
+  };
 
   return (
     <ProjectContext.Provider
@@ -112,6 +128,8 @@ const ProjectState = ({ children }) => {
         videoTimeSec,
         setVideoTimeMin,
         setVideoTimeSec,
+        extractName,
+        convertBytesToGB
       }}
     >
       {children}

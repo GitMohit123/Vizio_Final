@@ -73,7 +73,11 @@ const Homepage = () => {
 
   useEffect(() => {
     if (team) {
-      dispatch(setCurrentTeam(team[0]));
+      if(currentTeam){
+        dispatch(setCurrentTeam(currentTeam));
+      }else{
+        dispatch(setCurrentTeam(team[0]));
+      }
     }
   }, [team]);
 
