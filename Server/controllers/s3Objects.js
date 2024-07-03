@@ -785,7 +785,17 @@ async function copyFolder({ fromBucket, fromLocation, toBucket = fromBucket, toL
     if (list.KeyCount) { // if items to copy
       const fromObjectKeys = list.Contents.map(content => content.Key); // get the existing object keys
       for (let fromObjectKey of fromObjectKeys) { // loop through items and copy each one
-        const toObjectKey = fromObjectKey.replace(fromLocation, toLocation); // replace with the destination in the key
+        // const toObjectKey = fromObjectKey.replace(fromLocation, toLocation); // replace with the destination in the key
+        let toObjectKey = fromObjectKey.replace(fromLocation, toLocation);
+        console.log(toObjectKey)
+        if (isVideoFile(fromObjectKey)) {
+          const filename = fromObjectKey.split('_').slice(-1)[0];
+          console.log("Hi mohit",filename);
+          const timestamp = Date.now(); // or any other format you prefer
+          const newFileName = `video_${timestamp}_${filename}`;
+          console.log("Hi error",newFileName);
+          toObjectKey = toObjectKey.replace(fromObjectKey.split("/").pop(), newFileName);
+        }
         // copy the file
         const copyCommand = new CopyObjectCommand({
           // ACL: 'public-read',
@@ -804,6 +814,9 @@ async function copyFolder({ fromBucket, fromLocation, toBucket = fromBucket, toL
   };
   return recursiveCopy();
 };
+function isVideoFile(objectKey) {
+  return objectKey.includes('video') && objectKey.endsWith('.mp4');
+}
 
 export const copyObject = async (req, res) => {
   //destPath = path after 'users/'
@@ -812,17 +825,18 @@ export const copyObject = async (req, res) => {
 
   try {
     const sourceKey = prefix + srcKey;
+    const destinationPath =destPath.endsWith("/") ? destPath.slice(0, -1) : destPath;
     const owner_id = getOwnerIdFromObjectKey(sourceKey);
     console.log(owner_id);
     const ownerFirebaseData = await admin.auth().getUser(owner_id);
-    const ownerEmail = ownerFirebaseData.toJSON().email;
+    const ownerName = ownerFirebaseData.toJSON().displayName;
 
     const newMetadata = {
       sharing: "none",
       sharingType: "none",
       sharingWith: "[]",
       ownerId: owner_id,
-      ownerEmail: ownerEmail,
+      ownerName: ownerName,
       progress: "Upcoming",
     };
 
@@ -830,7 +844,7 @@ export const copyObject = async (req, res) => {
       // const folderName = srcKey.split('/').pop();
       // const emptyFolderResponse = await generationUploadUrl({path: destPath+'/'+folderName, user_id: owner_id});
 
-      const newDestPath = destPath + "/" + srcKey.split("/").pop();
+      const newDestPath = destinationPath + "/" + srcKey.split("/").pop();
       const emptyFolderResponse = await createEmptyFolder(
         newDestPath,
       )
@@ -845,11 +859,13 @@ export const copyObject = async (req, res) => {
 
       return res.json({ success: true, response });
     }
-
+    const timestamp = Date.now(); // or any other format you prefer
+    const newFileName = `video_${timestamp}_${sourceKey.split('_').slice(-1)[0]}`;
+    console.log("this is the name",newFileName)
     const command = new CopyObjectCommand({
       Bucket: "vidzspace",
       CopySource: `/vidzspace/${sourceKey}`,
-      Key: `${prefix + destPath}/${sourceKey.split("/").pop()}`,
+      Key: `${prefix + destinationPath}/${newFileName}`,
       Metadata: newMetadata,
       MetadataDirective: "REPLACE",
     });
@@ -857,7 +873,7 @@ export const copyObject = async (req, res) => {
 
     res.json({
       success: true,
-      newKey: `${prefix + destPath}/${sourceKey.split("/").pop()}`,
+      newKey: `${prefix + destinationPath}/${newFileName}`,
     });
   } catch (error) {
     console.log(error);
