@@ -44,6 +44,6 @@ app.get("/", (req,res,next) => {
   res.send("anurag");
 });
 app.listen(5001, (req, res) => {
-    console.log(`Server initialized at 6000`);
+    console.log(`Server initialized at 5001`);
   });
 
