@@ -8,7 +8,7 @@ export default defineConfig({
     port:3000,
     proxy:{
       "/vidzspaceApi":{
-        target:"http://172.17.0.1:5001",
+        target:"vizio-lb-1347889499.ap-south-1.elb.amazonaws.com",
         secure:false
       }
     }
