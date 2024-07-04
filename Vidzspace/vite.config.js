@@ -8,7 +8,7 @@ export default defineConfig({
     port:3000,
     proxy:{
       "/vidzspaceApi":{
-        target:"http://localhost:5001",
+        target:"http://172.17.0.1:5001",
         secure:false
       }
     }
