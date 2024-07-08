@@ -542,7 +542,7 @@ const TeamProjects = () => {
                               <img
                                 src="/icons/Folder.png"
                                 alt="Folder"
-                                className="h-20 w-24"
+                                className="lg:h-16 md:h-16 h-16 lg:w-20 md:w-20 w-20"
                               />
                               <p className="text-sm text-gray-200">
                                 {inFolder.Key}

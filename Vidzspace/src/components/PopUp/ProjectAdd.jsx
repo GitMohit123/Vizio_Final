@@ -453,14 +453,14 @@ const ProjectAdd = () => {
   }, [selectedFiles, selectedFolders, selectedFilesWithUrls]);
 
   return (
-    <div className="absolute h-[95%] w-full flex justify-center items-center z-30 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
-      <div className="popup bg-[#383838] w-3/6 h-3/5 p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c]">
+    <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-30 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
+      <div className="popup bg-[#383838] w-3/6 h-auto p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c]">
         {/* Title Section */}
-        <div className="flex w-full px-2 mb-8">
+        <div className="flex w-full px-2 mb-4">
           <p className="text-white text-3xl font-bold">Create New Project</p>
         </div>
         {/* Input Section */}
-        <div className="flex flex-row gap-8 px-3 w-full mb-7">
+        <div className="flex flex-row gap-8 px-3 w-full mb-4">
           <div className="flex flex-col gap-3 w-[60%] text-white">
             <p>Project Name</p>
             <input
@@ -554,7 +554,7 @@ const ProjectAdd = () => {
         </div>
 
         {/* Import from cloud */}
-        <div className="flex flex-col gap-3 w-full px-3 text-white text-lg font-bold mb-8">
+        <div className="flex flex-col gap-3 w-full px-3 text-white text-lg font-bold mb-4">
           <p>Import from cloud</p>
           <div className="w-full flex flex-row py-4 px-10 gap-3 bg-[#4d4b4b] justify-evenly items-center rounded-md">
             {cloudOptions.map((option, index) => {
