@@ -45,15 +45,15 @@ const CommentPage = () => {
       <div className=" bg-[#1B1B1B] min-h-screen p-[1px]">
         <div className=" flex h-full w-full p-2 flex-col px-3 gap-4">
           {/* Header */}
-          <div className="flex flex-row w-full bg-[#242426] gap-5 rounded-lg py-1 px-2 justify-between items-center">
-            <div className="flex flex-row gap-6 p-2 justify-center items-center rounded-xl text-white text-lg">
+          <div className="flex flex-row w-full bg-[#242426] lg:gap-5 md:gap-1 rounded-lg py-1 px-2 justify-between items-center">
+            <div className="flex flex-row lg:gap-6 md:gap-5 gap-4 p-2 justify-center items-center rounded-xl text-white text-lg">
               <div className="cursor-pointer" onClick={handleBack}>
                 <IoMdArrowRoundBack />
               </div>
               <div>@ {extractName(file.Key)}</div>
             </div>
 
-            <div className="flex flex-row gap-3 justify-center items-center text-gray-500 ">
+            <div className="lg:flex md:flex flex-row gap-3 justify-center items-center text-gray-500 hidden">
               <FaPhotoVideo />
               <p
                 className="cursor-pointer"
@@ -63,7 +63,7 @@ const CommentPage = () => {
             </div>
 
             <div className="flex flex-row gap-4 justify-center items-center cursor-pointer ">
-              <p className="text-white border border-yellow-300 font-bold px-4 py-1 rounded-lg">
+              <p className="text-white border border-yellow-300 font-bold px-4 py-1 rounded-lg hidden lg:block md:block">
                 View_Status
               </p>
               <p className="text-black font-bold px-4 py-1 rounded-full bg-[#f8ff2a]">
@@ -86,11 +86,11 @@ const CommentPage = () => {
           </div>
         </div>
 
-        <div className="lg:flex lg:justify-center p-0 min-h-[100%]">
+        <div className="lg:flex lg:justify-center p-0 h-[100%]">
           <div className=" flex-1 overflow-hidden ">
             <VideoBox file={file} />
           </div>
-          <div className=" lg:w-96 bg-[#242426] lg:h-[89vh] shadow-lg shadow-black text-gray-300 transform -translate-x-2 p-2 py-4">
+          <div className=" lg:w-96 w-[93%] bg-[#242426] lg:h-[89vh] shadow-lg shadow-black text-gray-300 transform -translate-x-2 py-4 mt-2 ml-5 px-3 mb-2 rounded-md lg:rounded-none">
             <div className="flex flex-col gap-4 items-center h-full w-full px-2">
               <div className="w-full flex flex-row gap-4 bg-[#38383b] p-2 px-4 justify-center items-center rounded-xl">
                 <FaSearch />

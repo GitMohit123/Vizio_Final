@@ -22,7 +22,7 @@ const VideoBox = ({ file }) => {
     });
 
   return (
-    <div className="lg:w-[56rem] lg:ml-24 lg:mt-10">
+    <div className="w-full lg:w-[56rem] lg:ml-24 lg:mt-10">
       <div className=" flex flex-col gap-8 text-white justify-center px-4 mt-4 items-center ">
         {" "}
         <div className="w-full h-full lg:h-[27rem] flex justify-center shadow-lg relative rounded-full">
