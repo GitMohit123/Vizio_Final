@@ -56,6 +56,8 @@ const TeamProjects = () => {
     handleDelete,
     handleDeleteFolder,
     selectedFiles,
+    selectedFolders,
+    setSelectedFolders,
     setSelectedFiles,
   } = useContext(HomeContext);
   const {
@@ -347,11 +349,17 @@ const TeamProjects = () => {
     const listedFiles = Array.from(e.target.files);
     setIsUploadingProgressOpen(true);
     setSelectedFiles(listedFiles);
+    const user_id = user?.uid;
+    const firstFilePath = listedFiles[0].webkitRelativePath;
+    const folderName = firstFilePath.split("/")[0];
+
+    await getUploadPresignedUrl({
+      fullPath: `${user_id}/${teamPath}/${path}/${folderName}`,
+    });
     const uploadPromises = listedFiles.map(async (file) => {
       const id = Date.now();
       const fileName = `video_${id}_${file.name}`;
       const contentType = file.type;
-      const user_id = user?.uid;
       const fullPath = `${user_id}/${teamPath}/${path}/${file?.webkitRelativePath?.substring(
         0,
         file?.webkitRelativePath.lastIndexOf("/")
@@ -440,45 +448,45 @@ const TeamProjects = () => {
                     <p className="cursor-pointer">Add</p>
                   </div>
                   {addPopUp && (
-                      <div className="dropdown absolute w-36 top-10 -right-8 bg-white rounded-lg shadow-lg z-20">
-                        {/* Dropdown content */}
-                        <ul className="py-1">
-                          <li
-                            onClick={handleNewFolderClick}
-                            className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100"
-                          >
-                            Create Folder
-                          </li>
-                          <li className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100">
-                            <label>
-                              Upload Files
-                              <input
-                                type="file"
-                                name="upload-video"
-                                accept="video/*"
-                                onChange={handleFileChange}
-                                className="hidden"
-                                multiple
-                              />
-                            </label>
-                          </li>
-                          <li className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100">
-                            <label>
-                              Upload Folder
-                              <input
-                                type="file"
-                                webkitdirectory="true"
-                                mozdirectory="true"
-                                directory=""
-                                multiple
-                                onChange={handleFolderChange}
-                                className="hidden"
-                              />
-                            </label>
-                          </li>
-                        </ul>
-                      </div>
-                    )}
+                    <div className="dropdown absolute w-36 top-10 -right-8 bg-white rounded-lg shadow-lg z-20">
+                      {/* Dropdown content */}
+                      <ul className="py-1">
+                        <li
+                          onClick={handleNewFolderClick}
+                          className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100"
+                        >
+                          Create Folder
+                        </li>
+                        <li className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100">
+                          <label>
+                            Upload Files
+                            <input
+                              type="file"
+                              name="upload-video"
+                              accept="video/*"
+                              onChange={handleFileChange}
+                              className="hidden"
+                              multiple
+                            />
+                          </label>
+                        </li>
+                        <li className="cursor-pointer text-left px-4 py-2 hover:bg-gray-100">
+                          <label>
+                            Upload Folder
+                            <input
+                              type="file"
+                              webkitdirectory="true"
+                              mozdirectory="true"
+                              directory=""
+                              multiple
+                              onChange={handleFolderChange}
+                              className="hidden"
+                            />
+                          </label>
+                        </li>
+                      </ul>
+                    </div>
+                  )}
                 </motion.button>
               </div>
             )}

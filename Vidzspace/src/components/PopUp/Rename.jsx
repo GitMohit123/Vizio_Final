@@ -67,7 +67,7 @@ const Rename = () => {
     }
   };
   return (
-    <div className="absolute h-[95%] w-full flex justify-center items-center z-30 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
+    <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-30 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
       <div className="popup bg-[#2f2f2f] w-2/6 h-2/7 p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c]">
         <div className="flex w-full px-2 mb-6">
           <p className="text-white text-3xl font-bold">Rename</p>
