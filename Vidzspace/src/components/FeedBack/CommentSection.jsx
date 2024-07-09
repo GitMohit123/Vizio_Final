@@ -35,14 +35,14 @@ const CommentSection = ({ backendComments }) => {
                 commentObject={commentObject}
                 index={index}
                 replies={getReplies(commentObject.video_comment_id)}
-                activeComments = {activeComments}
-                setActiveComments = {setActiveComments}
+                activeComments={activeComments}
+                setActiveComments={setActiveComments}
               />
             );
           })
       ) : (
         <div className="flex flex-col justify-center items-center mt-auto mb-auto gap-3">
-          <MdOutlineCommentsDisabled className="text-5xl"/>
+          <MdOutlineCommentsDisabled className="text-5xl" />
           <p className="text-xl text-center text-gray-600 font-medium">
             No Comments Available
           </p>
