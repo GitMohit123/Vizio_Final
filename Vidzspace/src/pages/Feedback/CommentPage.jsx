@@ -9,15 +9,18 @@ import { fetchCommentsApi } from "../../api/Comments";
 import HomeContext from "../../context/homePage/HomeContext";
 import ProjectContext from "../../context/project/ProjectContext";
 import { setCurrentTeam } from "../../app/Actions/teamActions";
+import ShareCommentPopup from "../../components/PopUp/ShareCommentPopup";
 
 const CommentPage = () => {
   const location = useLocation();
   const { file } = location.state || {};
   const navigate = useNavigate();
-  const { user } = useContext(HomeContext);
+  const { user, isShareCommentPopup, setIsShareCommentPopup } =
+    useContext(HomeContext);
   const firstLetter = user?.name.charAt(0).toUpperCase();
-  const { load,path,teamPath,handleTeamClick,currentTeam } = useContext(HomeContext);
-  const {extractName} = useContext(ProjectContext);
+  const { load, path, teamPath, handleTeamClick, currentTeam } =
+    useContext(HomeContext);
+  const { extractName } = useContext(ProjectContext);
 
   const [backendComments, setBackendComments] = useState([]);
 
@@ -35,11 +38,11 @@ const CommentPage = () => {
     };
     fetchCommentsData();
   }, [load]);
-  const handleBack = ()=>{
+  const handleBack = () => {
     navigate("/home");
-    console.log(currentTeam)
+    console.log(currentTeam);
     handleTeamClick(currentTeam);
-  }
+  };
   return (
     <>
       <div className=" bg-[#1B1B1B] min-h-screen p-[1px]">
@@ -55,9 +58,7 @@ const CommentPage = () => {
 
             <div className="lg:flex md:flex flex-row gap-3 justify-center items-center text-gray-500 hidden">
               <FaPhotoVideo />
-              <p
-                className="cursor-pointer"
-              >
+              <p className="cursor-pointer">
                 {teamPath} / {path}
               </p>
             </div>
@@ -66,7 +67,10 @@ const CommentPage = () => {
               <p className="text-white border border-yellow-300 font-bold px-4 py-1 rounded-lg hidden lg:block md:block">
                 View_Status
               </p>
-              <p className="text-black font-bold px-4 py-1 rounded-full bg-[#f8ff2a]">
+              <p
+                className="text-black font-bold px-4 py-1 rounded-full bg-[#f8ff2a]"
+                onClick={() => setIsShareCommentPopup((prev) => !prev)}
+              >
                 Share
               </p>
 
@@ -86,7 +90,7 @@ const CommentPage = () => {
           </div>
         </div>
 
-        <div className="lg:flex lg:justify-center p-0 h-[100%]">
+        <div className="lg:flex lg:justify-center p-0 h-[100%] relative">
           <div className=" flex-1 overflow-hidden ">
             <VideoBox file={file} />
           </div>
@@ -103,6 +107,7 @@ const CommentPage = () => {
               <CommentSection backendComments={backendComments} />
             </div>
           </div>
+          <div>{isShareCommentPopup && <ShareCommentPopup />}</div>
         </div>
       </div>
     </>

@@ -30,6 +30,7 @@ import {
   setTeamPath,
 } from "../../app/Actions/cmsAction";
 import TeamProjects from "./TeamProjects";
+import SharePopup from "../../components/PopUp/SharePopup";
 import TeamInfo from "./TeamInfo";
 import UpgradePlan from "./UpgradePlan";
 import ProjectAdd from "../../components/PopUp/ProjectAdd";
@@ -54,10 +55,12 @@ const Homepage = () => {
     handleDropDownClick,
     optionState,
     projectState,
+    setIsOpenShare,
     isTeamDropDownOpen,
     setIsTeamDropDownOpen,
     path,
     load,
+    isOpenShare,
   } = useContext(HomeContext);
   const {
     isUploadingProgressOpen,
@@ -311,8 +314,16 @@ const Homepage = () => {
             </div>
 
             <div className="flex flex-row gap-4 justify-center items-center cursor-pointer ">
-              <div className="flex flex-row gap-4 justify-center items-center cursor-pointer">
-                <img src="/icons/Share.png" alt="Share" className="h-6 w-10 hidden lg:block" />
+              <div
+                onClick={() => {
+                  setIsOpenShare((prev) => !prev);
+                }}
+              >
+                <img
+                  src="/icons/Share.png"
+                  alt="Share"
+                  className="h-6 w-10 hidden lg:block"
+                />
                 <p className="text-[#f8ff2a]">Share</p>
               </div>
               <div className="bg-[#1B1B1B] text-[#f8ff2a] p-2 rounded-full h-7 w-7 flex justify-center items-center hover:bg-[#242426]">
@@ -325,6 +336,7 @@ const Homepage = () => {
           <div className="relative flex flex-col w-full h-full bg-[#242426] rounded-lg p-5 overflow-y-auto">
             {projectState && <ProjectAdd />}
             {deletePopup && <Delete />}
+            {isOpenShare && <SharePopup />}
             {isUploadingProgressOpen && <UploadProgress />}
             {addFolder && <FolderAdd />}
             {teamState && <TeamAdd />}

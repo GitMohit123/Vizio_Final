@@ -8,7 +8,11 @@ import {
   setPathEmpty,
   setTeamPath,
 } from "../../app/Actions/cmsAction";
-import { deleteVideo, deleteVideoFolder, fetchTeamsData } from "../../api/s3Objects";
+import {
+  deleteVideo,
+  deleteVideoFolder,
+  fetchTeamsData,
+} from "../../api/s3Objects";
 
 const HomeState = ({ children }) => {
   // user state
@@ -58,6 +62,8 @@ const HomeState = ({ children }) => {
   const [isDragging, setIsDragging] = useState(false);
   const dispatch = useDispatch();
   const [teamName, setTeamName] = useState("");
+  const [isShareCommentPopup, setIsShareCommentPopup] = useState(false);
+  const [isOpenShare, setIsOpenShare] = useState(false);
   const [isTeamDropDownOpen, setIsTeamDropDownOpen] = useState(false);
   const [videoContainer, setVideoContainer] = useState(false);
   const [videoPreview, setVideoPreview] = useState("");
@@ -65,13 +71,13 @@ const HomeState = ({ children }) => {
   const [reName, setReName] = useState("");
   const [renamePopup, setRenamePopup] = useState(false);
   const [itemToRename, setItemToRename] = useState({});
-  
+
   const [selectedItem, setSelectedItem] = useState({});
   const handleDelete = (url) => {
     setLoad(true);
     setSelectedItem(null);
     deleteVideo(url)
-      .then(async(data) => {
+      .then(async (data) => {
         console.log(data);
         await fetchData();
         setLoad(false);
@@ -92,11 +98,11 @@ const HomeState = ({ children }) => {
     setSelectedItem(null);
     setLoad(true);
     deleteVideoFolder(folderKey, userId, teamPath, path)
-      .then(async(data) => {
+      .then(async (data) => {
         console.log(data);
 
         await fetchData();
-        setLoad(false)
+        setLoad(false);
       })
       .catch((error) => {
         console.log(error);
@@ -109,7 +115,7 @@ const HomeState = ({ children }) => {
   };
   const fetchData = async () => {
     const currentTeamPath = currentTeam;
-    console.log(currentTeamPath)
+    console.log(currentTeamPath);
     try {
       const userId = user?.uid;
       const response = await fetchTeamsData(
@@ -118,7 +124,7 @@ const HomeState = ({ children }) => {
       );
       const filesData = response?.files || [];
       const folderData = response?.folders || [];
-      console.log(filesData,folderData);
+      console.log(filesData, folderData);
       dispatch(setCMSData(filesData, folderData));
     } catch (err) {
       console.log("Unable to fetch data");
@@ -142,6 +148,10 @@ const HomeState = ({ children }) => {
         currentTeam,
         teamState,
         teamName,
+        isOpenShare,
+        setIsOpenShare,
+        setIsShareCommentPopup,
+        isShareCommentPopup,
         setTeamName,
         teamPath,
         handleTeamClick,
@@ -172,7 +182,7 @@ const HomeState = ({ children }) => {
         setSelectedItem,
         handleDelete,
         handleDeleteFolder,
-        fetchData
+        fetchData,
       }}
     >
       {children}
