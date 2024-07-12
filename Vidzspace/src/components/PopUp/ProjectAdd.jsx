@@ -30,7 +30,7 @@ const ProjectAdd = () => {
     path,
     user,
     setLoad,
-    currentTeam
+    currentTeam,
   } = useContext(HomeContext);
   const {
     setIsUploadingProgressOpen,
@@ -42,9 +42,10 @@ const ProjectAdd = () => {
     setVideoPercentageUploaded,
   } = useContext(ProjectContext);
 
-  const uploadToPresignedUrl = async (//direct api call
+  const uploadToPresignedUrl = async (
+    //direct api call
     presignedUrl,
-    file,
+    file
   ) => {
     console.log("in apii: ", presignedUrl, file);
     // Upload file to pre-signed URL
@@ -58,7 +59,6 @@ const ProjectAdd = () => {
         );
         console.log(`Upload Progress: ${percentCompleted}%`);
         setVideoPercentageUploaded(percentCompleted);
-
       },
     });
     return uploadResponse.status;
@@ -77,12 +77,37 @@ const ProjectAdd = () => {
       showUploadFolders: true,
       supportDrives: true,
       multiselect: true,
+      views: [
+        {
+          viewId: "DOCS",
+          mimeTypes: "application/vnd.google-apps.folder,video/*",
+          label: "Files and Folders",
+        },
+      ],
       // customViews: customViewsArray, // custom view
       callbackFunction: (data) => {
         if (data.action === "cancel") {
           console.log("User clicked cancel/close button");
         }
         console.log(data.docs);
+        //const file={}
+
+        const videoFiles = (data.docs || [])
+          ?.filter((doc) => doc.mimeType.startsWith("video/"))
+          ?.map((doc) => ({
+            name: doc.name,
+            type: doc.mimeType,
+            path: doc.name,
+            lastModified: doc.lastEditedUtc,
+            size: doc.sizeBytes,
+          }));
+
+        console.log(videoFiles);
+
+        setSelectedFiles((prevSelectedFiles) => [
+          ...prevSelectedFiles,
+          ...videoFiles,
+        ]);
       },
     });
   };
@@ -191,148 +216,155 @@ const ProjectAdd = () => {
     OneDrive.open(odOptions);
   };
 
-  const handleCreateProjectClick = async()=>{
+  const handleCreateProjectClick = async () => {
     dispatch(setProjectState(false));
     setIsUploadingFiles(true);
     // dispatch(setLoader(true));
     setLoad(true);
-    
-      const ownerId = user?.uid; //for testing only
-      const user_id = user?.uid;
-      // const response = await generate(`${ownerId}/${teamPath}/${path}`)
-      const files = selectedFiles;
 
-      
+    const ownerId = user?.uid; //for testing only
+    const user_id = user?.uid;
+    // const response = await generate(`${ownerId}/${teamPath}/${path}`)
+    const files = selectedFiles;
 
-      // create empty project first
-      await getUploadPresignedUrl({fullPath: `${ownerId}/${teamPath}/${projectName}`})
+    // create empty project first
+    await getUploadPresignedUrl({
+      fullPath: `${ownerId}/${teamPath}/${projectName}`,
+    });
 
-      var folderName = "";
-      const createFoldersPromises = selectedFolders.map(async (folder) => {
-        var folderName1 = folder.path.split("/")[1];
-        console.log(folderName1)
-        if(folderName1 !== folderName){
-          folderName = folderName1;
-          await getUploadPresignedUrl({fullPath: `${ownerId}/${teamPath}/${projectName}/${folderName}`})
-        }
-      })
-      await Promise.all(createFoldersPromises);
-
-      const uploadPromises = files.map(async (file) => {
-        const id = Date.now();
-        const fileName = `video_${id}_${file.name}`;
-        const contentType = file.type;
-        const isInAFolder = file.path && file.path.includes("/");
-        const fullPath = isInAFolder? `${ownerId}/${teamPath}/${projectName}/${file.path.slice(1, file.name.length * (-1) - 1)}` : `${ownerId}/${teamPath}/${projectName}`;
-        // const fullPath = `${ownerId}/${teamPath}/${path}/${projectName}`; //if want nested projects
-        try {
-          const result = await getUploadPresignedUrl({
-            fileName,
-            contentType,
-            user_id,
-            fullPath
+    var folderName = "";
+    const createFoldersPromises = selectedFolders.map(async (folder) => {
+      var folderName1 = folder.path.split("/")[1];
+      console.log(folderName1);
+      if (folderName1 !== folderName) {
+        folderName = folderName1;
+        await getUploadPresignedUrl({
+          fullPath: `${ownerId}/${teamPath}/${projectName}/${folderName}`,
         });
-          console.log(result.url);
-          return { file, presignedUrl: result.url, isUploading: false };
-        } catch (error) {
-          console.log("Error generating urls", error);
-          return null;
-        }
-      });
-  
-      // Wait for all uploads to finish
+      }
+    });
+    await Promise.all(createFoldersPromises);
+
+    const uploadPromises = files.map(async (file) => {
+      const id = Date.now();
+      const fileName = `video_${id}_${file.name}`;
+      const contentType = file.type;
+      const isInAFolder = file.path && file.path.includes("/");
+      const fullPath = isInAFolder
+        ? `${ownerId}/${teamPath}/${projectName}/${file.path.slice(
+            1,
+            file.name.length * -1 - 1
+          )}`
+        : `${ownerId}/${teamPath}/${projectName}`;
+      // const fullPath = `${ownerId}/${teamPath}/${path}/${projectName}`; //if want nested projects
       try {
-        const validFilesWithUrls = (await Promise.all(uploadPromises)).filter(
-          (fileWithUrl) => fileWithUrl !== null
-        );
-        const filesWithUrls = [...validFilesWithUrls , ...selectedFilesWithUrls];
-        setSelectedFilesWithUrls((prevSelectedFiles) => [
-          ...prevSelectedFiles,
-          ...validFilesWithUrls,
-        ]);
-        console.log("All files url generated successfully");
-
-        uploadFile(filesWithUrls);
-
+        const result = await getUploadPresignedUrl({
+          fileName,
+          contentType,
+          user_id,
+          fullPath,
+        });
+        console.log(result.url);
+        return { file, presignedUrl: result.url, isUploading: false };
       } catch (error) {
         console.log("Error generating urls", error);
+        return null;
       }
+    });
 
+    // Wait for all uploads to finish
+    try {
+      const validFilesWithUrls = (await Promise.all(uploadPromises)).filter(
+        (fileWithUrl) => fileWithUrl !== null
+      );
+      const filesWithUrls = [...validFilesWithUrls, ...selectedFilesWithUrls];
+      setSelectedFilesWithUrls((prevSelectedFiles) => [
+        ...prevSelectedFiles,
+        ...validFilesWithUrls,
+      ]);
+      console.log("All files url generated successfully");
+
+      uploadFile(filesWithUrls);
+    } catch (error) {
+      console.log("Error generating urls", error);
     }
+  };
 
-    const uploadFile = async (filesWithUrls) => {
-      console.log("hi")
-      const sharing = "none";
-      const sharing_type = "none";
-      const sharing_with = [];
-      const progress = "upcoming";
-      for (let i = 0; i < filesWithUrls.length; i++) {
-        const { file, presignedUrl } = filesWithUrls[i];
+  const uploadFile = async (filesWithUrls) => {
+    console.log("hi");
+    const sharing = "none";
+    const sharing_type = "none";
+    const sharing_with = [];
+    const progress = "upcoming";
+    for (let i = 0; i < filesWithUrls.length; i++) {
+      const { file, presignedUrl } = filesWithUrls[i];
 
-        setSelectedFilesWithUrls((files)=>{ files[i].isUploading = true; return files; })
-  
-        try {
-          const data = await uploadToPresignedUrl(
-            presignedUrl,
-            file
-          );
-          // toast.success("Uploaded successful");
-          console.log("File uploaded successfully", data);
-          setSelectedFilesWithUrls((files)=>{ files[i].isUploading = false; return files; })
-        } catch (error) {
-          console.log("Error uploading file", file.name, error);
-          // Handle error if required
-        }
-      }
-      // for (let i = 0; i < selectedFolderWithUrls.length; i++) {
-      //   const { file, presignedUrl } = selectedFolderWithUrls[i];
-  
-      //   try {
-      //     const data = await uploadToPresignedUrl(
-      //       presignedUrl,
-      //       file,
-      //       sharing,
-      //       sharing_type,
-      //       sharing_with
-      //     );
-      //     toast.success("Uploaded successful");
-      //     console.log(data);
-      //   } catch (error) {
-      //     console.log("Error uploading file", file.name, error);
-      //     // Handle error if required
-      //   }
-      // }
+      setSelectedFilesWithUrls((files) => {
+        files[i].isUploading = true;
+        return files;
+      });
 
-      if (!selectedFilesWithUrls) {
-        console.log("Files not found");
-      }
-      setIsUploadingFiles(false);
-      // dispatch(setLoader(false));
-      setLoad(false);
-      setIsUploadingProgressOpen(false);
-      setSelectedFilesWithUrls([]);
-      setSelectedFiles([]);
-      setSelectedFolders([]);
-      setVideoPercentageUploaded(0);
-      await fetchData();
-      // setRefresh((prev) => !prev);
-      
-    };
-    const fetchData = async () => {
-      const currentTeamPath = currentTeam;
       try {
-        const userId = user?.uid;
-        const response = await fetchTeamsData(
-          `${userId}/${currentTeamPath}/${path}`,
-          userId
-        );
-        const filesData = response?.files || [];
-        const folderData = response?.folders || [];
-        dispatch(setCMSData(filesData, folderData));
-      } catch (err) {
-        console.log("Unable to fetch data");
+        const data = await uploadToPresignedUrl(presignedUrl, file);
+        // toast.success("Uploaded successful");
+        console.log("File uploaded successfully", data);
+        setSelectedFilesWithUrls((files) => {
+          files[i].isUploading = false;
+          return files;
+        });
+      } catch (error) {
+        console.log("Error uploading file", file.name, error);
+        // Handle error if required
       }
-    };
+    }
+    // for (let i = 0; i < selectedFolderWithUrls.length; i++) {
+    //   const { file, presignedUrl } = selectedFolderWithUrls[i];
+
+    //   try {
+    //     const data = await uploadToPresignedUrl(
+    //       presignedUrl,
+    //       file,
+    //       sharing,
+    //       sharing_type,
+    //       sharing_with
+    //     );
+    //     toast.success("Uploaded successful");
+    //     console.log(data);
+    //   } catch (error) {
+    //     console.log("Error uploading file", file.name, error);
+    //     // Handle error if required
+    //   }
+    // }
+
+    if (!selectedFilesWithUrls) {
+      console.log("Files not found");
+    }
+    setIsUploadingFiles(false);
+    // dispatch(setLoader(false));
+    setLoad(false);
+    setIsUploadingProgressOpen(false);
+    setSelectedFilesWithUrls([]);
+    setSelectedFiles([]);
+    setSelectedFolders([]);
+    setVideoPercentageUploaded(0);
+    await fetchData();
+    // setRefresh((prev) => !prev);
+  };
+  const fetchData = async () => {
+    const currentTeamPath = currentTeam;
+    try {
+      const userId = user?.uid;
+      const response = await fetchTeamsData(
+        `${userId}/${currentTeamPath}/${path}`,
+        userId
+      );
+      const filesData = response?.files || [];
+      const folderData = response?.folders || [];
+      dispatch(setCMSData(filesData, folderData));
+    } catch (err) {
+      console.log("Unable to fetch data");
+    }
+  };
 
   // const handleCreateProjectClick = async () => {
   //   dispatch(setProjectState(false));
@@ -445,11 +477,10 @@ const ProjectAdd = () => {
   // };
 
   useEffect(() => {
-    if(selectedFiles.length > 0 || selectedFolders.length > 0){
+    if (selectedFiles.length > 0 || selectedFolders.length > 0) {
       setIsUploadingProgressOpen(true);
-    }
-    else setIsUploadingProgressOpen(false);
-    console.log(selectedFiles, selectedFolders, selectedFilesWithUrls)
+    } else setIsUploadingProgressOpen(false);
+    console.log(selectedFiles, selectedFolders, selectedFilesWithUrls);
   }, [selectedFiles, selectedFolders, selectedFilesWithUrls]);
 
   return (
