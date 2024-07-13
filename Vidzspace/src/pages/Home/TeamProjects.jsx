@@ -535,15 +535,17 @@ const TeamProjects = () => {
                         onClick={() => handleRoute(folder.Key)}
                       >
                         {folder?.innerFiles &&
-                          folder?.innerFiles.map((file, index) => (
-                            <div className="rounded-lg" key={file?.SignedUrl}>
-                              <video
-                                className="rounded-lg object-cover aspect-square w-full"
-                                key={index}
-                                src={file?.SignedUrl}
-                              ></video>
-                            </div>
-                          ))}
+                          folder?.innerFiles
+                            ?.filter((file) => !file?.Key.endsWith(".json"))
+                            .map((file, index) => (
+                              <div className="rounded-lg" key={file?.SignedUrl}>
+                                <video
+                                  className="rounded-lg object-cover aspect-square w-full"
+                                  key={index}
+                                  src={file?.SignedUrl}
+                                ></video>
+                              </div>
+                            ))}
                         {folder?.innerFolders &&
                           folder.innerFolders.map((inFolder, index) => (
                             <div className="flex flex-col justify-start items-center gap-1">
@@ -631,98 +633,100 @@ const TeamProjects = () => {
                   </div>
                 </div>
               ))}
-              {files?.map((file, index) => (
-                <div
-                  key={index}
-                  className="p-4 bg-[#35353a] rounded-lg text-white relative cursor-pointer"
-                  onDoubleClick={() => {
-                    console.log("DOUBLE");
-                    handleDoubleClick(file);
-                  }}
-                >
-                  <ProgressBar document={file} />
-                  <motion.div className="flex flex-col h-full w-full gap-2">
-                    <motion.div whileHover={{ scale: 1.03 }}>
-                      <video
-                        className="rounded-lg object-cover aspect-square w-full h-40"
-                        key={index}
-                        src={file?.SignedUrl}
-                        onMouseEnter={handleMouseEnter}
-                        onMouseLeave={handleMouseLeave}
-                        onClick={() => {
-                          setVideoPreview(index);
-                          setTimeout(() => {
-                            setVideoContainer(true);
-                          }, 1000);
-                        }}
-                      ></video>
-                    </motion.div>
-                    <div className="flex flex-row items-center w-full ">
-                      <div className="flex flex-col gap-1 w-[91%]">
-                        <div className="flex flex-row gap-4 justify-start items-center">
-                          <p className="text-xl font-bold">
-                            {extractName(file.Key)}
-                          </p>
-                          <p>{convertBytesToGB(file.Size)}</p>
-                        </div>
-                        <div className="text-lg text-gray-400">
-                          Mohit -{" "}
-                          {file.LastModified
-                            ? getDifferenceText(file.LastModified)
-                            : "Unknown"}
-                        </div>
-                      </div>
-
-                      <div className="flex justify-center items-center relative">
-                        <BsThreeDotsVertical
+              {files
+                ?.filter((file) => !file.Key.endsWith(".json"))
+                .map((file, index) => (
+                  <div
+                    key={index}
+                    className="p-4 bg-[#35353a] rounded-lg text-white relative cursor-pointer"
+                    onDoubleClick={() => {
+                      console.log("DOUBLE");
+                      handleDoubleClick(file);
+                    }}
+                  >
+                    <ProgressBar document={file} />
+                    <motion.div className="flex flex-col h-full w-full gap-2">
+                      <motion.div whileHover={{ scale: 1.03 }}>
+                        <video
+                          className="rounded-lg object-cover aspect-square w-full h-40"
+                          key={index}
+                          src={file?.SignedUrl}
+                          onMouseEnter={handleMouseEnter}
+                          onMouseLeave={handleMouseLeave}
                           onClick={() => {
-                            setSelectedItem({
-                              type: "file",
-                              index: `file-${index}`,
-                              path: file.Key,
-                            });
+                            setVideoPreview(index);
+                            setTimeout(() => {
+                              setVideoContainer(true);
+                            }, 1000);
                           }}
-                          className="font-black text-3xl cursor-pointer"
-                        />
-                        {selectedItem?.type === "file" &&
-                          selectedItem?.index === `file-${index}` &&
-                          selectedItem?.path === file.Key && (
-                            <div className="absolute left-2 top-10 h-50 bg-gray-900 z-30 py-1 rounded-xl">
-                              <div className="flex flex-col text-left">
-                                <p
-                                  className="text-[#f8ff2a] hover:bg-slate-800 py-1 px-6 rounded-xl"
-                                  onClick={closeSidebar}
-                                >
-                                  Close
-                                </p>
-                                {threeDotsMenuList.map((option, index) => {
-                                  return (
-                                    <p
-                                      onClick={() =>
-                                        handleThreeDotClick(
-                                          option.option,
-                                          file,
-                                          index
-                                        )
-                                      }
-                                      className="text-white hover:bg-slate-800 py-1 px-6 rounded-xl"
-                                    >
-                                      {option.option}
-                                    </p>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                      </div>
-                    </div>
-                  </motion.div>
+                        ></video>
+                      </motion.div>
+                      <div className="flex flex-row items-center w-full ">
+                        <div className="flex flex-col gap-1 w-[91%]">
+                          <div className="flex flex-row gap-4 justify-start items-center">
+                            <p className="text-xl font-bold">
+                              {extractName(file.Key)}
+                            </p>
+                            <p>{convertBytesToGB(file.Size)}</p>
+                          </div>
+                          <div className="text-lg text-gray-400">
+                            Mohit -{" "}
+                            {file.LastModified
+                              ? getDifferenceText(file.LastModified)
+                              : "Unknown"}
+                          </div>
+                        </div>
 
-                  {videoPreview === index && videoContainer && (
-                    <VideoContainer url={file?.SignedUrl} index={index} />
-                  )}
-                </div>
-              ))}
+                        <div className="flex justify-center items-center relative">
+                          <BsThreeDotsVertical
+                            onClick={() => {
+                              setSelectedItem({
+                                type: "file",
+                                index: `file-${index}`,
+                                path: file.Key,
+                              });
+                            }}
+                            className="font-black text-3xl cursor-pointer"
+                          />
+                          {selectedItem?.type === "file" &&
+                            selectedItem?.index === `file-${index}` &&
+                            selectedItem?.path === file.Key && (
+                              <div className="absolute left-2 top-10 h-50 bg-gray-900 z-30 py-1 rounded-xl">
+                                <div className="flex flex-col text-left">
+                                  <p
+                                    className="text-[#f8ff2a] hover:bg-slate-800 py-1 px-6 rounded-xl"
+                                    onClick={closeSidebar}
+                                  >
+                                    Close
+                                  </p>
+                                  {threeDotsMenuList.map((option, index) => {
+                                    return (
+                                      <p
+                                        onClick={() =>
+                                          handleThreeDotClick(
+                                            option.option,
+                                            file,
+                                            index
+                                          )
+                                        }
+                                        className="text-white hover:bg-slate-800 py-1 px-6 rounded-xl"
+                                      >
+                                        {option.option}
+                                      </p>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {videoPreview === index && videoContainer && (
+                      <VideoContainer url={file?.SignedUrl} index={index} />
+                    )}
+                  </div>
+                ))}
             </div>
           )}
         </div>

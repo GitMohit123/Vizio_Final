@@ -49,9 +49,10 @@ const ProjectAdd = () => {
   ) => {
     console.log("in apii: ", presignedUrl, file);
     // Upload file to pre-signed URL
+
     const uploadResponse = await axios.put(presignedUrl, file, {
       headers: {
-        "Content-Type": "video/mp4",
+        "Content-Type": file?.type,
       },
       onUploadProgress: (progressEvent) => {
         const percentCompleted = Math.round(
@@ -227,6 +228,8 @@ const ProjectAdd = () => {
     // const response = await generate(`${ownerId}/${teamPath}/${path}`)
     const files = selectedFiles;
 
+    console.log(files);
+
     // create empty project first
     await getUploadPresignedUrl({
       fullPath: `${ownerId}/${teamPath}/${projectName}`,
@@ -258,6 +261,30 @@ const ProjectAdd = () => {
         : `${ownerId}/${teamPath}/${projectName}`;
       // const fullPath = `${ownerId}/${teamPath}/${path}/${projectName}`; //if want nested projects
       try {
+        console.log("isin", isInAFolder);
+
+        const metadataUrlResult = await getUploadPresignedUrl({
+          fileName: "metadata.json",
+          contentType: "application/json",
+          user_id,
+          fullPath: `${fullPath}`,
+        });
+
+        console.log("metada", metadataUrlResult);
+
+        const metadata = {
+          fullPath,
+          createdAt: new Date().toISOString(),
+          sharing: "none",
+          sharing_type: "none",
+          progress: "Upcoming",
+        };
+
+        await uploadToPresignedUrl(
+          metadataUrlResult.url,
+          new Blob([JSON.stringify(metadata)], { type: "application/json" })
+        );
+
         const result = await getUploadPresignedUrl({
           fileName,
           contentType,

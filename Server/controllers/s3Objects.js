@@ -9,7 +9,7 @@ import {
   PutObjectCommand,
   PutObjectTaggingCommand,
 } from "@aws-sdk/client-s3";
-import path from "path"
+import path from "path";
 import archiver from "archiver";
 import { s3Client } from "../s3config.js";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -105,10 +105,16 @@ export const createTeam = async (req, res, next) => {
 function getFilesForSubfolder(subfolderKey, objects) {
   var subFiles = [];
   var subfolders = [];
+
+  //console.log("objects", objects);
   objects.map((item) => {
     if (item.Key.startsWith(subfolderKey)) {
       const relativePath = item.Key.slice(subfolderKey.length);
-      if (relativePath.endsWith('/') && relativePath.slice(0, -1).indexOf('/') === -1) subfolders.push({ Key: relativePath.slice(0, -1), Type: "folder" });
+      if (
+        relativePath.endsWith("/") &&
+        relativePath.slice(0, -1).indexOf("/") === -1
+      )
+        subfolders.push({ Key: relativePath.slice(0, -1), Type: "folder" });
       if (relativePath.indexOf("/") === -1 && relativePath !== "")
         subFiles.push(item); //is a file
     }
@@ -173,7 +179,10 @@ async function calculateFolderSizes(folders, bucketName, prefix) {
 
   for (const folder of folders) {
     if (folder.Type === "folder") {
-      const folderSize = await getFolderSize(bucketName, prefix + folder.Key + "/");
+      const folderSize = await getFolderSize(
+        bucketName,
+        prefix + folder.Key + "/"
+      );
       folderSizes.push({ Key: folder.Key, size: folderSize });
     }
   }
@@ -199,12 +208,16 @@ export const listRoot = async (req, res, next) => {
     };
     const data = await s3Client.send(new ListObjectsV2Command(params));
 
+    // console.log(data);
+
     const params2 = {
       Bucket: "vidzspace",
       Prefix: prefix + `${path}`,
       Delimiter: "",
     };
     const data2 = await s3Client.send(new ListObjectsV2Command(params2));
+
+    //console.log(data2);
     const size = await getFolderSize("vidzspace", prefix + path, data2);
 
     // const owner_id = getOwnerIdFromObjectKey(prefix + path);
@@ -235,6 +248,7 @@ export const listRoot = async (req, res, next) => {
       Key: prefix.Prefix.split("/").filter(Boolean).pop(),
       Type: "folder",
       LastModified: null,
+      Metadata: null,
     }));
 
     //inner files
@@ -253,6 +267,7 @@ export const listRoot = async (req, res, next) => {
       subfolder.innerFolders = innerStuff.subfolders;
       subfolder.innerFiles = await Promise.all(
         innerStuff.subFiles.map(async (file) => {
+          console.log("file", file);
           if (file) {
             return await addMetadataAndSignedUrl(file);
           } else {
@@ -267,6 +282,22 @@ export const listRoot = async (req, res, next) => {
       );
       if (folderObject) {
         subfolder.LastModified = folderObject.LastModified;
+      }
+
+      const metadataFileKey = `${params.Prefix}${subfolder.Key}/metadata.json`;
+      const metadataFileObject = data2.Contents.find(
+        (item) => item.Key === metadataFileKey
+      );
+      if (metadataFileObject) {
+        // Fetch metadata of metadata.json
+        const metadataParams = {
+          Bucket: "vidzspace",
+          Key: metadataFileKey,
+        };
+        const metadataResponse = await s3Client.send(
+          new HeadObjectCommand(metadataParams)
+        );
+        subfolder.Metadata = metadataResponse.Metadata;
       }
     }
 
@@ -303,12 +334,19 @@ export const listRoot = async (req, res, next) => {
           };
         })
     );
-    const folderSizes = await calculateFolderSizes(folders, "vidzspace", prefix + path);
+    const folderSizes = await calculateFolderSizes(
+      folders,
+      "vidzspace",
+      prefix + path
+    );
     const result = {
-      folders: folders.map((folder) => ({ ...folder, size: folderSizes.find((f) => f.Key === folder.Key)?.size || 0 })), // Add size to each folder object
+      folders: folders.map((folder) => ({
+        ...folder,
+        size: folderSizes.find((f) => f.Key === folder.Key)?.size || 0,
+      })), // Add size to each folder object
       files: files,
       // sharingDetails: sharingDetails,
-      size: size
+      size: size,
     };
 
     return res.json(result);
@@ -573,7 +611,11 @@ const downloadFolder = async (key, res) => {
 
       const { Body } = await s3Client.send(fileCommand);
       //console.log(Body);
-      return { body: Body, name: path.relative(key, item.Key),size:item.Size };
+      return {
+        body: Body,
+        name: path.relative(key, item.Key),
+        size: item.Size,
+      };
     };
 
     const fetchPromises = Contents?.map((item) => fetchFile(item));
@@ -581,7 +623,7 @@ const downloadFolder = async (key, res) => {
 
     for (const file of files) {
       // console.log("file", file.body, file.name);
-      if (!file.name || file.size===0) {
+      if (!file.name || file.size === 0) {
         console.error(`Error: File name is empty for key`);
         continue; // Skip this file
       }
@@ -621,8 +663,11 @@ export const generationUploadUrl = async (req, res, next) => {
   try {
     const { fileName, contentType, user_id, path } = req.body;
 
-    if(!fileName){ //empty folder
-      console.log(path)
+    console.log("content", contentType);
+
+    if (!fileName) {
+      //empty folder
+      console.log(path);
       const command = new PutObjectCommand({
         Bucket: "vidzspace",
         Key: `users/${path}/`,
@@ -708,6 +753,11 @@ export const updateProgress = async (req, res, next) => {
     await updateObjectMetadata(folprefix, newProgress);
 
     res.status(200).json({ message: "Metadata updated successfully" });
+  } else if (type === "folder") {
+    const metadataFileKey = `${folprefix}/metadata.json`;
+    await updateObjectMetadata(metadataFileKey, newProgress);
+
+    res.status(200).json({ message: "Folder metadata updated successfully" });
   } else {
     res.status(200).json({ message: "Object Type undefined" });
   }
@@ -763,7 +813,7 @@ export const createFolder = async (req, res, next) => {
       const command = new PutObjectCommand(params);
       await s3Client.send(command);
 
-      res.status(200).send("Folder Created")
+      res.status(200).send("Folder Created");
     } else {
       res.status(200).send("Folder cannot be created");
     }
@@ -773,35 +823,45 @@ export const createFolder = async (req, res, next) => {
   }
 };
 
-async function copyFolder({ fromBucket, fromLocation, toBucket = fromBucket, toLocation }) {
+async function copyFolder({
+  fromBucket,
+  fromLocation,
+  toBucket = fromBucket,
+  toLocation,
+}) {
   let count = 0;
-  const recursiveCopy = async function(token) {
+  const recursiveCopy = async function (token) {
     const listCommand = new ListObjectsV2Command({
       Bucket: fromBucket,
       Prefix: fromLocation,
-      ContinuationToken: token
+      ContinuationToken: token,
     });
     let list = await s3Client.send(listCommand); // get the list
-    if (list.KeyCount) { // if items to copy
-      const fromObjectKeys = list.Contents.map(content => content.Key); // get the existing object keys
-      for (let fromObjectKey of fromObjectKeys) { // loop through items and copy each one
+    if (list.KeyCount) {
+      // if items to copy
+      const fromObjectKeys = list.Contents.map((content) => content.Key); // get the existing object keys
+      for (let fromObjectKey of fromObjectKeys) {
+        // loop through items and copy each one
         // const toObjectKey = fromObjectKey.replace(fromLocation, toLocation); // replace with the destination in the key
         let toObjectKey = fromObjectKey.replace(fromLocation, toLocation);
-        console.log(toObjectKey)
+        console.log(toObjectKey);
         if (isVideoFile(fromObjectKey)) {
-          const filename = fromObjectKey.split('_').slice(-1)[0];
-          console.log("Hi mohit",filename);
+          const filename = fromObjectKey.split("_").slice(-1)[0];
+          console.log("Hi mohit", filename);
           const timestamp = Date.now(); // or any other format you prefer
           const newFileName = `video_${timestamp}_${filename}`;
-          console.log("Hi error",newFileName);
-          toObjectKey = toObjectKey.replace(fromObjectKey.split("/").pop(), newFileName);
+          console.log("Hi error", newFileName);
+          toObjectKey = toObjectKey.replace(
+            fromObjectKey.split("/").pop(),
+            newFileName
+          );
         }
         // copy the file
         const copyCommand = new CopyObjectCommand({
           // ACL: 'public-read',
           Bucket: toBucket,
           CopySource: `${fromBucket}/${fromObjectKey}`,
-          Key: toObjectKey
+          Key: toObjectKey,
         });
         await s3Client.send(copyCommand);
         count += 1;
@@ -813,9 +873,9 @@ async function copyFolder({ fromBucket, fromLocation, toBucket = fromBucket, toL
     return `${count} files copied.`;
   };
   return recursiveCopy();
-};
+}
 function isVideoFile(objectKey) {
-  return objectKey.includes('video') && objectKey.endsWith('.mp4');
+  return objectKey.includes("video") && objectKey.endsWith(".mp4");
 }
 
 export const copyObject = async (req, res) => {
@@ -825,7 +885,9 @@ export const copyObject = async (req, res) => {
 
   try {
     const sourceKey = prefix + srcKey;
-    const destinationPath =destPath.endsWith("/") ? destPath.slice(0, -1) : destPath;
+    const destinationPath = destPath.endsWith("/")
+      ? destPath.slice(0, -1)
+      : destPath;
     const owner_id = getOwnerIdFromObjectKey(sourceKey);
     console.log(owner_id);
     const ownerFirebaseData = await admin.auth().getUser(owner_id);
@@ -845,23 +907,23 @@ export const copyObject = async (req, res) => {
       // const emptyFolderResponse = await generationUploadUrl({path: destPath+'/'+folderName, user_id: owner_id});
 
       const newDestPath = destinationPath + "/" + srcKey.split("/").pop();
-      const emptyFolderResponse = await createEmptyFolder(
-        newDestPath,
-      )
-      if(emptyFolderResponse) console.log("Folder created");
+      const emptyFolderResponse = await createEmptyFolder(newDestPath);
+      if (emptyFolderResponse) console.log("Folder created");
 
       const response = await copyFolder({
         fromBucket: "vidzspace",
         fromLocation: sourceKey,
         toBucket: "vidzspace",
-        toLocation: `${prefix + newDestPath}`
+        toLocation: `${prefix + newDestPath}`,
       });
 
       return res.json({ success: true, response });
     }
     const timestamp = Date.now(); // or any other format you prefer
-    const newFileName = `video_${timestamp}_${sourceKey.split('_').slice(-1)[0]}`;
-    console.log("this is the name",newFileName)
+    const newFileName = `video_${timestamp}_${
+      sourceKey.split("_").slice(-1)[0]
+    }`;
+    console.log("this is the name", newFileName);
     const command = new CopyObjectCommand({
       Bucket: "vidzspace",
       CopySource: `/vidzspace/${sourceKey}`,
@@ -887,4 +949,4 @@ const createEmptyFolder = async (path, user_id) => {
   });
   const response = await s3Client.send(command);
   return response;
-}
+};
