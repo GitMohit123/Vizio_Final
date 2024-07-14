@@ -23,7 +23,7 @@ const UploadProgress = () => {
   const getFolderName = (path) => {
     const parts = path.split("/");
     if (parts.length > 1) {
-      return parts.slice(0, -1).join("/");
+      return parts.slice(0, -1);
     }
     return path;
   };
@@ -39,29 +39,21 @@ const UploadProgress = () => {
             key={index}
             className="flex flex-row gap-3 items-center justify-between py-1"
           >
-            <div className="flex flexe-row gap-2 justify-center items-center">
+            <div className="flex flex-row gap-2 justify-center items-start">
               {file?.path && file.path.includes("/") ? (
                 <>
                   <FaFolder />
-                  <p className="text-sm truncate max-w-full">
+                  <p className="text-sm truncate max-w-[150px] overflow-hidden whitespace-nowrap text-ellipsis">
                     {getFolderName(file.path)}
                   </p>
                 </>
               ) : (
                 <>
                   <FaPhotoVideo />
-                  <p className="text-sm truncate max-w-full">{file.path}</p>
+                  <p className="text-sm truncate max-w-[150px] overflow-hidden whitespace-nowrap text-ellipsis">
+                    {file.path}
+                  </p>
                 </>
-              )}
-              {(file?.name) && (
-                <p className="text-sm truncate max-w-full">
-                  {file.path || file?.name}
-                </p>
-              )}
-              {file?.webkitRelativePath && (
-                <p className="text-sm truncate max-w-full">
-                {getFolderName(file?.webkitRelativePath)}
-              </p>
               )}
             </div>
             {
