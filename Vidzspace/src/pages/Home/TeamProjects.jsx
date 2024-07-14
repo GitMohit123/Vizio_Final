@@ -29,6 +29,7 @@ import {
 } from "../../api/s3Objects";
 import Rename from "../../components/PopUp/Rename";
 import ProjectContext from "../../context/project/ProjectContext";
+import SidebarComponent from "../../components/Project/SidebarComponent";
 import axios from "axios";
 
 const TeamProjects = () => {
@@ -162,7 +163,7 @@ const TeamProjects = () => {
     setSelectedItem(null);
   };
 
-  const handleThreeDotClick = (option_passed, file, index) => {
+  const handleThreeDotFileClick = (option_passed, file, index) => {
     if (option_passed === "Delete") {
       // handleDelete(file?.SignedUrl);
       // setSelectedItem(null);
@@ -401,6 +402,8 @@ const TeamProjects = () => {
     }
   };
 
+  console.log(selectedItem);
+
   return (
     <>
       <div className="flex flex-row w-full p-2 justify-between items-center">
@@ -601,32 +604,11 @@ const TeamProjects = () => {
                         {selectedItem?.type === "folder" &&
                           selectedItem?.index === `folder-${index}` &&
                           selectedItem?.path === folder?.Key && (
-                            <div className="absolute left-2 top-10 h-50 bg-gray-900 z-30 py-1 rounded-xl">
-                              <div className="flex flex-col text-left">
-                                <p
-                                  className="text-[#f8ff2a] hover:bg-slate-800 py-1 px-6 rounded-xl"
-                                  onClick={closeSidebar}
-                                >
-                                  Close
-                                </p>
-                                {threeDotsMenuList.map((option, index) => {
-                                  return (
-                                    <p
-                                      onClick={() =>
-                                        handleThreeDotFolderClick(
-                                          option.option,
-                                          folder,
-                                          index
-                                        )
-                                      }
-                                      className="text-white hover:bg-slate-800 py-1 px-6 rounded-xl"
-                                    >
-                                      {option.option}
-                                    </p>
-                                  );
-                                })}
-                              </div>
-                            </div>
+                            <SidebarComponent
+                              folderfile={folder}
+                              closeSidebar={closeSidebar}
+                              handleThreeDotClick={handleThreeDotFolderClick}
+                            />
                           )}
                       </div>
                     </div>
@@ -691,32 +673,37 @@ const TeamProjects = () => {
                           {selectedItem?.type === "file" &&
                             selectedItem?.index === `file-${index}` &&
                             selectedItem?.path === file.Key && (
-                              <div className="absolute left-2 top-10 h-50 bg-gray-900 z-30 py-1 rounded-xl">
-                                <div className="flex flex-col text-left">
-                                  <p
-                                    className="text-[#f8ff2a] hover:bg-slate-800 py-1 px-6 rounded-xl"
-                                    onClick={closeSidebar}
-                                  >
-                                    Close
-                                  </p>
-                                  {threeDotsMenuList.map((option, index) => {
-                                    return (
-                                      <p
-                                        onClick={() =>
-                                          handleThreeDotClick(
-                                            option.option,
-                                            file,
-                                            index
-                                          )
-                                        }
-                                        className="text-white hover:bg-slate-800 py-1 px-6 rounded-xl"
-                                      >
-                                        {option.option}
-                                      </p>
-                                    );
-                                  })}
-                                </div>
-                              </div>
+                              // <div className="absolute left-2 top-10 h-50 bg-gray-900 z-30 py-1 rounded-xl">
+                              //   <div className="flex flex-col text-left">
+                              //     <p
+                              //       className="text-[#f8ff2a] hover:bg-slate-800 py-1 px-6 rounded-xl"
+                              //       onClick={closeSidebar}
+                              //     >
+                              //       Close
+                              //     </p>
+                              //     {threeDotsMenuList.map((option, index) => {
+                              //       return (
+                              //         <p
+                              //           onClick={() =>
+                              //             handleThreeDotClick(
+                              //               option.option,
+                              //               file,
+                              //               index
+                              //             )
+                              //           }
+                              //           className="text-white hover:bg-slate-800 py-1 px-6 rounded-xl"
+                              //         >
+                              //           {option.option}
+                              //         </p>
+                              //       );
+                              //     })}
+                              //   </div>
+                              // </div>
+                              <SidebarComponent
+                                folderfile={file}
+                                closeSidebar={closeSidebar}
+                                handleThreeDotClick={handleThreeDotFileClick}
+                              />
                             )}
                         </div>
                       </div>
