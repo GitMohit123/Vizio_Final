@@ -2,27 +2,48 @@ import React, { useContext } from "react";
 import ProjectContext from "../../context/project/ProjectContext";
 import { motion } from "framer-motion";
 import HomeContext from "../../context/homePage/HomeContext";
+import { useRef, useEffect } from "react";
 
 const Delete = () => {
-  const { setDeletePopup, deletedFiles, setDeletedFiles } = useContext(ProjectContext);
+  const { setDeletePopup, deletedFiles, setDeletedFiles, deletePopup } =
+    useContext(ProjectContext);
   const { handleDelete, handleDeleteFolder } = useContext(HomeContext);
 
   const handleDeleteClick = () => {
     if (deletedFiles.Type === "folder") {
-        handleDeleteFolder(deletedFiles.Key);
-        handleCancelClick()
-    }else{
-        handleDelete(deletedFiles?.SignedUrl);
-        handleCancelClick()
+      handleDeleteFolder(deletedFiles.Key);
+      handleCancelClick();
+    } else {
+      handleDelete(deletedFiles?.SignedUrl);
+      handleCancelClick();
     }
   };
-  const handleCancelClick = ()=>{
+  const handleCancelClick = () => {
     setDeletePopup(false);
-    setDeletedFiles({})
-  }
+    setDeletedFiles({});
+  };
+
+  const popupRef = useRef(null);
+
+  const handleOutsideClick = (event) => {
+    if (popupRef.current && !popupRef.current.contains(event.target)) {
+      handleCancelClick();
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [deletePopup]);
   return (
     <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-30 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
-      <div className="relative popup bg-[#2f2f2f] w-5/12 h-44 p-5 flex flex-col rounded-sm border-2 border-[#4c4c4c]">
+      <div
+        ref={popupRef}
+        className="relative popup bg-[#2f2f2f] w-5/12 h-44 p-5 flex flex-col rounded-sm border-2 border-[#4c4c4c]"
+      >
         <div className="absolute top-[-25px] left-1/2 transform -translate-x-1/2">
           <img
             src="/icons/Mask group.png"

@@ -1,12 +1,32 @@
 import React, { useContext } from "react";
 import HomeContext from "../../context/homePage/HomeContext";
-
+import { useRef, useEffect } from "react";
 const ShareCommentPopup = () => {
   const { isShareCommentPopup, setIsShareCommentPopup } =
     useContext(HomeContext);
+
+  const popupRef = useRef(null);
+
+  const handleOutsideClick = (event) => {
+    if (popupRef.current && !popupRef.current.contains(event.target)) {
+      setIsShareCommentPopup(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [isShareCommentPopup]);
+
   return (
     <div className="absolute top-0 right-0 p-2 max-w-lg max-h-full mx-auto w-full text-white z-20 drop-shadow-xl">
-      <div className="relative bg-[#242426] rounded-lg shadow dark:bg-gray-700 ">
+      <div
+        ref={popupRef}
+        className="relative bg-[#242426] rounded-lg shadow dark:bg-gray-700 "
+      >
         <div className="flex items-center justify-between p-4 border-b rounded-t dark:border-gray-600">
           <h3 className="text-lg font-semibold">{`Share`}</h3>
           <div className="flex space-x-2">

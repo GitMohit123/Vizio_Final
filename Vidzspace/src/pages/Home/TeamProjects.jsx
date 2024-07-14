@@ -19,6 +19,7 @@ import CMSLoader from "../../components/CMSLoader";
 import { useNavigate } from "react-router-dom";
 import { threeDotsMenuList } from "../../constants/projectsPage";
 import VideoContainer from "../../components/Project/VideoContainer";
+import { useEffect } from "react";
 import {
   deleteVideo,
   deleteVideoFolder,
@@ -404,6 +405,22 @@ const TeamProjects = () => {
 
   console.log(selectedItem);
 
+  const popupRef = useRef(null);
+
+  const handleOutsideClick = (event) => {
+    if (popupRef.current && !popupRef.current.contains(event.target)) {
+      setAddPopUp(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [addPopUp]);
+
   return (
     <>
       <div className="flex flex-row w-full p-2 justify-between items-center">
@@ -451,7 +468,10 @@ const TeamProjects = () => {
                     <p className="cursor-pointer">Add</p>
                   </div>
                   {addPopUp && (
-                    <div className="dropdown absolute w-36 top-10 -right-8 bg-white rounded-lg shadow-lg z-20">
+                    <div
+                      ref={popupRef}
+                      className="dropdown absolute w-36 top-10 -right-8 bg-white rounded-lg shadow-lg z-20"
+                    >
                       {/* Dropdown content */}
                       <ul className="py-1">
                         <li

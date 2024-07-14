@@ -6,11 +6,19 @@ import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
 import { createFolder, createTeam, fetchTeamsData } from "../../api/s3Objects";
 import { setCMSData, setTeamPath } from "../../app/Actions/cmsAction";
+import { useRef } from "react";
 import ProjectContext from "../../context/project/ProjectContext";
 
 const FolderAdd = () => {
-  const { user, currentTeam,path,teamPath,setLoad } = useContext(HomeContext);
-  const { addFolder,setAddFolder,newFolderName, setNewFolderName,setAddPopUp } = useContext(ProjectContext);
+  const { user, currentTeam, path, teamPath, setLoad } =
+    useContext(HomeContext);
+  const {
+    addFolder,
+    setAddFolder,
+    newFolderName,
+    setNewFolderName,
+    setAddPopUp,
+  } = useContext(ProjectContext);
   const dispatch = useDispatch();
   const handleCancelClick = () => {
     setAddFolder(false);
@@ -35,24 +43,48 @@ const FolderAdd = () => {
   const handleCreateFolderClick = async () => {
     setAddFolder(false);
     setLoad(true);
-    try{
-        const userId = user?.uid;
-        const response = await createFolder(path,teamPath,userId,newFolderName);
-        await fetchData();
-        setAddPopUp(false);
-        setLoad(false);
-        setNewFolderName("")
-        console.log(response);
-    }catch(err){
-        console.log(err);
-        setLoad(false);
+    try {
+      const userId = user?.uid;
+      const response = await createFolder(
+        path,
+        teamPath,
+        userId,
+        newFolderName
+      );
+      await fetchData();
+      setAddPopUp(false);
+      setLoad(false);
+      setNewFolderName("");
+      console.log(response);
+    } catch (err) {
+      console.log(err);
+      setLoad(false);
     }
-    console.log("created")
+    console.log("created");
   };
+
+  const popupRef = useRef(null);
+
+  const handleOutsideClick = (event) => {
+    if (popupRef.current && !popupRef.current.contains(event.target)) {
+      handleCancelClick();
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [addFolder]);
 
   return (
     <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-30 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
-      <div className="popup bg-[#2f2f2f] w-2/6 h-2/7 p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c]">
+      <div
+        ref={popupRef}
+        className="popup bg-[#2f2f2f] w-2/6 h-2/7 p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c]"
+      >
         <div className="flex w-full px-2 mb-6">
           <p className="text-white text-3xl font-bold">Create New Folder</p>
         </div>

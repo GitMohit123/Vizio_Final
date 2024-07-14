@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect } from "react";
+import React, { useCallback, useContext, useEffect, useRef } from "react";
 import { useState } from "react";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { useDispatch } from "react-redux";
@@ -31,6 +31,7 @@ const ProjectAdd = () => {
     user,
     setLoad,
     currentTeam,
+    projectState,
   } = useContext(HomeContext);
   const {
     setIsUploadingProgressOpen,
@@ -510,9 +511,28 @@ const ProjectAdd = () => {
     console.log(selectedFiles, selectedFolders, selectedFilesWithUrls);
   }, [selectedFiles, selectedFolders, selectedFilesWithUrls]);
 
+  const popupRef = useRef(null);
+
+  const handleOutsideClick = (event) => {
+    if (popupRef.current && !popupRef.current.contains(event.target)) {
+      handleCancelClick();
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [projectState]);
+
   return (
     <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-30 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
-      <div className="popup bg-[#383838] w-3/6 h-auto p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c]">
+      <div
+        ref={popupRef}
+        className="popup bg-[#383838] w-3/6 h-auto p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c]"
+      >
         {/* Title Section */}
         <div className="flex w-full px-2 mb-4">
           <p className="text-white text-3xl font-bold">Create New Project</p>

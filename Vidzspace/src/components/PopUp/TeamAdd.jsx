@@ -9,11 +9,15 @@ import {
   setCurrentTeam,
   setTeams,
 } from "../../app/Actions/teamActions";
+import { useRef } from "react";
 import { createTeam, listTeams } from "../../api/s3Objects";
 import { setTeamPath } from "../../app/Actions/cmsAction";
+import ProjectContext from "../../context/project/ProjectContext";
 
 const TeamAdd = () => {
-  const { teamName, setTeamName, user, currentTeam } = useContext(HomeContext);
+  const { teamName, setTeamName, user, currentTeam, teamState } =
+    useContext(HomeContext);
+  const { addFolder } = useContext(ProjectContext);
   const dispatch = useDispatch();
   const handleCancelClick = () => {
     dispatch(addTeamState(false));
@@ -49,9 +53,28 @@ const TeamAdd = () => {
     }
   };
 
+  const popupRef = useRef(null);
+
+  const handleOutsideClick = (event) => {
+    if (popupRef.current && !popupRef.current.contains(event.target)) {
+      handleCancelClick();
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [addFolder]);
+
   return (
     <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-30 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
-      <div className="popup bg-[#2f2f2f] w-2/6 h-2/7 p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c]">
+      <div
+        ref={popupRef}
+        className="popup bg-[#2f2f2f] w-2/6 h-2/7 p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c]"
+      >
         <div className="flex w-full px-2 mb-6">
           <p className="text-white text-3xl font-bold">Create New Team</p>
         </div>
