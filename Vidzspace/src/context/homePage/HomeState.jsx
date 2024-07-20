@@ -71,6 +71,7 @@ const HomeState = ({ children }) => {
   const [reName, setReName] = useState("");
   const [renamePopup, setRenamePopup] = useState(false);
   const [itemToRename, setItemToRename] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [selectedItem, setSelectedItem] = useState({});
   const handleDelete = (url) => {
@@ -149,6 +150,8 @@ const HomeState = ({ children }) => {
         teamState,
         teamName,
         isOpenShare,
+        searchQuery,
+        setSearchQuery,
         setIsOpenShare,
         setIsShareCommentPopup,
         isShareCommentPopup,

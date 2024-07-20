@@ -107,7 +107,7 @@ const CommentPage = () => {
               <CommentSection backendComments={backendComments} />
             </div>
           </div>
-          <div>{isShareCommentPopup && <ShareCommentPopup />}</div>
+          <div>{isShareCommentPopup && <ShareCommentPopup file={file} />}</div>
         </div>
       </div>
     </>

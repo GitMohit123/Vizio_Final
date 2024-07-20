@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useState } from "react";
+import React, { useCallback, useContext, useRef, useState } from "react";
 import { FaPhotoVideo, FaPlus } from "react-icons/fa";
 import HomeContext from "../../context/homePage/HomeContext";
 import { TbCloudUpload } from "react-icons/tb";
@@ -32,6 +32,7 @@ import Rename from "../../components/PopUp/Rename";
 import ProjectContext from "../../context/project/ProjectContext";
 import SidebarComponent from "../../components/Project/SidebarComponent";
 import axios from "axios";
+import _ from "lodash";
 
 const TeamProjects = () => {
   const {
@@ -61,6 +62,8 @@ const TeamProjects = () => {
     selectedFolders,
     setSelectedFolders,
     setSelectedFiles,
+    searchQuery,
+    setSearchQuery,
   } = useContext(HomeContext);
   const {
     deletePopup,
@@ -87,7 +90,7 @@ const TeamProjects = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const fetchData = async () => {
+  const fetchData = async (query = "") => {
     const currentTeamPath = currentTeam;
     try {
       const userId = user?.uid;
@@ -95,13 +98,30 @@ const TeamProjects = () => {
         `${userId}/${currentTeamPath}/${path}`,
         userId
       );
-      const filesData = response?.files || [];
-      const folderData = response?.folders || [];
+      let filesData = response?.files || [];
+      let folderData = response?.folders || [];
+
+      if (query != "") {
+        filesData = filesData.filter((file) =>
+          file.Key.toLowerCase().startsWith(query.toLowerCase())
+        );
+        folderData = folderData.filter((folder) =>
+          folder.Key.toLowerCase().startsWith(query.toLowerCase())
+        );
+      }
       dispatch(setCMSData(filesData, folderData));
     } catch (err) {
       console.log("Unable to fetch data");
     }
   };
+
+  const debounceFetchData = useCallback(
+    _.debounce((query) => fetchData(query), 1000)
+  );
+
+  useEffect(() => {
+    debounceFetchData(searchQuery);
+  }, [searchQuery]);
 
   const handlePasteObject = async () => {
     setLoad(true);

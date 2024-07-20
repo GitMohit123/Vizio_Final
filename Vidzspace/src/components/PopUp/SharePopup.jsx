@@ -1,10 +1,22 @@
 import React, { useContext } from "react";
 import HomeContext from "../../context/homePage/HomeContext";
 import Input from "../Auth Inputs/Input";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
+import { shareVideoFolder } from "../../api/s3Objects";
 
 const SharePopup = () => {
   const { setIsOpenShare, isOpenShare } = useContext(HomeContext);
+
+  const { user, path, teamPath } = useContext(HomeContext);
+
+  console.log(path);
+
+  const [emailInput, setEmailInput] = useState("");
+  const [peopleWithAccess, setPeopleWithAccess] = useState([]);
+  const [accessLevel, setAccessLevel] = useState("view");
+  const [sharing, setSharing] = useState("none");
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [sharingLink, setSharingLink] = useState("");
 
   const popupRef = useRef(null);
 
@@ -21,6 +33,55 @@ const SharePopup = () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, [isOpenShare]);
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const sharingDetails = {
+        sharingWith: peopleWithAccess ?? [],
+        sharingType: accessLevel,
+        sharing: sharing,
+      };
+
+      console.log(user);
+
+      console.log(sharingDetails);
+
+      const response = await shareVideoFolder({
+        sharingWith: peopleWithAccess ?? [],
+        sharingType: accessLevel,
+        sharing: sharing,
+        requester_id: user?.user_id,
+        path,
+        userId: user?.user_id,
+        teamPath,
+      });
+
+      setSharingLink(response.sharingLink);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    console.log(linkCopied);
+    console.log(sharingLink);
+    console.log(sharing);
+  }, [linkCopied, sharingLink, sharing]);
+
+  const handleCopyLink = () => {
+    navigator?.clipboard
+      ?.writeText(sharingLink)
+      .then(() => {
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 2000);
+      })
+      .catch((err) => {
+        console.error("Could not copy text: ", err);
+      });
+  };
+
   return (
     <div
       ref={popupRef}
@@ -60,12 +121,13 @@ const SharePopup = () => {
           </div>
         </div>
         <div className="p-4">
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium">
-              Add People
-            </label>
-            <div className="flex flex-wrap items-center  border   text-sm rounded-lg focus:ring-primary-600 border-white p-2.5 mt-2">
-              {/* {peopleWithAccess?.map((email, index) => (
+          <form onSubmit={handleFormSubmit}>
+            <div className="mb-4">
+              <label htmlFor="email" className="block text-sm font-medium">
+                Add People
+              </label>
+              <div className="flex flex-wrap items-center  border   text-sm rounded-lg focus:ring-primary-600 border-white p-2.5 mt-2">
+                {/* {peopleWithAccess?.map((email, index) => (
                       <span
                         key={index}
                         className="bg-gray-200 text-gray-700 rounded-full px-2 py-1 mr-2 mb-2"
@@ -73,67 +135,71 @@ const SharePopup = () => {
                         {email}
                       </span>
                     ))} */}
-              <input
-                type="email"
-                name="email"
-                id="email"
-                className="flex-grow bg-transparent outline-none text-white"
-                placeholder="Enter email"
-                //   value={emailInput}
-                //   onChange={handleEmailInputChange}
-                //   onKeyPress={handleEmailKeyPress}
-                style={{
-                  flex: "1 1 auto",
-                  minWidth: "150px",
-                  paddingLeft: "5px",
-                  width: "100%",
-                  height: "100%",
+                <input
+                  type="email"
+                  name="email"
+                  id="email"
+                  className="flex-grow bg-transparent outline-none text-white"
+                  placeholder="Enter email"
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  //   value={emailInput}
+                  //   onChange={handleEmailInputChange}
+                  //   onKeyPress={handleEmailKeyPress}
+                  style={{
+                    flex: "1 1 auto",
+                    minWidth: "150px",
+                    paddingLeft: "5px",
+                    width: "100%",
+                    height: "100%",
 
-                  backgroundColor: "transparent",
-                  fontSize: "1rem", // Adjust font size as needed
-                  // fontWeight: "bold",
-                  border: "none",
+                    backgroundColor: "transparent",
+                    fontSize: "1rem", // Adjust font size as needed
+                    // fontWeight: "bold",
+                    border: "none",
 
-                  outline: "none",
-                }}
-              />
+                    outline: "none",
+                  }}
+                />
+              </div>
             </div>
-          </div>
-          <div className="mb-4">
-            <label htmlFor="access" className="block text-sm font-medium ">
-              Access
-            </label>
-            <select
-              id="access"
-              // value={accessLevel}
-              // onChange={handleAccessChange}
-              className=" border bg-transparent  text-gray-400 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 mt-4 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 placeholder-gray-300 border-white"
-            >
-              <option value="view" className="text-black">
-                Viewer
-              </option>
-              <option value="edit" className="text-black">
-                Editor
-              </option>
-            </select>
-            <select
-              id="sharing"
-              // value={sharing}
-              // onChange={handleSharing}
-              className="border bg-transparent border-white text-gray-400 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 mt-4 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-300"
-            >
-              <option value="onlyMe" className="text-black">
-                Only Me
-              </option>
-              <option value="limited" className="text-black">
-                Limited
-              </option>
-              <option value="public" className="text-black">
-                Anyone with the link
-              </option>
-            </select>
-          </div>
-          {/* {sharing === "limited" && peopleWithAccess?.length > 0 && (
+            <div className="mb-4">
+              <label htmlFor="access" className="block text-sm font-medium ">
+                Access
+              </label>
+              <select
+                id="access"
+                // value={accessLevel}
+                // onChange={handleAccessChange}
+                className=" border bg-transparent  text-gray-400 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 mt-4 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 placeholder-gray-300 border-white"
+                value={accessLevel}
+                onChange={(e) => setAccessLevel(e.target.value)}
+              >
+                <option value="view" className="text-black">
+                  Viewer
+                </option>
+                <option value="edit" className="text-black">
+                  Editor
+                </option>
+              </select>
+              <select
+                id="sharing"
+                value={sharing}
+                onChange={(e) => setSharing(e.target.value)}
+                className="border bg-transparent border-white text-gray-400 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 mt-4 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-300"
+              >
+                <option value="onlyMe" className="text-black">
+                  Only Me
+                </option>
+                <option value="limited" className="text-black">
+                  Limited
+                </option>
+                <option value="public" className="text-black">
+                  Anyone with the link
+                </option>
+              </select>
+            </div>
+            {/* {sharing === "limited" && peopleWithAccess?.length > 0 && (
                   <div className="mb-4">
                     <h4 className="text-sm font-medium text-gray-900 dark:text-white">
                       People with access
@@ -183,15 +249,38 @@ const SharePopup = () => {
                   </div>
                 )} */}
 
-          <div className="flex justify-between">
-            <button className="text-gray-400">Invite Only</button>
-            <button
-              className="p-2 bg-[#f8ff2a] px-6 rounded-xl
+            <div className="flex justify-between">
+              <button className="text-gray-400">Invite Only</button>
+              <button
+                className="p-2 bg-[#f8ff2a] px-6 rounded-xl
                cursor-pointer text-gray-900 font-bold"
-            >
-              Share
-            </button>
-          </div>
+              >
+                Share
+              </button>
+            </div>
+
+            {sharing !== "none" && sharingLink && (
+              <div className="flex justify-between items-center">
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={handleCopyLink}
+                    className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                  >
+                    Copy Link
+                  </button>
+                  {linkCopied && (
+                    <span
+                      className="absolute left-full ml-2 text-sm text-green-500 opacity-0 transition-opacity duration-200 ease-in-out"
+                      style={{ opacity: linkCopied ? 1 : 0 }}
+                    >
+                      Link copied
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </form>
         </div>
       </div>
     </div>

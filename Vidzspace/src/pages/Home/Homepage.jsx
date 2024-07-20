@@ -61,6 +61,8 @@ const Homepage = () => {
     path,
     load,
     isOpenShare,
+    searchQuery,
+    setSearchQuery,
   } = useContext(HomeContext);
   const {
     isUploadingProgressOpen,
@@ -310,6 +312,8 @@ const Homepage = () => {
                 type="text"
                 placeholder="Search"
                 className="w-full bg-transparent border-none outline-none"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
 
