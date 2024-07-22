@@ -447,3 +447,60 @@ export const shareVideoFolder = async ({
     console.log(error);
   }
 };
+
+export const deleteTeam = async (userId, teamPath) => {
+  try {
+    console.log(userId, teamPath);
+    const { data } = await axios.post(
+      `/vidzspaceApi/users/s3/deleteteam`,
+      {
+        teamPath,
+      },
+
+      {
+        params: {
+          userId,
+        },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log(data);
+
+    return data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const renameTeam = async (newName, oldName, userId) => {
+  try {
+    console.log(userId, newName, oldName);
+    const { data } = await axios.post(
+      `/vidzspaceApi/users/s3/renameteam`,
+      {
+        newName,
+        oldName,
+      },
+
+      {
+        params: {
+          userId,
+        },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log(data);
+
+    return data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};

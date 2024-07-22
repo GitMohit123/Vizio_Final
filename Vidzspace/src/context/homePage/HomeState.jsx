@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import HomeContext from "./HomeContext";
 import { useDispatch, useSelector } from "react-redux";
-import { addTeamState, setCurrentTeam } from "../../app/Actions/teamActions";
+import {
+  addTeamState,
+  setCurrentTeam,
+  renameTeamState,
+} from "../../app/Actions/teamActions";
 import {
   setCMSData,
   setPath,
@@ -23,6 +27,7 @@ const HomeState = ({ children }) => {
   const team = useSelector((state) => state.team.info);
   const currentTeam = useSelector((state) => state.team.currentTeam);
   const teamState = useSelector((state) => state.team.teamState);
+  const renameState = useSelector((state) => state.team.renameState);
   const optionState = useSelector((state) => state.team.optionState);
   const folders = useSelector((state) => state.cms.folders);
   const files = useSelector((state) => state.cms.files);
@@ -40,6 +45,10 @@ const HomeState = ({ children }) => {
   //open team add popup
   const handleAddTeam = () => {
     dispatch(addTeamState(true));
+  };
+
+  const handleTeamRename = () => {
+    dispatch(renameTeamState(true));
   };
 
   //profile team dropdown
@@ -72,6 +81,8 @@ const HomeState = ({ children }) => {
   const [renamePopup, setRenamePopup] = useState(false);
   const [itemToRename, setItemToRename] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [deleteTeamState, setDeleteTeamState] = useState(false);
+  const [teamToRename, setTeamToRename] = useState("");
 
   const [selectedItem, setSelectedItem] = useState({});
   const handleDelete = (url) => {
@@ -151,12 +162,15 @@ const HomeState = ({ children }) => {
         teamName,
         isOpenShare,
         searchQuery,
+        teamToRename,
+        setTeamToRename,
         setSearchQuery,
         setIsOpenShare,
         setIsShareCommentPopup,
         isShareCommentPopup,
         setTeamName,
         teamPath,
+        handleTeamRename,
         handleTeamClick,
         handleAddTeam,
         handleDropDownClick,
@@ -169,6 +183,7 @@ const HomeState = ({ children }) => {
         selectedFiles,
         setSelectedFiles,
         selectedFolders,
+        renameState,
         setSelectedFolders,
         isDragging,
         setIsDragging,
@@ -186,6 +201,8 @@ const HomeState = ({ children }) => {
         handleDelete,
         handleDeleteFolder,
         fetchData,
+        deleteTeamState,
+        setDeleteTeamState,
       }}
     >
       {children}

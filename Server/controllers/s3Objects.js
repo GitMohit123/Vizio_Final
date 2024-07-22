@@ -1156,3 +1156,111 @@ export const updateVideoMetadataFolder = async (req, res, next) => {
     });
   }
 };
+
+export const deleteTeam = async (req, res, next) => {
+  const { teamPath } = req.body;
+  const { userId } = req.query;
+
+  console.log("teamPath", userId, teamPath);
+
+  try {
+    const teamPref = `${userId}/${teamPath}`;
+    const params = {
+      Bucket: "vidzspace",
+      Prefix: prefix + teamPref,
+    };
+
+    // List all objects under the team path
+    const listCommand = new ListObjectsV2Command(params);
+    const data = await s3Client.send(listCommand);
+
+    if (!data.Contents || data.Contents.length === 0) {
+      return res
+        .status(404)
+        .send({ message: "Team not found or already empty" });
+    }
+
+    console.log("data", data);
+
+    const keysToDelete = data.Contents.map((obj) => obj.Key);
+    const objects = keysToDelete.map((Key) => ({ Key }));
+
+    // Delete all objects
+    const delParams = {
+      Bucket: "vidzspace",
+      Delete: {
+        Objects: objects,
+        Quiet: true,
+      },
+    };
+
+    const commandDel = new DeleteObjectsCommand(delParams);
+    await s3Client.send(commandDel);
+
+    return res.status(200).send({ message: "Team deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({ message: "Error deleting team" });
+  }
+};
+
+export const renameTeam = async (req, res, next) => {
+  const { newName, oldName } = req.body;
+
+  const { userId } = req.query;
+
+  console.log("name", newName, oldName, userId);
+
+  const teamPrefix = `${prefix}${userId}/${oldName}/`;
+
+  try {
+    // List all objects under the old team name prefix
+    const listParams = {
+      Bucket: "vidzspace",
+      Prefix: teamPrefix,
+    };
+
+    const listCommand = new ListObjectsV2Command(listParams);
+    const listedObjects = await s3Client.send(listCommand);
+
+    if (listedObjects.Contents.length === 0) {
+      return res.status(404).json({
+        message: "No objects found under the old team name",
+      });
+    }
+
+    // Copy each object to the new location with the new team name prefix
+    for (const object of listedObjects.Contents) {
+      const copyParams = {
+        Bucket: "vidzspace",
+        CopySource: `/${listParams.Bucket}/${object.Key}`,
+        Key: object.Key.replace(
+          `${userId}/${oldName}/`,
+          `${userId}/${newName}/`
+        ),
+      };
+
+      const copyCommand = new CopyObjectCommand(copyParams);
+      await s3Client.send(copyCommand);
+
+      // Delete the original object
+      const deleteParams = {
+        Bucket: "vidzspace",
+        Key: object.Key,
+      };
+
+      const deleteCommand = new DeleteObjectCommand(deleteParams);
+      await s3Client.send(deleteCommand);
+    }
+
+    res.status(200).json({
+      message: "Team renamed successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Error renaming team",
+      error: error.message,
+    });
+  }
+};
