@@ -199,55 +199,6 @@ const SharePopup = () => {
                 </option>
               </select>
             </div>
-            {/* {sharing === "limited" && peopleWithAccess?.length > 0 && (
-                  <div className="mb-4">
-                    <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                      People with access
-                    </h4>
-                    <div className="max-h-32 overflow-y-auto">
-                      {peopleWithAccess?.map((email, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between py-2"
-                        >
-                          <div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">
-                              {email}
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              {email}
-                            </p>
-                          </div>
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">
-                            {accessLevel.charAt(0).toUpperCase() +
-                              accessLevel.slice(1)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {sharing !== "none" && sharingLink && (
-                  <div className="flex justify-between items-center">
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={handleCopyLink}
-                        className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-                      >
-                        Copy Link
-                      </button>
-                      {linkCopied && (
-                        <span
-                          className="absolute left-full ml-2 text-sm text-green-500 opacity-0 transition-opacity duration-200 ease-in-out"
-                          style={{ opacity: linkCopied ? 1 : 0 }}
-                        >
-                          Link copied
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )} */}
 
             <div className="flex justify-between">
               <button className="text-gray-400">Invite Only</button>

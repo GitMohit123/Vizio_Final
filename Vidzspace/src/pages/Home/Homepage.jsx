@@ -18,7 +18,7 @@ import {
   setOptionState,
   setTeams,
 } from "../../app/Actions/teamActions";
-import { Route, Routes, useNavigate } from "react-router-dom";
+import { Route, Routes, useNavigate, useSearchParams } from "react-router-dom";
 import HomeContext from "../../context/homePage/HomeContext";
 import { FaPlus } from "react-icons/fa";
 import TeamAdd from "../../components/PopUp/TeamAdd";
@@ -26,6 +26,7 @@ import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { FaSearch } from "react-icons/fa";
 import {
   setCMSData,
+  setPath,
   setProjectState,
   setTeamPath,
 } from "../../app/Actions/cmsAction";
@@ -76,6 +77,56 @@ const Homepage = () => {
 
   const { handleSignOut } = useContext(FirebaseContext);
   // console.log(path)
+  const [searchParams] = useSearchParams();
+  const encodedFullPath = searchParams?.get("v");
+  const [owner_id,setOwner_id] = useState("");
+
+  // const setPermissions = (sharingDetails) => {
+  //   console.log("owner:",owner_id, "userId",user?.user_id)
+  //   if(sharingDetails?.sharingtype === "edit" || user?.user_id === owner_id){
+  //     setCanWrite(true);
+  //     console.log(canWrite)
+  //   }
+  //   if(user?.user_id === owner_id){
+  //     setIsOwner(true);
+  //   }
+  // }
+
+  const getFolderFromSharedLink = async(encodedFullPath) => {
+    const full_Path = atob(encodedFullPath);
+    console.log(full_Path);
+    const userId = full_Path.split("/")[1];
+    const currentTeam = full_Path.split("/")[2];
+    const path = full_Path.split("'s Team/")[1];
+    // dispatch(setCurrentTeam(currentTeam));
+    // setFullPath(full_Path);
+    // var ownerId = full_Path.split("/")[0]
+    // ownerId = ownerId.endsWith("/") ? ownerId.slice(0, -1) : ownerId
+    // setOwner_id(ownerId);
+    // console.log("owner id:", owner_id)
+    // const idToken = await getCurrentUserToken();
+    // const data = await listRoot({idToken, path: full_Path, requester_id: user?.user_id});
+    // console.log("data: " + data)
+    // if(data.success === false) navigate('/error', {state: {message: "You don't have access to the folder or the link is invalid :("}});
+    // dispatch(setFetchData(data));
+    // setPermissions(data?.sharingDetails);
+    // setSelectedTeam(full_Path.split("/")[1]);//might cause extra slash. needs testing
+  }
+
+  useEffect(() => {
+    const list = async () => {
+      try {
+        if (user) {
+          if (encodedFullPath) { 
+            getFolderFromSharedLink(encodedFullPath);
+          }
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    list();
+  }, [user, path]);
 
   useEffect(() => {
     if (team) {

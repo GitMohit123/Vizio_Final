@@ -1,6 +1,10 @@
 import React from 'react'
+import { useSearchParams } from 'react-router-dom';
 
 const LandingPage = () => {
+  const [searchParams] = useSearchParams();
+  const encodedFullPath = searchParams?.get("v");
+  console.log(encodedFullPath);
   return (
     <div className='landing-page' style={{ height: '100vh', width: '100%' }}>
       <iframe 

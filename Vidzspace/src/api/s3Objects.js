@@ -340,21 +340,21 @@ export const copyObject = async ({ srcKey, destPath, type, user_id }) => {
   }
 };
 
-const frontendURL = "http://127.0.0.1:3000/home";
+const frontendURL = "http://localhost:3000/home";
 
 function getSharingLinkFromKey(Key) {
   console.log("key in url = " + Key);
 
   const sharingLi = frontendURL + `/${Key}`;
   console.log(sharingLi);
-  const sharingLink = frontendURL + `/${btoa(Key)}`;
+  const sharingLink = frontendURL + `/?v=${btoa(Key)}`;
   return sharingLink;
 }
 function getSharingLinkFromPath(path, userId, teamPath) {
   console.log("path in url = " + path);
   let fullPath;
   fullPath = `users/${userId}/${teamPath}/${path}`;
-  const sharingLink = frontendURL + `/${btoa(fullPath)}`;
+  const sharingLink = frontendURL + `/?v=${btoa(fullPath)}`;
   const sharingLi = frontendURL + `/${fullPath}`;
   console.log(sharingLi);
   return sharingLink;

@@ -423,8 +423,6 @@ const TeamProjects = () => {
     }
   };
 
-  console.log(selectedItem);
-
   const popupRef = useRef(null);
 
   const handleOutsideClick = (event) => {
