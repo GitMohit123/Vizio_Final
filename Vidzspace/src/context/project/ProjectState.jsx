@@ -77,7 +77,7 @@ const ProjectState = ({ children }) => {
   const [videoTimeSec, setVideoTimeSec] = useState(0);
   const [videoTimeMin, setVideoTimeMin] = useState(0);
   const extractName = (filename) => {
-    const match = filename.match(/.*_(.+)$/);
+    const match = filename?.match(/.*_(.+)$/);
     return match ? match[1] : filename;
   };
   const convertBytesToGB = (bytes) => {

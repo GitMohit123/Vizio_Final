@@ -72,6 +72,8 @@ const Homepage = () => {
     handleTeamRename,
     teamToRename,
     setTeamToRename,
+    owner_id,
+    setOwner_id,
   } = useContext(HomeContext);
   const {
     isUploadingProgressOpen,
@@ -86,55 +88,44 @@ const Homepage = () => {
   const { handleSignOut } = useContext(FirebaseContext);
   // console.log(path)
   const [searchParams] = useSearchParams();
-  const encodedFullPath = searchParams?.get("v");
-  const [owner_id, setOwner_id] = useState("");
+  const encodedFullPath1 = searchParams?.get("v");
+  const [encodedFullPath, setEncodedFullPath] = useState(encodedFullPath1);
+  const [canWrite, setCanWrite] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
 
-  // const setPermissions = (sharingDetails) => {
-  //   console.log("owner:",owner_id, "userId",user?.user_id)
-  //   if(sharingDetails?.sharingtype === "edit" || user?.user_id === owner_id){
-  //     setCanWrite(true);
-  //     console.log(canWrite)
-  //   }
-  //   if(user?.user_id === owner_id){
-  //     setIsOwner(true);
-  //   }
-  // }
+  const setPermissions = (sharingDetails) => {
+    console.log("owner:",owner_id, "userId",user?.user_id)
+    if(sharingDetails?.sharingtype === "edit" || user?.user_id === owner_id){
+      setCanWrite(true);
+      console.log("can Write")
+    }
+    if(user?.user_id === owner_id){
+      setIsOwner(true);
+      console.log("is Owner")
+    }
+  }
 
   const getFolderFromSharedLink = async (encodedFullPath) => {
     const full_Path = atob(encodedFullPath);
     console.log(full_Path);
-    const userId = full_Path.split("/")[1];
     const currentTeam = full_Path.split("/")[2];
     const path = full_Path.split("'s Team/")[1];
-    // dispatch(setCurrentTeam(currentTeam));
-    // setFullPath(full_Path);
-    // var ownerId = full_Path.split("/")[0]
-    // ownerId = ownerId.endsWith("/") ? ownerId.slice(0, -1) : ownerId
-    // setOwner_id(ownerId);
-    // console.log("owner id:", owner_id)
-    // const idToken = await getCurrentUserToken();
-    // const data = await listRoot({idToken, path: full_Path, requester_id: user?.user_id});
-    // console.log("data: " + data)
-    // if(data.success === false) navigate('/error', {state: {message: "You don't have access to the folder or the link is invalid :("}});
-    // dispatch(setFetchData(data));
-    // setPermissions(data?.sharingDetails);
+    var ownerId = full_Path.split("/")[1]
+    setOwner_id(ownerId);
+   
     // setSelectedTeam(full_Path.split("/")[1]);//might cause extra slash. needs testing
+        const response = await fetchTeamsData(
+          `${ownerId}/${currentTeam}/${path}`,
+          user?.user_id
+        );
+        if(response?.success === false) navigate('/error', {state: {message: "You don't have access to the folder or the link is invalid :("}});
+        const filesData = response?.files;
+        const folderData = response?.folders;
+        dispatch(setCMSData(filesData, folderData));
+        setPermissions(response?.sharingDetails);
+        setEncodedFullPath(null);
   };
 
-  useEffect(() => {
-    const list = async () => {
-      try {
-        if (user) {
-          if (encodedFullPath) {
-            getFolderFromSharedLink(encodedFullPath);
-          }
-        }
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    list();
-  }, [user, path]);
 
   useEffect(() => {
     if (team) {
@@ -150,14 +141,22 @@ const Homepage = () => {
     const currentTeamPath = currentTeam;
     const fetchData = async () => {
       try {
+        if (encodedFullPath) {
+          getFolderFromSharedLink(encodedFullPath);
+        }
+        else{
         const userId = user?.uid;
+        if(!owner_id) setOwner_id(userId);
         const response = await fetchTeamsData(
-          `${userId}/${currentTeamPath}/${path}`,
+          `${owner_id}/${currentTeamPath}/${path}`,
           userId
-        );
+        ); 
+        if(response.success === false) navigate('/error', {state: {message: "You don't have access to the folder or the link is invalid :("}});
         const filesData = response?.files;
         const folderData = response?.folders;
+        setPermissions(response?.sharingDetails);
         dispatch(setCMSData(filesData, folderData));
+      }
       } catch (err) {
         console.log("Unable to fetch data");
       }
@@ -221,7 +220,7 @@ const Homepage = () => {
       .catch((error) => console.log(error));
   };
 
-  console.log("team", team, currentTeam, teamPath);
+  // console.log("team", team, currentTeam, teamPath);
 
   return (
     <div className="h-screen w-screen bg-[#1B1B1B] flex flex-row justify-between">
@@ -396,6 +395,7 @@ const Homepage = () => {
             </div>
 
             <div className="flex flex-row gap-4 justify-center items-center cursor-pointer ">
+              { isOwner && 
               <div
                 onClick={() => {
                   setIsOpenShare((prev) => !prev);
@@ -407,7 +407,7 @@ const Homepage = () => {
                   className="h-6 w-10 hidden lg:block"
                 />
                 <p className="text-[#f8ff2a]">Share</p>
-              </div>
+              </div>}
               <div className="bg-[#1B1B1B] text-[#f8ff2a] p-2 rounded-full h-7 w-7 flex justify-center items-center hover:bg-[#242426]">
                 ?
               </div>

@@ -83,6 +83,7 @@ const HomeState = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteTeamState, setDeleteTeamState] = useState(false);
   const [teamToRename, setTeamToRename] = useState("");
+  const [owner_id, setOwner_id] = useState("");
 
   const [selectedItem, setSelectedItem] = useState({});
   const handleDelete = (url) => {
@@ -152,6 +153,8 @@ const HomeState = ({ children }) => {
         setRenamePopup,
         reName,
         setReName,
+        owner_id,
+        setOwner_id,
         load,
         setLoad,
         displayName,

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import VideoBox from "../../components/FeedBack/VideoBox";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { MdOutlineAccountCircle } from "react-icons/md";
 import { IoMdArrowRoundBack } from "react-icons/io";
 import { FaPhotoVideo, FaSearch } from "react-icons/fa";
@@ -10,23 +10,77 @@ import HomeContext from "../../context/homePage/HomeContext";
 import ProjectContext from "../../context/project/ProjectContext";
 import { setCurrentTeam } from "../../app/Actions/teamActions";
 import ShareCommentPopup from "../../components/PopUp/ShareCommentPopup";
+import { getSharedVideoFromKey, prefix } from "../../api/s3Objects";
 
 const CommentPage = () => {
   const location = useLocation();
-  const { file } = location.state || {};
+  // const { file } = location.state || null;
   const navigate = useNavigate();
   const { user, isShareCommentPopup, setIsShareCommentPopup } =
     useContext(HomeContext);
   const firstLetter = user?.name.charAt(0).toUpperCase();
-  const { load, path, teamPath, handleTeamClick, currentTeam } =
+  const { load, path, teamPath, handleTeamClick, currentTeam, owner_id, setOwner_id } =
     useContext(HomeContext);
+  const [searchParams] = useSearchParams();
   const { extractName } = useContext(ProjectContext);
+  const encodedKey = searchParams?.get("v");
 
   const [backendComments, setBackendComments] = useState([]);
+  // const [fetchedVideo, setFetchedVideo] = useState();
+  const [canWrite, setCanWrite] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [file, setFile] = useState(location.state?.file);
+
+  function getOwnerIdFromKey(Key) {
+    console.log(Key)
+    //key = users/...
+    const parts = Key.split("/");
+    const prefixLength = prefix.split("/").length - 1;
+    // Ensure there are at least 2 parts (users, username)
+    if (parts.length > prefixLength) {
+      console.log(parts);
+      return parts[prefixLength];
+    } else {
+      return null;
+    }
+  }
+  const setPermissions = (videoData) => {
+    console.log(videoData)
+    console.log(owner_id);
+    var ownerId = getOwnerIdFromKey(videoData?.FullKey);
+    console.log(ownerId);
+    // if(!ownerId) ownerId = user?.uid;
+    setOwner_id(ownerId);
+    console.log("owner:",ownerId, " userId:",user?.user_id)
+    if(videoData?.Metadata?.sharingtype === "edit" || user?.user_id === ownerId){
+      setCanWrite(true);
+      console.log("canWrite");
+    }
+    if(user?.user_id === ownerId){
+      setIsOwner(true);
+      console.log("isOwner");
+    }
+  }
+
+  const getVideoFromSharedLink = async(encodedKey) => {
+    const Key = atob(encodedKey);
+    const response = await getSharedVideoFromKey({Key, requester_id: user?.user_id});
+    console.log(response)
+    if(response.success === false) navigate('/error', {state: {message: "You dont have access to the file or the link is invalid :("}});
+    // setFetchedVideo(response?.videoData);
+    // const ownerId = owner_id ?? getOwnerIdFromKey(Key);
+    console.log("current Path = ", Key)
+    setPermissions(response?.videoData);
+    setFile(response?.videoData);
+  }
 
   useEffect(() => {
     const fetchCommentsData = async () => {
       try {
+        if(!file){
+          getVideoFromSharedLink(encodedKey).then(console.log("video fetched"));
+        }
+        else setPermissions(file);
         const videoName = file?.Key;
         const userId = user?.uid;
         const response = await fetchCommentsApi(userId, videoName);
@@ -53,7 +107,7 @@ const CommentPage = () => {
               <div className="cursor-pointer" onClick={handleBack}>
                 <IoMdArrowRoundBack />
               </div>
-              <div>@ {extractName(file.Key)}</div>
+              <div>@ {extractName(file?.Key)}</div>
             </div>
 
             <div className="lg:flex md:flex flex-row gap-3 justify-center items-center text-gray-500 hidden">
@@ -67,12 +121,12 @@ const CommentPage = () => {
               <p className="text-white border border-yellow-300 font-bold px-4 py-1 rounded-lg hidden lg:block md:block">
                 View_Status
               </p>
-              <p
+              { isOwner && <p
                 className="text-black font-bold px-4 py-1 rounded-full bg-[#f8ff2a]"
                 onClick={() => setIsShareCommentPopup((prev) => !prev)}
               >
                 Share
-              </p>
+              </p>}
 
               <div className="relative w-8 h-8">
                 <img

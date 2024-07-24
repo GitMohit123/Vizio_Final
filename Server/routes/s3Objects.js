@@ -15,6 +15,7 @@ import {
   updateVideoMetadataFolder,
   deleteTeam,
   renameTeam,
+  getSharedVideoFromKey,
 } from "../controllers/s3Objects.js";
 
 const s3router = Router();
@@ -31,6 +32,7 @@ s3router.post("/createFolder", createFolder);
 s3router.post("/copyObject", copyObject);
 s3router.post("/updateVideoMetadata", updateVideoMetadata);
 s3router.post("/updateVideoMetadataFolder", updateVideoMetadataFolder);
+s3router.post("/getSharedVideoFromKey", getSharedVideoFromKey);
 s3router.post("/deleteteam", deleteTeam);
 s3router.post("/renameteam", renameTeam);
 

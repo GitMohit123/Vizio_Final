@@ -10,6 +10,7 @@ import { validateUserJWTToken } from "./api/auth";
 import MainLoader from "./components/MainLoader";
 import HomeState from "./context/homePage/HomeState";
 import ProjectState from "./context/project/ProjectState";
+import ErrorNoAccess from "./components/ErrorNoAccess";
 
 const App = () => {
   const loading = useSelector((state) => state.user.loading);
@@ -51,6 +52,7 @@ const App = () => {
               <Route path="/signup" element={<SignUp />} />
               <Route path="/home" element={<HomePage />} />
               <Route path="/feedback" element={<CommentPage />} />
+              <Route path="/error" element={<ErrorNoAccess/>}/>
             </Routes>
           </ProjectState>
         </HomeState>

@@ -552,7 +552,7 @@ const TeamProjects = () => {
             isPastingObject ? "filter brightness-75" : ""
           }`}
         >
-          {files.length === 0 && folders.length === 0 && path !== "" ? (
+          {files?.length === 0 && folders?.length === 0 && path !== "" ? (
             <div className="w-full h-full justify-center items-center flex">
               <div className="flex flex-col justify-center items-center gap-3 text-gray-400">
                 <ImFilesEmpty className="text-5xl" />

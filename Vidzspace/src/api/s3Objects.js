@@ -1,5 +1,7 @@
 import axios from "axios";
 
+export const prefix = "users/";
+
 export const listTeams = async (userId) => {
   try {
     const response = await axios.get("/vidzspaceApi/users/s3/listTeams", {
@@ -58,6 +60,7 @@ export const createTeam = async (teamName, userId) => {
 
 export const fetchTeamsData = async (path, user_id) => {
   try {
+    console.log("in fetch teams data with path", path, ", requestorid: ", user_id);
     const response = await axios.get(`/vidzspaceApi/users/s3/fetchTeamsData`, {
       params: {
         requester_id: user_id,
@@ -341,13 +344,11 @@ export const copyObject = async ({ srcKey, destPath, type, user_id }) => {
 };
 
 const frontendURL = "http://localhost:3000/home";
+const frontendURLFeedback = "http://localhost:3000/feedback";
 
 function getSharingLinkFromKey(Key) {
   console.log("key in url = " + Key);
-
-  const sharingLi = frontendURL + `/${Key}`;
-  console.log(sharingLi);
-  const sharingLink = frontendURL + `/?v=${btoa(Key)}`;
+  const sharingLink = frontendURLFeedback + `/?v=${btoa(Key)}`;
   return sharingLink;
 }
 function getSharingLinkFromPath(path, userId, teamPath) {
@@ -416,6 +417,9 @@ export const shareVideoFolder = async ({
   teamPath,
 }) => {
   try {
+    console.log("in share api with path, uid, team:",path,
+      userId,
+      teamPath)
     const response = await axios.post(
       "/vidzspaceApi/users/s3/updateVideoMetadataFolder",
       {
@@ -447,6 +451,30 @@ export const shareVideoFolder = async ({
     console.log(error);
   }
 };
+
+export const getSharedVideoFromKey = async ({Key, requester_id}) => {
+  try {
+    console.log("key:", Key);
+    const response = await axios.post(
+      `/vidzspaceApi/users/s3/getSharedVideoFromKey`,
+      {
+        Key,
+        requester_id
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 
 export const deleteTeam = async (userId, teamPath) => {
   try {

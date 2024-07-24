@@ -62,7 +62,7 @@ const ShareCommentPopup = ({ file }) => {
           type: file?.type,
         });
 
-        setSharingLink(response.sharingLink);
+        setSharingLink(response?.sharingLink);
       }
     } catch (error) {
       console.log(error);
@@ -149,8 +149,8 @@ const ShareCommentPopup = ({ file }) => {
                   //   value={emailInput}
                   //   onChange={handleEmailInputChange}
                   //   onKeyPress={handleEmailKeyPress}
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
+                  value={peopleWithAccess}
+                  onChange={(e) => setPeopleWithAccess([e.target.value])}
                   style={{
                     flex: "1 1 auto",
                     minWidth: "150px",

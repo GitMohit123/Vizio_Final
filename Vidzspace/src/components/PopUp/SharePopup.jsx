@@ -141,8 +141,8 @@ const SharePopup = () => {
                   id="email"
                   className="flex-grow bg-transparent outline-none text-white"
                   placeholder="Enter email"
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
+                  value={peopleWithAccess}
+                  onChange={(e) => setPeopleWithAccess([e.target.value])}
                   //   value={emailInput}
                   //   onChange={handleEmailInputChange}
                   //   onKeyPress={handleEmailKeyPress}
