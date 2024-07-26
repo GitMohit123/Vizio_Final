@@ -1,27 +1,31 @@
-import React, { useContext, useRef, useState, useEffect } from "react";
+import React, { useRef, useEffect, useState, useContext } from 'react';
 import ProjectContext from "../../context/project/ProjectContext";
-import CommentForm from "./CommentForm";
-import { FaPencilAlt, FaEraser, FaSave } from "react-icons/fa";
+import CommentForm from './CommentForm'; // Adjust the import path as needed
 
 const VideoBox = ({ file }) => {
-  const { setVideoTimeMin, setVideoTimeSec } = useContext(ProjectContext);
-  const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const videoRef = useRef(null);
+  const { setVideoTimeMin, setVideoTimeSec } = useContext(ProjectContext);
   const [isDrawing, setIsDrawing] = useState(false);
   const [context, setContext] = useState(null);
-  const [toolMode, setToolMode] = useState("draw"); // 'draw' or 'erase'
   const [drawings, setDrawings] = useState([]);
+  const [toolMode, setToolMode] = useState('pencil');
+  const [color, setColor] = useState('red'); 
 
   useEffect(() => {
     const video = videoRef.current;
     if (video) {
- 
       video.addEventListener("seeked", () => {
         const currentTime = Math.floor(video.currentTime);
         const mins = Math.floor(currentTime / 60);
         const seconds = currentTime % 60;
         setVideoTimeSec(seconds);
         setVideoTimeMin(mins);
+        clearCanvas(); 
+      });
+
+      video.addEventListener("play", () => {
+        clearCanvas(); 
       });
     }
 
@@ -29,95 +33,82 @@ const VideoBox = ({ file }) => {
     if (canvas) {
       const ctx = canvas.getContext("2d");
       setContext(ctx);
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = "red"; // Default drawing color
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = color; 
     }
-  }, [setVideoTimeMin, setVideoTimeSec]);
+  }, [setVideoTimeMin, setVideoTimeSec, color]);
 
   const getCanvasCoordinates = (event) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
     return {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
+      x: (event.clientX - rect.left) * scaleX,
+      y: (event.clientY - rect.top) * scaleY,
     };
   };
 
   const handleMouseDown = (e) => {
+    if (toolMode === 'eraser') {
+      context.globalCompositeOperation = 'destination-out';
+    } else {
+      context.globalCompositeOperation = 'source-over';
+    }
+
     const { x, y } = getCanvasCoordinates(e);
-    if (context && toolMode === "draw") {
+    if (context) {
       context.beginPath();
       context.moveTo(x, y);
       setIsDrawing(true);
-    } else if (toolMode === "erase") {
-      setIsDrawing(true);
-      handleErase(e);
     }
   };
 
   const handleMouseMove = (e) => {
+    if (!isDrawing) return;
+
     const { x, y } = getCanvasCoordinates(e);
-    if (isDrawing && context && toolMode === "draw") {
+    if (context) {
       context.lineTo(x, y);
       context.stroke();
-    } else if (isDrawing && context && toolMode === "erase") {
-      handleErase(e);
     }
   };
 
   const handleMouseUp = () => {
-    if (context && toolMode === "draw") {
+    if (isDrawing && context) {
       context.closePath();
       setIsDrawing(false);
-    } else if (toolMode === "erase") {
-      setIsDrawing(false);
     }
   };
 
-  const handleErase = (e) => {
-    const { x, y } = getCanvasCoordinates(e);
+  const clearCanvas = () => {
     if (context) {
-      context.clearRect(x - 5, y - 5, 10, 10);
+      context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     }
   };
 
-  const toggleToolMode = (mode) => {
-    setToolMode(mode);
-    if (mode === "draw") {
-      canvasRef.current.style.cursor = "crosshair";
-    } else if (mode === "erase") {
-      canvasRef.current.style.cursor = "cell";
+  const saveDrawing = () => {
+    if (canvasRef.current) {
+      const dataUrl = canvasRef.current.toDataURL();
+      const timestamp = videoRef.current.currentTime;
+      setDrawings([...drawings, { drawing: dataUrl, timestamp }]);
     }
   };
-
-  const saveDrawing = async () => {
-    const video = videoRef.current;
+  const showDrawing = (drawingDataUrl) => {
     const canvas = canvasRef.current;
-    if (!canvas || !video) return;
-
-    // Create a new canvas to combine both video and drawing
-    const combinedCanvas = document.createElement("canvas");
-    combinedCanvas.width = canvas.width;
-    combinedCanvas.height = canvas.height;
-    const combinedCtx = combinedCanvas.getContext("2d");
-
-    // Draw the current video frame onto the combined canvas
-    combinedCtx.drawImage(video, 0, 0, combinedCanvas.width, combinedCanvas.height);
-
-    // Draw the existing canvas drawing onto the combined canvas
-    combinedCtx.drawImage(canvas, 0, 0);
-
-    // Save the combined image
-    const drawing = combinedCanvas.toDataURL("image/png");
-    const timestamp = videoRef.current.currentTime;
-
-    setDrawings((prevDrawings) => [
-      ...prevDrawings,
-      { drawing, timestamp },
-    ]);
-
-    console.log(drawings); // Log the saved drawings to check if it works
+    const ctx = canvas.getContext('2d');
+    
+    if (ctx) {
+      const image = new Image();
+      image.src = drawingDataUrl;
+      image.onload = () => {
+        clearCanvas(); 
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+      };
+    }
   };
+
 
   return (
     <div className="w-full lg:w-[56rem] lg:ml-24 lg:mt-10 relative">
@@ -130,7 +121,6 @@ const VideoBox = ({ file }) => {
             src={file?.SignedUrl}
             type="video/mp4"
             controls
-           
           />
           <canvas
             ref={canvasRef}
@@ -138,32 +128,55 @@ const VideoBox = ({ file }) => {
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-            style={{ cursor: toolMode === "draw" ? "crosshair" : "auto" }}
           />
-          <div className="absolute top-0 right-0 m-4 flex gap-4">
-            <FaPencilAlt
-              className={`cursor-pointer ${
-                toolMode === "draw" ? "text-blue-500" : "text-white"
-              }`}
-              onClick={() => toggleToolMode("draw")}
-              size={24}
-            />
-            <FaEraser
-              className={`cursor-pointer ${
-                toolMode === "erase" ? "text-red-500" : "text-white"
-              }`}
-              onClick={() => toggleToolMode("erase")}
-              size={24}
-            />
-            <FaSave
-              className="cursor-pointer text-white"
-              onClick={saveDrawing}
-              size={24}
-            />
-          </div>
         </div>
-        {/* Comment Form */}
-        <CommentForm file={file} />
+        <div className="flex gap-2 mt-4">
+          {drawings.map((drawing, index) => (
+            <div
+              key={index}
+              className="relative flex items-center justify-center"
+              style={{
+                width: '24px',
+                height: '24px',
+                backgroundColor: 'white',
+                borderRadius: '50%',
+                cursor: 'pointer',
+                transform: 'scale(1)',
+                transition: 'transform 0.2s ease-in-out'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+              onClick={() => showDrawing(drawing.drawing)}
+            >
+              <div
+                className="absolute flex items-center justify-center"
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  backgroundColor: '#3399FF',
+                  borderRadius: '50%',
+                  color: 'white',
+                  fontSize: '10px'
+                }}
+              >
+                {Math.floor(drawing.timestamp / 60)}:
+                {Math.floor(drawing.timestamp % 60)}
+              </div>
+            </div>
+          ))}
+        </div>
+        <CommentForm
+          file={file}
+          toolMode={toolMode}
+          setToolMode={setToolMode}
+          saveDrawing={saveDrawing}
+          clearCanvas={clearCanvas}
+          setColor={setColor}
+        />
       </div>
     </div>
   );

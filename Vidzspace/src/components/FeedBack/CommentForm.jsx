@@ -1,56 +1,51 @@
-import React, { useContext, useState } from "react";
+import  { useContext, useState } from "react";
 import ProjectContext from "../../context/project/ProjectContext";
-import { MdOutlineAccountCircle } from "react-icons/md";
+
 import { IoIosTime } from "react-icons/io";
 import { motion } from "framer-motion";
 import HomeContext from "../../context/homePage/HomeContext";
-import { FaLocationArrow } from "react-icons/fa6";
-import { createComment } from "../../api/Comments";
+import { FaEraser, FaLocationArrow } from "react-icons/fa6";
 
-const CommentForm = ({ file }) => {
-  const { user,load,setLoad } = useContext(HomeContext);
-  const {videoTimeMin,videoTimeSec} = useContext(ProjectContext);
+import { createComment } from "../../api/Comments";
+import { FaPaintBrush } from "react-icons/fa";
+import { FaSave } from "react-icons/fa";
+import { GrPowerReset } from "react-icons/gr";
+const CommentForm = ({ file, toolMode, setToolMode, saveDrawing, clearCanvas, setColor }) => {
+  const { user, load, setLoad } = useContext(HomeContext);
+  const { videoTimeMin, videoTimeSec } = useContext(ProjectContext);
   const firstLetter = file?.Metadata?.ownername?.charAt(0).toUpperCase();
   const firstLetterCommenting = user?.name?.charAt(0).toUpperCase();
-  const [text,setText] = useState("")
-  const isTextAreaDisabled = text.length===0;
+  const [text, setText] = useState("");
+  const isTextAreaDisabled = text.length === 0;
 
-  const handleCreateComment = async()=>{
+  const handleCreateComment = async () => {
     setLoad(true);
-    try{
-        const comment = text;
-        const userId = user?.uid;
-        const territory_id = user?.name;
-        const videoName = file?.Key;
-        const reply_id = "null";
-        const videoTime = videoTimeMin*60 + videoTimeSec;
-        const response = await createComment(comment,userId,territory_id,videoName,reply_id,videoTime);
-        console.log("Comment Created : Message from Frontend");
-        console.log(response);
-        setText("");
-        setLoad(false);
-    }catch(err){
-        console.log("Unable to create Comment");
+    try {
+      const comment = text;
+      const userId = user?.uid;
+      const territory_id = user?.name;
+      const videoName = file?.Key;
+      const reply_id = "null";
+      const videoTime = videoTimeMin * 60 + videoTimeSec;
+      const response = await createComment(comment, userId, territory_id, videoName, reply_id, videoTime);
+      console.log("Comment Created : Message from Frontend");
+      console.log(response);
+      setText("");
+      setLoad(false);
+    } catch (err) {
+      console.log("Unable to create Comment");
     }
   }
+
+  const handleToolChange = (tool) => {
+    setToolMode(tool);
+  };
 
   const { getDifferenceText } = useContext(ProjectContext);
   return (
     <div className="bg-[#242426] w-full rounded-md px-2 py-2">
       <div className="flex flex-col gap-6 p-2">
         <div className="flex flex-row gap-3 items-center justify-start">
-          {/* <div className="relative w-8 h-8">
-            <img
-              src="/icons/Profile.png"
-              alt="User"
-              className="w-full h-full rounded-full"
-            />
-            {firstLetter && (
-              <div className="absolute inset-0 flex items-center justify-center font-bold text-blue-400 bg-opacity-75 rounded-full">
-                {firstLetter}
-              </div>
-            )}
-          </div> */}
           <p className="text-sm text-gray-400">{file?.Metadata?.ownername}</p>
           <p className="text-sm text-gray-400">
             {getDifferenceText(file?.LastModified)}
@@ -78,22 +73,56 @@ const CommentForm = ({ file }) => {
               <input
                 type="text"
                 placeholder="Type your Comment"
-                className="w-full bg-transparent border-none focus:outline-none text-gray-800"
+                className="w-full bg-transparent border-none focus:outline-none text-gray-700"
                 value={text}
-                onChange={(e)=>setText(e.target.value)}
-                onKeyDown={(e)=>{if(e.key==="Enter"){
-                    handleCreateComment()
-                }}}
+                onChange={(e) => setText(e.target.value)}
               />
+          <div className="flex gap-2 justify-center ">
+            <FaPaintBrush
+              size={24}
+              onClick={() => handleToolChange('pencil')}
+              className={`cursor-pointer ${toolMode === 'pencil' ? 'text-black' : 'text-blue-500'}`}
+            />
+            <FaEraser
+              size={24}
+              onClick={() => handleToolChange('eraser')}
+              className={`cursor-pointer ${toolMode === 'eraser' ? 'text-black' : 'text-blue-500'}`}
+            />
+            <div className="flex gap-2">
+              <div
+                className="h-6 w-6 bg-yellow-400 rounded-full cursor-pointer"
+                onClick={() => setColor('yellow')}
+              />
+              <div
+                className="h-6 w-6 bg-blue-400 rounded-full cursor-pointer"
+                onClick={() => setColor('blue')}
+              />
+              <div
+                className="h-6 w-6 bg-red-400 rounded-full cursor-pointer"
+                onClick={() => setColor('red')}
+              />
+            </div>
+            <FaSave onClick={saveDrawing} size={25} color="blue">
+              Save
+            </FaSave>
+            <GrPowerReset onClick={clearCanvas} size={25} color="blue">
+              Reset
+            </GrPowerReset>
+          </div>
               <motion.button
-                className=" p-2 rounded-full"
+                whileTap={{ scale: 0.8 }}
+                whileHover={{ scale: 1.2 }}
+                className={`${
+                  isTextAreaDisabled ? "bg-gray-400" : "bg-blue-400"
+                } text-white rounded-md px-4 py-2 transition duration-150 ease-in-out`}
                 disabled={isTextAreaDisabled}
                 onClick={handleCreateComment}
               >
-                <FaLocationArrow className="text-xl text-black" />
+                <FaLocationArrow />
               </motion.button>
             </div>
           </div>
+         
         </div>
       </div>
     </div>
