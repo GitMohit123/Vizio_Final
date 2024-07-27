@@ -116,7 +116,7 @@ const VideoBox = ({ file }) => {
         <div className="w-full h-full lg:h-[27rem] relative">
           <video
             ref={videoRef}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
             id="myVideo"
             src={file?.SignedUrl}
             type="video/mp4"
