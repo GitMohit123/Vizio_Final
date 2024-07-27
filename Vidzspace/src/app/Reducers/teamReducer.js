@@ -2,7 +2,8 @@ const initialState = {
   info: null,
   currentTeam: null,
   teamState: false,
-  optionState:"Team Projects"
+  renameState: false,
+  optionState: "Team Projects",
 };
 const teamReducer = (state = initialState, action) => {
   switch (action.type) {
@@ -21,11 +22,16 @@ const teamReducer = (state = initialState, action) => {
         ...state,
         teamState: action.value,
       };
-      case "SET_OPTION_STATE":
-        return{
-            ...state,
-            optionState:action.optionName
-        }
+    case "RENAME_TEAM_STATE":
+      return {
+        ...state,
+        renameState: action.value,
+      };
+    case "SET_OPTION_STATE":
+      return {
+        ...state,
+        optionState: action.optionName,
+      };
     default:
       return state;
   }

@@ -221,7 +221,7 @@ export const getUploadPresignedUrl = async ({
   fileName,
   contentType,
   user_id,
-  fullPath
+  fullPath,
 }) => {
   try {
     const path = fullPath || "";
@@ -252,7 +252,6 @@ export const getUploadPresignedUrl = async ({
     throw error; // Re-throwing the error for handling elsewhere if needed
   }
 };
-
 
 export const updateProgress = async (
   type,
@@ -326,17 +325,182 @@ export const createFolder = async (
   }
 };
 
-export const copyObject = async ({srcKey, destPath, type, user_id}) => {
+export const copyObject = async ({ srcKey, destPath, type, user_id }) => {
   try {
     const response = await axios.post(`/vidzspaceApi/users/s3/copyObject`, {
-        requester_id: user_id,
-        srcKey,
-        destPath,
-        type,
+      requester_id: user_id,
+      srcKey,
+      destPath,
+      type,
     });
     console.log(response.data);
     return response.data;
   } catch (err) {
     console.log(err);
+  }
+};
+
+const frontendURL = "http://localhost:3000/home";
+
+function getSharingLinkFromKey(Key) {
+  console.log("key in url = " + Key);
+
+  const sharingLi = frontendURL + `/${Key}`;
+  console.log(sharingLi);
+  const sharingLink = frontendURL + `/?v=${btoa(Key)}`;
+  return sharingLink;
+}
+function getSharingLinkFromPath(path, userId, teamPath) {
+  console.log("path in url = " + path);
+  let fullPath;
+  fullPath = `users/${userId}/${teamPath}/${path}`;
+  const sharingLink = frontendURL + `/?v=${btoa(fullPath)}`;
+  const sharingLi = frontendURL + `/${fullPath}`;
+  console.log(sharingLi);
+  return sharingLink;
+}
+
+export const shareVideo = async ({
+  url,
+  requester_id,
+  sharing,
+  sharingType,
+  sharingWith,
+  type,
+}) => {
+  try {
+    const getKeyFromSignedUrl = (signedUrl) => {
+      const urlObj = new URL(signedUrl);
+      return decodeURIComponent(urlObj.pathname.slice(1)); // Remove leading slash and decode URI
+    };
+
+    const Key = getKeyFromSignedUrl(url);
+    console.log(Key);
+
+    const response = await axios.post(
+      "/vidzspaceApi/users/s3/updateVideoMetadata",
+      {
+        Key,
+        requester_id,
+        sharing,
+        sharingType,
+        sharingWith,
+        type,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+      }
+    );
+
+    const sharingLink = getSharingLinkFromKey(Key);
+
+    return {
+      response: response.data,
+      sharingLink: sharingLink,
+    };
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const shareVideoFolder = async ({
+  requester_id,
+  sharing,
+  sharingType,
+  sharingWith,
+  path,
+  userId,
+  teamPath,
+}) => {
+  try {
+    const response = await axios.post(
+      "/vidzspaceApi/users/s3/updateVideoMetadataFolder",
+      {
+        requester_id,
+        sharing,
+        sharingType,
+        sharingWith,
+        path,
+        userId,
+        teamPath,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+      }
+    );
+
+    const sharingLink = getSharingLinkFromPath(path, userId, teamPath);
+
+    console.log(response);
+
+    return {
+      response: response.data,
+      sharingLink: sharingLink,
+    };
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const deleteTeam = async (userId, teamPath) => {
+  try {
+    console.log(userId, teamPath);
+    const { data } = await axios.post(
+      `/vidzspaceApi/users/s3/deleteteam`,
+      {
+        teamPath,
+      },
+
+      {
+        params: {
+          userId,
+        },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log(data);
+
+    return data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const renameTeam = async (newName, oldName, userId) => {
+  try {
+    console.log(userId, newName, oldName);
+    const { data } = await axios.post(
+      `/vidzspaceApi/users/s3/renameteam`,
+      {
+        newName,
+        oldName,
+      },
+
+      {
+        params: {
+          userId,
+        },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log(data);
+
+    return data;
+  } catch (error) {
+    console.log(error);
+    throw error;
   }
 };

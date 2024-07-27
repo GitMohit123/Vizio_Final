@@ -8,6 +8,7 @@ import {
   fetchTeamsData,
   listTeams,
   copyObject,
+  deleteTeam,
 } from "../../api/s3Objects";
 import { CgProfile } from "react-icons/cg";
 import { FiLogOut } from "react-icons/fi";
@@ -18,14 +19,15 @@ import {
   setOptionState,
   setTeams,
 } from "../../app/Actions/teamActions";
-import { Route, Routes, useNavigate } from "react-router-dom";
+import { Route, Routes, useNavigate, useSearchParams } from "react-router-dom";
 import HomeContext from "../../context/homePage/HomeContext";
 import { FaPlus } from "react-icons/fa";
 import TeamAdd from "../../components/PopUp/TeamAdd";
-import { MdOutlineKeyboardArrowDown } from "react-icons/md";
+import { Md10K, MdDelete, MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { FaSearch } from "react-icons/fa";
 import {
   setCMSData,
+  setPath,
   setProjectState,
   setTeamPath,
 } from "../../app/Actions/cmsAction";
@@ -39,6 +41,7 @@ import ProjectContext from "../../context/project/ProjectContext";
 import UploadProgress from "../../components/PopUp/UploadProgress";
 import Delete from "../../components/PopUp/Delete";
 import FolderAdd from "../../components/PopUp/FolderAdd";
+import RenameTeam from "../../components/PopUp/RenameTeam";
 
 const Homepage = () => {
   const dispatch = useDispatch();
@@ -49,6 +52,7 @@ const Homepage = () => {
     team,
     currentTeam,
     teamState,
+    renameState,
     teamPath,
     handleTeamClick,
     handleAddTeam,
@@ -61,6 +65,13 @@ const Homepage = () => {
     path,
     load,
     isOpenShare,
+    searchQuery,
+    setSearchQuery,
+    deleteTeamState,
+    setDeleteTeamState,
+    handleTeamRename,
+    teamToRename,
+    setTeamToRename,
   } = useContext(HomeContext);
   const {
     isUploadingProgressOpen,
@@ -74,6 +85,56 @@ const Homepage = () => {
 
   const { handleSignOut } = useContext(FirebaseContext);
   // console.log(path)
+  const [searchParams] = useSearchParams();
+  const encodedFullPath = searchParams?.get("v");
+  const [owner_id, setOwner_id] = useState("");
+
+  // const setPermissions = (sharingDetails) => {
+  //   console.log("owner:",owner_id, "userId",user?.user_id)
+  //   if(sharingDetails?.sharingtype === "edit" || user?.user_id === owner_id){
+  //     setCanWrite(true);
+  //     console.log(canWrite)
+  //   }
+  //   if(user?.user_id === owner_id){
+  //     setIsOwner(true);
+  //   }
+  // }
+
+  const getFolderFromSharedLink = async (encodedFullPath) => {
+    const full_Path = atob(encodedFullPath);
+    console.log(full_Path);
+    const userId = full_Path.split("/")[1];
+    const currentTeam = full_Path.split("/")[2];
+    const path = full_Path.split("'s Team/")[1];
+    // dispatch(setCurrentTeam(currentTeam));
+    // setFullPath(full_Path);
+    // var ownerId = full_Path.split("/")[0]
+    // ownerId = ownerId.endsWith("/") ? ownerId.slice(0, -1) : ownerId
+    // setOwner_id(ownerId);
+    // console.log("owner id:", owner_id)
+    // const idToken = await getCurrentUserToken();
+    // const data = await listRoot({idToken, path: full_Path, requester_id: user?.user_id});
+    // console.log("data: " + data)
+    // if(data.success === false) navigate('/error', {state: {message: "You don't have access to the folder or the link is invalid :("}});
+    // dispatch(setFetchData(data));
+    // setPermissions(data?.sharingDetails);
+    // setSelectedTeam(full_Path.split("/")[1]);//might cause extra slash. needs testing
+  };
+
+  useEffect(() => {
+    const list = async () => {
+      try {
+        if (user) {
+          if (encodedFullPath) {
+            getFolderFromSharedLink(encodedFullPath);
+          }
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    list();
+  }, [user, path]);
 
   useEffect(() => {
     if (team) {
@@ -150,6 +211,18 @@ const Homepage = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const handleDeleteTeam = () => {
+    const userId = user?.uid;
+
+    deleteTeam(userId, teamPath)
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((error) => console.log(error));
+  };
+
+  console.log("team", team, currentTeam, teamPath);
+
   return (
     <div className="h-screen w-screen bg-[#1B1B1B] flex flex-row justify-between">
       {/* Section1 */}
@@ -169,6 +242,13 @@ const Homepage = () => {
                 onClick={() => handleTeamClick(team)}
               >
                 <p>{displayName(team)}</p>
+                <MdDelete onClick={handleDeleteTeam} />
+                <Md10K
+                  onClick={() => {
+                    handleTeamRename();
+                    setTeamToRename(team);
+                  }}
+                />
               </motion.div>
             );
           })}
@@ -310,6 +390,8 @@ const Homepage = () => {
                 type="text"
                 placeholder="Search"
                 className="w-full bg-transparent border-none outline-none"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
 
@@ -340,6 +422,7 @@ const Homepage = () => {
             {isUploadingProgressOpen && <UploadProgress />}
             {addFolder && <FolderAdd />}
             {teamState && <TeamAdd />}
+            {renameState && <RenameTeam />}
             {optionState === "Team Projects" && <TeamProjects />}
             {optionState === "Team Info" && <TeamInfo />}
             {optionState === "Upgrade the plan" && <UpgradePlan />}
