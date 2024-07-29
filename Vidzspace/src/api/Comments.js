@@ -35,24 +35,24 @@ export const deleteComment = async(userId,commentId)=>{
     }
   };
 
-  export const createComment = async(comment,userId,territory_id,videoName,reply_id,videoTime)=>{
-    try{
-      const response = await axios.post(`/vidzspaceApi/users/comments/createComment`,
-        {
-          text:comment,
-          userId:userId, 
-          userName:territory_id, 
-          videoName:videoName, 
-          reply_id:reply_id,
-          videoTime:videoTime
-        }
-      );
-      console.log(response.data)
-      return response.data
-    }catch(err){
-      console.log("Error : ", err)
+  export const createComment = async (comment, userId, territory_id, videoName, reply_id, videoTime, drawings) => {
+    try {
+      const response = await axios.post(`/vidzspaceApi/users/comments/createComment`, {
+        text: comment,
+        userId: userId, 
+        userName: territory_id, 
+        videoName: videoName, 
+        reply_id: reply_id,
+        videoTime: videoTime,
+        drawings: drawings 
+      });
+      console.log(response.data);
+      return response.data;
+    } catch (err) {
+      console.log("Error: ", err);
     }
-  }
+  };
+  
 
   export const editComment = async(userId,video_comment_id,newMessage)=>{
     try{

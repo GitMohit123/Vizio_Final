@@ -10,6 +10,7 @@ import HomeContext from "../../context/homePage/HomeContext";
 import ProjectContext from "../../context/project/ProjectContext";
 import { setCurrentTeam } from "../../app/Actions/teamActions";
 import ShareCommentPopup from "../../components/PopUp/ShareCommentPopup";
+import { DrawingProvider } from "../../context/drawing/DrawingContext";
 
 const CommentPage = () => {
   const location = useLocation();
@@ -45,6 +46,7 @@ const CommentPage = () => {
   };
   return (
     <>
+    <DrawingProvider>
       <div className=" bg-[#1B1B1B] min-h-screen p-[1px]">
         <div className=" flex h-full w-full p-2 flex-col px-3 gap-4">
           {/* Header */}
@@ -110,6 +112,7 @@ const CommentPage = () => {
           <div>{isShareCommentPopup && <ShareCommentPopup file={file} />}</div>
         </div>
       </div>
+      </DrawingProvider>
     </>
   );
 };

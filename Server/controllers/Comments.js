@@ -28,10 +28,18 @@ export const getComments = async (req, res, next) => {
 };
 
 export const generateComment = async (req, res, next) => {
-  const { text, userId, userName, videoName, reply_id, videoTime } = req.body;
+  const { text, userId, userName, videoName, reply_id, videoTime, drawings } = req.body;
   const timestamp = Date.now();
 
   try {
+    //  console.log("hola",drawings);
+    
+    //  const cleanedDrawing = drawings.replace(/^\"|\"$/g, '');
+    const cleanedDrawing = drawings.replace(/^"|"$/g, '');
+    console.log("hola",cleanedDrawing);
+    
+
+
     const existingComments = await fetchComments(userId, videoName);
     const commentCount = existingComments.length;
     const commentId = commentCount + 1;
@@ -39,26 +47,30 @@ export const generateComment = async (req, res, next) => {
     const comment = {
       comment_id: commentId.toString(),
       video_id: videoName,
-      reply_id: null || reply_id.toString(),
+      reply_id: reply_id ? reply_id.toString() : null,
       territory_id: userName,
       timestamp: timestamp.toString(),
       visibility: false,
       comment: text,
       knowledge_id: userId,
       videoTime: videoTime.toString(),
-      progress:false
+      drawings: cleanedDrawing, 
+      progress: false,
     };
+    console.log("hola 60",cleanedDrawing);
     await createComment(comment);
 
     return res.status(201).json({
       success: true,
-      message: "Comment created successfully",
+      message: "Comment and drawings created successfully",
+      
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     next(error);
   }
 };
+
 
 export const delComment = async (req, res, next) => {
   const { userId, commentId } = req.body;

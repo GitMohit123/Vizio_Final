@@ -1,9 +1,12 @@
-import React, { useRef, useEffect, useState, useContext } from 'react';
+// VideoBox.js
+import  { useRef, useEffect, useState, useContext } from 'react';
+
 import ProjectContext from "../../context/project/ProjectContext";
-import CommentForm from './CommentForm'; // Adjust the import path as needed
+import CommentForm from './CommentForm';
+import { useDrawing } from '../../context/drawing/DrawingContext';
 
 const VideoBox = ({ file }) => {
-  const canvasRef = useRef(null);
+  const { canvasRef, setCanvasContext } = useDrawing();
   const videoRef = useRef(null);
   const { setVideoTimeMin, setVideoTimeSec } = useContext(ProjectContext);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -11,7 +14,7 @@ const VideoBox = ({ file }) => {
   const [drawings, setDrawings] = useState([]);
   const [toolMode, setToolMode] = useState('pencil');
   const [color, setColor] = useState('red'); 
-
+  const { showDrawing } = useDrawing()
   useEffect(() => {
     const video = videoRef.current;
     if (video) {
@@ -33,10 +36,11 @@ const VideoBox = ({ file }) => {
     if (canvas) {
       const ctx = canvas.getContext("2d");
       setContext(ctx);
+      setCanvasContext(ctx); // Set context in global state
       ctx.lineWidth = 3;
       ctx.strokeStyle = color; 
     }
-  }, [setVideoTimeMin, setVideoTimeSec, color]);
+  }, [setVideoTimeMin, setVideoTimeSec, color, setCanvasContext]);
 
   const getCanvasCoordinates = (event) => {
     const canvas = canvasRef.current;
@@ -92,22 +96,10 @@ const VideoBox = ({ file }) => {
     if (canvasRef.current) {
       const dataUrl = canvasRef.current.toDataURL();
       const timestamp = videoRef.current.currentTime;
-      setDrawings([...drawings, { drawing: dataUrl, timestamp }]);
+      setDrawings(dataUrl);
     }
   };
-  const showDrawing = (drawingDataUrl) => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    
-    if (ctx) {
-      const image = new Image();
-      image.src = drawingDataUrl;
-      image.onload = () => {
-        clearCanvas(); 
-        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-      };
-    }
-  };
+
 
 
   return (
@@ -131,7 +123,7 @@ const VideoBox = ({ file }) => {
           />
         </div>
         <div className="flex gap-2 mt-4">
-          {drawings.map((drawing, index) => (
+          {/* {drawings.map((drawing, index) => (
             <div
               key={index}
               className="relative flex items-center justify-center"
@@ -167,7 +159,7 @@ const VideoBox = ({ file }) => {
                 {Math.floor(drawing.timestamp % 60)}
               </div>
             </div>
-          ))}
+          ))} */}
         </div>
         <CommentForm
           file={file}
@@ -176,6 +168,7 @@ const VideoBox = ({ file }) => {
           saveDrawing={saveDrawing}
           clearCanvas={clearCanvas}
           setColor={setColor}
+          drawings={drawings}
         />
       </div>
     </div>

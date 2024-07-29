@@ -8,45 +8,47 @@ import { GrPowerReset } from "react-icons/gr";
 import { createComment } from "../../api/Comments";
 import { FaPaintBrush } from "react-icons/fa";
 
-const CommentForm = ({ file, toolMode, setToolMode, saveDrawing, clearCanvas, setColor }) => {
+const CommentForm = ({ drawings, file, toolMode, setToolMode, saveDrawing, clearCanvas, setColor }) => {
   const { user, load, setLoad } = useContext(HomeContext);
   const { videoTimeMin, videoTimeSec, getDifferenceText } = useContext(ProjectContext);
   const firstLetterCommenting = user?.name?.charAt(0).toUpperCase();
   const [text, setText] = useState("");
-  const [isToolsVisible, setIsToolsVisible] = useState(false); // Toggle state for tool icons
+  const [isToolsVisible, setIsToolsVisible] = useState(false); 
   const isTextAreaDisabled = text.length === 0;
 
   const handleCreateComment = async () => {
     setLoad(true);
     try {
-      const comment = text;
-      const userId = user?.uid;
-      const territory_id = user?.name;
-      const videoName = file?.Key;
+      const comment = text || ""; 
+      const userId = user?.uid || "";
+      const territory_id = user?.name || ""; 
+      const videoName = file?.Key || ""; 
       const reply_id = "null";
       const videoTime = videoTimeMin * 60 + videoTimeSec;
-      const response = await createComment(comment, userId, territory_id, videoName, reply_id, videoTime);
-      console.log("Comment Created : Message from Frontend");
-      console.log(response);
+
+     
+      saveDrawing();
+
+  
+      console.log("drawings", drawings)
+      const response = await createComment(comment, userId, territory_id, videoName, reply_id, videoTime, drawings);
+      console.log("Comment Created: Message from Frontend");
+     
       setText("");
     } catch (err) {
-      console.log("Unable to create Comment");
+      console.log("Unable to create Comment", err);
     } finally {
       setLoad(false);
     }
   };
 
   const handleSaveOrComment = () => {
-    if (text) {
-      handleCreateComment();
-    } else {
-      saveDrawing();
-    }
+    handleCreateComment();
   };
 
   const handleColorChange = (color) => {
     setColor(color);
-    setToolMode('pencil'); // Ensure pencil mode is activated when changing color
+    setToolMode('pencil'); 
   };
 
   return (
