@@ -84,6 +84,7 @@ const HomeState = ({ children }) => {
   const [deleteTeamState, setDeleteTeamState] = useState(false);
   const [teamToRename, setTeamToRename] = useState("");
   const [owner_id, setOwner_id] = useState("");
+  const [sharedPath, setSharedPath] = useState(null);
 
   const [selectedItem, setSelectedItem] = useState({});
   const handleDelete = (url) => {
@@ -206,6 +207,8 @@ const HomeState = ({ children }) => {
         fetchData,
         deleteTeamState,
         setDeleteTeamState,
+        sharedPath, 
+        setSharedPath
       }}
     >
       {children}

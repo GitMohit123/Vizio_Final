@@ -64,6 +64,7 @@ const TeamProjects = () => {
     setSelectedFiles,
     searchQuery,
     setSearchQuery,
+    setSharedPath,
   } = useContext(HomeContext);
   const {
     deletePopup,
@@ -573,7 +574,19 @@ const TeamProjects = () => {
                       <div
                         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-3 gap-4 h-40 overflow-y-auto no-scrollbar"
                         key={folder.Key}
-                        onClick={() => handleRoute(folder.Key)}
+                        onClick={() => {
+                          console.log(path)
+                          if(path.includes("sharedProjectsOfUser")){
+                            setLoad(true);
+                            console.log("setting shared path: ", folder.fullPath);
+                            setSharedPath(folder.fullPath);
+                            dispatch(setPath(folder.Key));
+                            setTimeout(() => {
+                              setLoad(false);
+                            }, 1000);
+                          }else
+                          handleRoute(folder.Key)
+                        }}
                       >
                         {folder?.innerFiles &&
                           folder?.innerFiles

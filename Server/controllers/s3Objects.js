@@ -45,6 +45,7 @@ export const listTeams = async (req, res, next) => {
       (teamName) => teamName !== null && teamName !== undefined
     );
     const uniqueTeamNames = [...new Set(filteredTeamNames)];
+    console.log(uniqueTeamNames)
 
     return res.status(200).json(uniqueTeamNames); // Send OK (200) with the list of teams
   } catch (err) {
@@ -204,10 +205,154 @@ const getSharingDetails = async (key) => {
   return metadataResponse.Metadata;
 }
 
+const addToSharedProjects = async (user_id, fullPath, type) => {//type = "team"/"project"
+  console.log("adding: ", user_id, fullPath, type);
+  const arrayName = type === "team" ? "sharedTeams" : "sharedProjects";
+  const arrayPath = prefix + user_id + "/" + arrayName + ".json"
+  //check if user has the sharedprojects wala array
+  const params1 = {
+    Bucket : "vidzspace",
+    Prefix : prefix + user_id + '/',
+    Delimiter: '/'
+  }
+  const response1 = await s3Client.send( new ListObjectsV2Command(params1) );
+  // console.log("contents:",response1.Contents);
+
+  const sharedProjectsObject = response1.Contents?.find(
+    (item) => item.Key === arrayPath
+  );
+
+  //if not, create kardo
+  if(response1.Contents?.length === 0 || !sharedProjectsObject){
+    const params2 = {
+      Bucket : "vidzspace",
+      Key : arrayPath,
+      ContentType : "application/json",
+      Body: JSON.stringify([fullPath]),
+    }
+    const response2 = await s3Client.send(new PutObjectCommand(params2));
+  }
+  else{
+    //add to array
+    const params2 = {
+      Bucket: "vidzspace",
+      Key: arrayPath,
+    };
+    const response2 = await s3Client.send(new GetObjectCommand(params2));
+    const jsonString = await response2.Body?.transformToString();
+    const array = JSON.parse(jsonString ?? '')
+    console.log("array: ", array);
+    if(!array.includes(fullPath)) array.push(fullPath);
+    const params3 = {
+      Bucket: "vidzspace",
+      Key: arrayPath,
+      Body: JSON.stringify(array),
+      ContentType: "application/json",
+    };
+    const response3 = await s3Client.send(new PutObjectCommand(params3));
+  }
+  console.log("added to array");
+}
+
+const getSharedProjects = async(path) => {
+  console.log("share path", prefix + path)
+  const paramsShared = {
+    Bucket: "vidzspace",
+    Key: prefix + path,
+  };
+  const responseShared = await s3Client.send(new GetObjectCommand(paramsShared));
+  const jsonString = await responseShared.Body?.transformToString();
+  const array = JSON.parse(jsonString ?? '')
+  console.log("got array")
+  const folders = array.map((prefix) => ({
+    fullPath: prefix,
+    Key: prefix.split("/").filter(Boolean).pop(),
+    Type: "folder",
+    LastModified: null,
+    Metadata: null,
+  }));
+  
+  for (const subfolder of folders) {
+    
+    subfolder.fullPath = subfolder.fullPath.endsWith("/") ? subfolder.fullPath : subfolder.fullPath + "/";
+
+    const params2 = {
+      Bucket: "vidzspace",
+      Prefix: subfolder.fullPath,
+      Delimiter: "",
+    };
+    const data2 = await s3Client.send(new ListObjectsV2Command(params2));
+    console.log("got one folders data")
+
+    const innerStuff = getFilesForSubfolder(
+      subfolder.fullPath,
+      data2.Contents
+    );
+    subfolder.innerFolders = innerStuff.subfolders;
+    subfolder.innerFiles = await Promise.all(
+      innerStuff.subFiles.map(async (file) => {
+        // console.log("file", file);
+        if (file) {
+          file.FullKey = file.Key;
+          return await addMetadataAndSignedUrl(file);
+        } else {
+          return [];
+        }
+      })
+    );
+
+    // Get LastModified for the folder itself (assuming it's listed in data2.Contents)
+    const folderObject = data2.Contents.find(
+      (item) => item.Key === subfolder.fullPath
+    );
+    if (folderObject) {
+      subfolder.LastModified = folderObject.LastModified;
+    }
+
+    const metadataFileKey = subfolder.fullPath + "metadata.json";
+    const metadataFileObject = data2.Contents.find(
+      (item) => item.Key === metadataFileKey
+    );
+    if (metadataFileObject) {
+      // Fetch metadata of metadata.json
+      const metadataParams = {
+        Bucket: "vidzspace",
+        Key: metadataFileKey,
+      };
+      const metadataResponse = await s3Client.send(
+        new HeadObjectCommand(metadataParams)
+      );
+      subfolder.Metadata = metadataResponse.Metadata;
+    }
+  }
+
+  const files = []; //currently only projects in it
+
+  const folderSizes = 0; //for testing
+
+  const result = {
+    folders: folders.map((folder) => ({
+      ...folder,
+      size: folderSizes,
+    })), // Add size to each folder object
+    files: files,
+    size: 0, //for testing
+    sharingDetails: {sharing: "none", sharingWith: "[]", sharingType: "none"},
+  };
+  return result;
+}
+
 export const listRoot = async (req, res, next) => {
   const user_id = req.query.requester_id;
   let path = req.query.path || ""; // Default to empty string if path is not provided
   console.log("path:" + path);
+
+  //if path is Shared Projects wala Array
+  if(path.endsWith("sharedProjectsOfUser") || path.endsWith("sharedProjectsOfUser/")) {
+    // console.log("in it")
+    const result = await getSharedProjects(user_id + '/' + "sharedProjects.json")
+    return res.json(result);
+  }
 
   // Ensure path ends with a slash if it is not empty
   if (path && !path.endsWith("/")) {
@@ -220,16 +365,17 @@ export const listRoot = async (req, res, next) => {
       Prefix: prefix + `${path}`,
       Delimiter: "/",
     };
-    const data = await s3Client.send(new ListObjectsV2Command(params));
+    const data = await s3Client.send(new ListObjectsV2Command(params)); //only files at first level
 
     // console.log(data);
+    // console.log("jo")
 
     const params2 = {
       Bucket: "vidzspace",
       Prefix: prefix + `${path}`,
       Delimiter: "",
     };
-    const data2 = await s3Client.send(new ListObjectsV2Command(params2));
+    const data2 = await s3Client.send(new ListObjectsV2Command(params2)); //all files inside the folder
 
     //console.log(data2);
     const size = await getFolderSize("vidzspace", prefix + path, data2);
@@ -250,13 +396,19 @@ export const listRoot = async (req, res, next) => {
       }
       sharingDetails = {sharing, sharingwith, sharingtype};
     }
-    else if (owner_id !== user_id) {
+    else if (owner_id !== user_id) {//if doesn't have metadata means it hasn't been shared
       return res.status(201).json({
         success: false,
         message: "no access"
       });
     }
-
+    console.log(path.split("/").filter(Boolean).length, "hehe")
+    const type = path.split("/").filter(Boolean).length === 2 ? "team" : "project"; //assuming projects only exist inside teams
+    console.log(type)
+    if(user_id !== owner_id && sharingDetails?.sharing === "public"){
+      console.log("adding to shared projects")
+      addToSharedProjects(user_id, prefix + path, type);
+    }
     // Extract the common prefixes (folders) and top-level files
     const folders = (data.CommonPrefixes || []).map((prefix) => ({
       Key: prefix.Prefix.split("/").filter(Boolean).pop(),
@@ -264,7 +416,6 @@ export const listRoot = async (req, res, next) => {
       LastModified: null,
       Metadata: null,
     }));
-
     //inner files
     // folders.forEach(subfolder => {
     //   const innerStuff = getFilesForSubfolder(params.Prefix + subfolder.Key + '/', data2.Contents);
@@ -272,50 +423,52 @@ export const listRoot = async (req, res, next) => {
     //   subfolder.innerFolders = innerStuff.subfolders;
     // });
     // res.json({folders: folders, data2: data2.Contents})
+    
 
-    for (const subfolder of folders) {
-      const innerStuff = getFilesForSubfolder(
-        params.Prefix + subfolder.Key + "/",
-        data2.Contents
-      );
-      subfolder.innerFolders = innerStuff.subfolders;
-      subfolder.innerFiles = await Promise.all(
-        innerStuff.subFiles.map(async (file) => {
-          // console.log("file", file);
-          if (file) {
-            file.FullKey = file.Key;
-            return await addMetadataAndSignedUrl(file);
-          } else {
-            return [];
-          }
-        })
-      );
-
-      // Get LastModified for the folder itself (assuming it's listed in data2.Contents)
-      const folderObject = data2.Contents.find(
-        (item) => item.Key === params.Prefix + subfolder.Key + "/"
-      );
-      if (folderObject) {
-        subfolder.LastModified = folderObject.LastModified;
+for (const subfolder of folders) {
+  const innerStuff = getFilesForSubfolder(
+    params.Prefix + subfolder.Key + "/",
+    data2.Contents
+  );
+  subfolder.innerFolders = innerStuff.subfolders;
+  subfolder.innerFiles = await Promise.all(
+    innerStuff.subFiles.map(async (file) => {
+      // console.log("file", file);
+      if (file) {
+        file.FullKey = file.Key;
+        return await addMetadataAndSignedUrl(file);
+      } else {
+        return [];
       }
+    })
+  );
 
-      const metadataFileKey = `${params.Prefix}${subfolder.Key}/metadata.json`;
-      const metadataFileObject = data2.Contents.find(
-        (item) => item.Key === metadataFileKey
-      );
-      if (metadataFileObject) {
-        // Fetch metadata of metadata.json
-        const metadataParams = {
-          Bucket: "vidzspace",
-          Key: metadataFileKey,
-        };
-        const metadataResponse = await s3Client.send(
-          new HeadObjectCommand(metadataParams)
-        );
-        subfolder.Metadata = metadataResponse.Metadata;
-      }
-    }
+  // Get LastModified for the folder itself (assuming it's listed in data2.Contents)
+  const folderObject = data2.Contents.find(
+    (item) => item.Key === params.Prefix + subfolder.Key + "/"
+  );
+  if (folderObject) {
+    subfolder.LastModified = folderObject.LastModified;
+  }
 
+  const metadataFileKey = `${params.Prefix}${subfolder.Key}/metadata.json`;
+  const metadataFileObject = data2.Contents.find(
+    (item) => item.Key === metadataFileKey
+  );
+  if (metadataFileObject) {
+    // Fetch metadata of metadata.json
+    const metadataParams = {
+      Bucket: "vidzspace",
+      Key: metadataFileKey,
+    };
+    const metadataResponse = await s3Client.send(
+      new HeadObjectCommand(metadataParams)
+    );
+    subfolder.Metadata = metadataResponse.Metadata;
+  }
+}
+
+console.log("here")
     const files = await Promise.all(
       (data.Contents || [])
         .filter((item) => item.Key !== params.Prefix) // Exclude the prefix itself if it's listed
@@ -403,16 +556,6 @@ export const getSharedVideoFromKey = async (req, res, next) => {
 
     //checking if user has access to share
     if((owner_id === requester_id) || (sharing === "public") || (sharing === "limited" && sharingwith.includes(requester_id))){ //requester has access
-      // const videoData = {
-      //   SignedUrl: "https://vidzspace.s3.ap-south-1.amazonaws.com/" + Key, // for testing. Use the GetSignedUrl wala function instead of this
-      //   Key: Key,
-      //   Metadata: metadata,
-      //   LastModified: file.LastModified,
-      //   ETag: file.ETag,
-      //   Size: file.Size,
-      //   StorageClass: file.StorageClass,
-      //   Type: "file",
-      // }
       return res.status(201).json({
         success: true,
         videoData: fileData,
@@ -1159,28 +1302,6 @@ export const updateVideoMetadataFolder = async (req, res, next) => {
           const responseMeta = await s3Client.send(commandMeta)
       }
 
-    
-
-      // try {
-      //   const command1 = new HeadObjectCommand({
-      //     Bucket: "vidzspace",
-      //     Key: metadataPath,
-      //   });
-      //   const response1 = await s3Client.send(command1);
-      // } catch (error) {
-      //   if (error.name === 'NotFound') { 
-      //     //if no metaadata.json
-      //     const commandMeta = new PutObjectCommand({
-      //       Bucket: "vidzspace",
-      //       Key: metadataPath,
-      //       ContentType: 'application/json',
-      //     });
-      //     const responseMeta = await s3Client.send(commandMeta)
-      //   } else {
-      //     console.log(error)
-      //   }
-      // }
-
       const owner_id = getOwnerIdFromObjectKey(metadataPath); // Implement this function as per your logic
       console.log("metadatapath:", metadataPath, " ownerid:", owner_id)
       const ownerFirebaseData = await admin.auth().getUser(owner_id);
@@ -1195,8 +1316,6 @@ export const updateVideoMetadataFolder = async (req, res, next) => {
 
       const sharingWithIds = await getUserIdsFromEmails(sharingWith);
 
-      
-
       const command1 = new HeadObjectCommand({
         Bucket: "vidzspace",
         Key: metadataPath,
@@ -1210,9 +1329,17 @@ export const updateVideoMetadataFolder = async (req, res, next) => {
 
       console.log(response1);
 
+      const type = folprefix.split("/").filter(Boolean).length === prefix.split("/").filter(Boolean).length + 2 ? "team" : "project"; //assuming projects only exist inside teams
+      const sharedProjArrayResponse = await Promise.all(
+        sharingWithIds.map(async (id) => {
+            await addToSharedProjects(id, folprefix, type)
+            return true;
+        })
+      );
+
       metadataCopy.sharing = sharing || "none";
       metadataCopy.sharingtype = sharingType || "none";
-      metadataCopy.sharingwith = JSON.stringify(sharingWithIds) || "[]";
+      metadataCopy.sharingwith = JSON.stringify(sharingWithIds) || "[]"; //replacing collaborators (not appending) Change as per requirement.
       metadataCopy.ownerId = owner_id;
       metadataCopy.ownerEmail = ownerEmail;
       metadataCopy.progress = metadataCopy?.progress; // A

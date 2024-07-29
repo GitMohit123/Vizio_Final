@@ -74,6 +74,8 @@ const Homepage = () => {
     setTeamToRename,
     owner_id,
     setOwner_id,
+    sharedPath,
+    setSharedPath,
   } = useContext(HomeContext);
   const {
     isUploadingProgressOpen,
@@ -143,6 +145,11 @@ const Homepage = () => {
       try {
         if (encodedFullPath) {
           getFolderFromSharedLink(encodedFullPath);
+        }
+        else if(sharedPath){
+          setEncodedFullPath(btoa(sharedPath));
+          getFolderFromSharedLink(btoa(sharedPath));
+          setSharedPath(null);
         }
         else{
         const userId = user?.uid;
@@ -376,6 +383,7 @@ const Homepage = () => {
                 </div>
               );
             })}
+            <div className="bg-black text-white w-28" onClick={()=>{dispatch(setPath("sharedProjectsOfUser"))}}>Shared Projects</div>
           </div>
         </div>
 
