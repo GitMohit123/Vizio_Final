@@ -3,7 +3,7 @@ import { useContext } from "react";
 import { FaUserPlus, FaEdit, FaTrashAlt } from "react-icons/fa";
 import HomeContext from "../../context/homePage/HomeContext";
 import { deleteTeam, fetchTeamsData } from "../../api/s3Objects";
-import { fetchData } from "next-auth/client/_utils";
+// import { fetchData } from "next-auth/client/_utils";
 import CMSLoader from "../../components/CMSLoader";
 
 const TeamInfo = () => {
@@ -82,8 +82,7 @@ console.log("team", currentTeam)
         <h2 className="text-2xl font-semibold">{teamPath}</h2>
         <div className="flex items-center space-x-3">
           <button 
-          onClick={fetchData}  
-        
+          // onClick={fetchData}          
           className="flex items-center text-sm font-medium bg-[#f8ff2a] text-gray-900 px-3 py-2 rounded-md hover:bg-yellow-300 transition">
          <FaUserPlus className="mr-2" />   Add New Member 
           </button>
