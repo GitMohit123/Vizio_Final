@@ -241,13 +241,13 @@ const Homepage = () => {
                 onClick={() => handleTeamClick(team)}
               >
                 <p>{displayName(team)}</p>
-                <MdDelete onClick={handleDeleteTeam} />
-                <Md10K
+                {/* <MdDelete onClick={handleDeleteTeam} /> */}
+                {/* <Md10K
                   onClick={() => {
                     handleTeamRename();
                     setTeamToRename(team);
                   }}
-                />
+                /> */}
               </motion.div>
             );
           })}

@@ -39,7 +39,8 @@ export const fetchComments = async (userId, videoName) => {
         visibility: item.visibility ? item.visibility.BOOL : null,
         comment: item.comment ? item.comment.S : null,
         videoTime: item.videoTime ? item.videoTime.S : null,
-        progress:item.progress? item.progress.BOOL : null
+        progress:item.progress? item.progress.BOOL : null,
+        drawings:item.drawings? item.drawings.S : null,
       };
     });
 
@@ -52,6 +53,7 @@ export const fetchComments = async (userId, videoName) => {
 };
 
 export const createComment = async (comment) => {
+  console.log("comment.drawing", JSON.stringify(comment.drawings) )
   const params = {
     TableName: commentTable,
     Item: {
@@ -63,18 +65,21 @@ export const createComment = async (comment) => {
       visibility: { BOOL: comment.visibility },
       comment: { S: comment.comment },
       videoTime: { S: comment.videoTime },
-      progress:{BOOL:comment.progress}
+      progress: { BOOL: comment.progress },
+      drawings: { S: JSON.stringify(comment.drawings) },
     },
   };
 
   try {
     const command = new PutItemCommand(params);
     await dynamoDBClient.send(command);
-    console.log("Comment created successfully");
+    console.log("Comment and drawings created successfully");
   } catch (error) {
+    console.error("Error creating comment and drawings:", error);
     throw error;
   }
 };
+
 
 export const deleteComment = async (userId, commentId) => {
   const params = {
