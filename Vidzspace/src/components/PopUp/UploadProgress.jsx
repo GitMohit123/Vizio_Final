@@ -50,8 +50,9 @@ const UploadProgress = () => {
               ) : (
                 <>
                   <FaPhotoVideo />
-                  <p className="text-sm truncate max-w-[150px] overflow-hidden whitespace-nowrap text-ellipsis">
-                    {file.path}
+                  <p className="text-sm truncate max-w-[150px] overflow-hidden whitespace-nowrap text-ellipsis flex flex-row justify-between items-center">
+                    <p>{file.path || file.name}</p> 
+                    <p>{`${videoPercentageUploaded}%`}</p>
                   </p>
                 </>
               )}

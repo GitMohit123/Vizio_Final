@@ -271,7 +271,7 @@ const TeamProjects = () => {
   const handleFileChange = async (e) => {
     const files = Array.from(e.target.files);
     console.log(files);
-    setSelectedFiles(files);
+    setSelectedFiles((prev) => [...prev, ...files]);
     setIsUploadingProgressOpen(true);
     const uploadPromises = files.map(async (file) => {
       try {
@@ -439,6 +439,13 @@ const TeamProjects = () => {
     };
   }, [addPopUp]);
 
+  const isMetaDataJson = (folders) => {
+    return folders?.some((folder) =>
+      folder.innerFiles.some((file) => file.Key.endsWith("metadata.json"))
+    );
+  };
+  console.log(isMetaDataJson(folders));
+
   return (
     <>
       <div className="flex flex-row w-full p-2 justify-between items-center">
@@ -536,7 +543,9 @@ const TeamProjects = () => {
       </div>
       {load && <CMSLoader />}
       {renamePopup && <Rename />}
-      {files?.length === 0 && folders?.length === 0 && !path ? (
+      {files?.length === 0 &&
+      folders?.length === 0 &&
+      !path  ? (
         <div className="h-full w-full flex justify-center items-center">
           <motion.div
             onClick={() => dispatch(setProjectState(true))}
@@ -552,7 +561,8 @@ const TeamProjects = () => {
             isPastingObject ? "filter brightness-75" : ""
           }`}
         >
-          {files?.length === 0 && folders?.length === 0 && path !== "" ? (
+          {(files?.length === 0 && folders?.length === 0 && path !== "") ||
+          (files?.length === 1 && !isMetaDataJson(folders)) ? (
             <div className="w-full h-full justify-center items-center flex">
               <div className="flex flex-col justify-center items-center gap-3 text-gray-400">
                 <ImFilesEmpty className="text-5xl" />
@@ -564,12 +574,14 @@ const TeamProjects = () => {
               {folders?.map((folder, index) => (
                 <div
                   key={index}
-                  className="p-4 bg-[#35353a] rounded-lg text-white relative cursor-pointer"
+                  className={`p-4 bg-[#35353a] rounded-lg text-white relative cursor-pointer ${
+                    path == "" ? "border-2 border-[#b2b62d]" : ""
+                  }`}
                 >
                   <ProgressBar document={folder} />
                   <div className="flex flex-col gap-2 w-full px-2 rounded-md">
-                    {folder?.innerFiles.length !== 0 ||
-                    folder?.innerFolders.length !== 0 ? (
+                    {(folder?.innerFiles.length !== 0 ||
+                    folder?.innerFolders.length !== 0) && (folder?.innerFiles.length!==1) ? (
                       <div
                         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-3 gap-4 h-40 overflow-y-auto no-scrollbar"
                         key={folder.Key}
@@ -621,7 +633,7 @@ const TeamProjects = () => {
                           <p>{convertBytesToGB(folder.size)}</p>
                         </div>
                         <div className="text-lg text-gray-400">
-                          Mohit -{" "}
+                          {folder?.Metadata?.ownername} -{" "}
                           {folder.LastModified
                             ? getDifferenceText(folder.LastModified)
                             : "Unknown"}
@@ -690,7 +702,7 @@ const TeamProjects = () => {
                             <p>{convertBytesToGB(file.Size)}</p>
                           </div>
                           <div className="text-lg text-gray-400">
-                            Mohit -{" "}
+                            {file?.Metadata?.ownername} -{" "}
                             {file.LastModified
                               ? getDifferenceText(file.LastModified)
                               : "Unknown"}

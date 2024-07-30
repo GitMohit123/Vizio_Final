@@ -5,57 +5,22 @@ import HomeContext from "../../context/homePage/HomeContext";
 import { deleteTeam, fetchTeamsData } from "../../api/s3Objects";
 // import { fetchData } from "next-auth/client/_utils";
 import CMSLoader from "../../components/CMSLoader";
+import ProjectContext from "../../context/project/ProjectContext";
 
 const TeamInfo = () => {
-  const [loading, setLoading] = useState(false);
   const {
-    displayName,
-    user,
-    team,
     currentTeam,
-    teamState,
-    renameState,
     teamPath,
-    handleTeamClick,
-    handleAddTeam,
-    handleDropDownClick,
-    optionState,
-    projectState,
-    setIsOpenShare,
-    isTeamDropDownOpen,
-    setIsTeamDropDownOpen,
-    path,
-    load,
-    isOpenShare,
-    searchQuery,
-    setSearchQuery,
-    deleteTeamState,
-    setDeleteTeamState,
     handleTeamRename,
-    teamToRename,
     setTeamToRename,
   } = useContext(HomeContext);
-
-  console.log("currentTeam ", fetchTeamsData);
+  const {setTeamDeletePopup, teamDeletePopup} = useContext(ProjectContext);
 
   const handleDeleteTeam = () => {
-    const userId = user?.uid;
-    setLoading(true);
-    
-    deleteTeam(userId, teamPath)
-      .then((data) => {
-        console.log(data);
-      })
-      window.location.reload(false)
-      .catch((error) => console.log(error))
-      .finally(() => setLoading(false));
+   setTeamDeletePopup(true);
   };
 
-
-
-console.log("team", currentTeam)
-    
-
+  console.log("team", currentTeam);
 
   const teamMembers = [
     {
@@ -77,22 +42,32 @@ console.log("team", currentTeam)
 
   return (
     <div className=" p-6 rounded-lg text-white">
-       {loading && <CMSLoader />}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">{teamPath}</h2>
+        <div className="flex items-center space-x-8">
+          <h2 className="text-2xl font-semibold text-[#f8ff2a]">{teamPath}</h2>
+          <div className="flex items-center space-x-3">
+          <FaEdit
+            size={22}
+            onClick={() => {
+              handleTeamRename();
+              setTeamToRename(currentTeam);
+            }}
+            className="text-white cursor-pointer hover:text-[#f8ff2a] transition"
+          />
+          <FaTrashAlt
+            size={20}
+            onClick={handleDeleteTeam}
+            className="text-white cursor-pointer hover:text-[#f8ff2a] transition"
+          />
+          </div>
+        </div>
         <div className="flex items-center space-x-3">
-          <button 
-          // onClick={fetchData}          
-          className="flex items-center text-sm font-medium bg-[#f8ff2a] text-gray-900 px-3 py-2 rounded-md hover:bg-yellow-300 transition">
-         <FaUserPlus className="mr-2" />   Add New Member 
+          <button
+            // onClick={fetchData}
+            className="flex items-center text-sm font-medium bg-[#f8ff2a] text-gray-900 px-3 py-2 rounded-md hover:bg-[#f8ff2a] transition"
+          >
+            <FaUserPlus className="mr-2" /> Add New Member
           </button>
-          <FaEdit  size={25} 
-           onClick={() => {
-            handleTeamRename();
-            setTeamToRename(currentTeam);
-          }}
-          className="text-yellow-500 cursor-pointer hover:text-yellow-400 transition" />
-          <FaTrashAlt size={22}  onClick={handleDeleteTeam}  className="text-yellow-500 cursor-pointer hover:text-yellow-400 transition" />
         </div>
       </div>
       <div className="mt-6">
@@ -101,7 +76,7 @@ console.log("team", currentTeam)
           {teamMembers.map((member, index) => (
             <div
               key={index}
-              className="flex justify-between items-center p-3 bg-gray-700 rounded-md"
+              className="flex justify-between items-center p-3 px-5 bg-gray-800 rounded-md"
             >
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
@@ -115,7 +90,7 @@ console.log("team", currentTeam)
                 </div>
               </div>
               <select
-                className="bg-gray-600 text-white rounded-md px-3 py-1 outline-none"
+                className="bg-gray-600 text-white rounded-md px-3 py-2 outline-none"
                 defaultValue={member.role}
               >
                 <option value="Viewer">Viewer</option>

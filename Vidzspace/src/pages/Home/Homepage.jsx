@@ -42,6 +42,7 @@ import UploadProgress from "../../components/PopUp/UploadProgress";
 import Delete from "../../components/PopUp/Delete";
 import FolderAdd from "../../components/PopUp/FolderAdd";
 import RenameTeam from "../../components/PopUp/RenameTeam";
+import TeamDelete from "../../components/PopUp/TeamDelete";
 
 const Homepage = () => {
   const dispatch = useDispatch();
@@ -83,6 +84,7 @@ const Homepage = () => {
     setIsPastingObject,
     copiedObject,
     setCopiedObject,
+    teamDeletePopup
   } = useContext(ProjectContext);
 
   const { handleSignOut } = useContext(FirebaseContext);
@@ -418,6 +420,7 @@ const Homepage = () => {
           <div className="relative flex flex-col w-full h-full bg-[#242426] rounded-lg p-5 overflow-y-auto">
             {projectState && <ProjectAdd />}
             {deletePopup && <Delete />}
+            {teamDeletePopup && <TeamDelete/>}
             {isOpenShare && <SharePopup />}
             {isUploadingProgressOpen && <UploadProgress />}
             {addFolder && <FolderAdd />}

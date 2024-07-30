@@ -4,10 +4,11 @@ import { MdDriveFileRenameOutline } from "react-icons/md";
 import HomeContext from "../../context/homePage/HomeContext";
 import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
-import { createFolder, createTeam, fetchTeamsData } from "../../api/s3Objects";
+import { createFolder, createTeam, fetchTeamsData, getUploadPresignedUrl } from "../../api/s3Objects";
 import { setCMSData, setTeamPath } from "../../app/Actions/cmsAction";
 import { useRef } from "react";
 import ProjectContext from "../../context/project/ProjectContext";
+import axios from "axios";
 
 const FolderAdd = () => {
   const { user, currentTeam, path, teamPath, setLoad } =
@@ -39,6 +40,28 @@ const FolderAdd = () => {
       console.log("Unable to fetch data");
     }
   };
+  const uploadToPresignedUrl = async (
+    //direct api call
+    presignedUrl,
+    file
+  ) => {
+    console.log("in apii: ", presignedUrl, file);
+    // Upload file to pre-signed URL
+
+    const uploadResponse = await axios.put(presignedUrl, file, {
+      headers: {
+        "Content-Type": file?.type,
+      },
+      onUploadProgress: (progressEvent) => {
+        const percentCompleted = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
+        console.log(`Upload Progress: ${percentCompleted}%`);
+        setVideoPercentageUploaded(percentCompleted);
+      },
+    });
+    return uploadResponse.status;
+  };
 
   const handleCreateFolderClick = async () => {
     setAddFolder(false);
@@ -50,6 +73,28 @@ const FolderAdd = () => {
         teamPath,
         userId,
         newFolderName
+      );
+      const fullPath = `${userId}/${teamPath}/${path}/${newFolderName}`
+      const metadataUrlResult = await getUploadPresignedUrl({
+        fileName: "metadata.json",
+        contentType: "application/json",
+        userId,
+        fullPath: `${fullPath}`,
+      });
+
+      console.log("metada", metadataUrlResult);
+
+      const metadata = {
+        fullPath,
+        createdAt: new Date().toISOString(),
+        sharing: "none",
+        sharing_type: "none",
+        progress: "Upcoming",
+      };
+
+      await uploadToPresignedUrl(
+        metadataUrlResult.url,
+        new Blob([JSON.stringify(metadata)], { type: "application/json" })
       );
       await fetchData();
       setAddPopUp(false);

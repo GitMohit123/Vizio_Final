@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { renameTeamState } from "../../app/Actions/teamActions";
+import { renameTeamState, setCurrentTeam, setOptionState } from "../../app/Actions/teamActions";
 import { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
@@ -7,11 +7,13 @@ import Input from "../HomeInputs/Input";
 import { MdDriveFileRenameOutline } from "react-icons/md";
 import HomeContext from "../../context/homePage/HomeContext";
 import { renameTeam } from "../../api/s3Objects";
+import { userLoading } from "../../app/Actions/userAction";
+import { setTeamPath } from "../../app/Actions/cmsAction";
 
 const RenameTeam = () => {
   const dispatch = useDispatch();
 
-  const { user } = useContext(HomeContext);
+  const { user,setLoad,load } = useContext(HomeContext);
 
   const { teamToRename, setTeamToRename } = useContext(HomeContext);
 
@@ -38,18 +40,28 @@ const RenameTeam = () => {
 
   const handleRename = async () => {
     const userId = user?.uid;
-
-    renameTeam(reName, teamToRename, userId)
-      .then((data) => {
-        console.log(data);
-      })
-      .catch((error) => console.log(error));
+    dispatch(userLoading(true));
+    handleCancelClick();
+    setLoad(true);
+    try {
+      const response = await renameTeam(reName, teamToRename, userId);
+      console.log(response);
+    } catch (error) {
+      console.error("Error renaming team:", error);
+    } finally {
+      dispatch(userLoading(false));
+      dispatch(setTeamPath(reName+"'s Team"));
+      dispatch(setOptionState("Team Info"));
+      dispatch(setCurrentTeam(reName+"'s Team"))
+      setLoad(false);
+      setReName("");
+    }
   };
   return (
     <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-30 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
       <div
         ref={popupRef}
-        className="popup bg-[#2f2f2f] w-2/6 h-2/7 p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c]"
+        className="popup bg-[#2f2f2f] w-1/3 h-2/7 p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c]"
       >
         <div className="flex w-full px-2 mb-6">
           <p className="text-white text-3xl font-bold">Rename Team</p>

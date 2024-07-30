@@ -8,6 +8,7 @@ const ProjectState = ({ children }) => {
   const [projectName, setProjectName] = useState("Untitled Project");
   const [currUploadingFile, setCurrUploadingFile] = useState(null);
   const [deletePopup, setDeletePopup] = useState(false);
+  const [teamDeletePopup,setTeamDeletePopup] = useState(false);
   const [deletedFiles, setDeletedFiles] = useState({});
   const [videoPercentageUploaded, setVideoPercentageUploaded] = useState(0);
   const [addPopUp, setAddPopUp] = useState(false);
@@ -129,7 +130,8 @@ const ProjectState = ({ children }) => {
         setVideoTimeMin,
         setVideoTimeSec,
         extractName,
-        convertBytesToGB
+        convertBytesToGB,
+        teamDeletePopup,setTeamDeletePopup
       }}
     >
       {children}

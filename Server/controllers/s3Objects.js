@@ -192,7 +192,7 @@ async function calculateFolderSizes(folders, bucketName, prefix) {
 }
 
 const getSharingDetails = async (key) => {
-  console.log("key", key)
+  console.log("key", key);
   const metadataParams = {
     Bucket: "vidzspace",
     Key: key,
@@ -202,7 +202,7 @@ const getSharingDetails = async (key) => {
   );
   // console.log("response", metadataResponse.Metadata);
   return metadataResponse.Metadata;
-}
+};
 
 export const listRoot = async (req, res, next) => {
   const user_id = req.query.requester_id;
@@ -237,23 +237,31 @@ export const listRoot = async (req, res, next) => {
     const owner_id = getOwnerIdFromObjectKey(prefix + path);
     var sharingDetails;
 
-    const hasMetadata = (data.Contents || []).filter((item) => item.Key.endsWith("metadata.json")).length > 0;
-    if(hasMetadata){
-      console.log("has metadata")
-      const {sharing, sharingwith, sharingtype} = await getSharingDetails(prefix + path+"metadata.json");
-      if((user_id !== owner_id) && (sharing !== "public") && !(sharing === "limited" && sharingwith.includes(user_id))){ //requester has no access
-        console.log("no access")
+    const hasMetadata =
+      (data.Contents || []).filter((item) => item.Key.endsWith("metadata.json"))
+        .length > 0;
+    if (hasMetadata) {
+      console.log("has metadata");
+      const { sharing, sharingwith, sharingtype } = await getSharingDetails(
+        prefix + path + "metadata.json"
+      );
+      if (
+        user_id !== owner_id &&
+        sharing !== "public" &&
+        !(sharing === "limited" && sharingwith.includes(user_id))
+      ) {
+        //requester has no access
+        console.log("no access");
         return res.status(201).json({
           success: false,
-          message: "no access"
+          message: "no access",
         });
       }
-      sharingDetails = {sharing, sharingwith, sharingtype};
-    }
-    else if (owner_id !== user_id) {
+      sharingDetails = { sharing, sharingwith, sharingtype };
+    } else if (owner_id !== user_id) {
       return res.status(201).json({
         success: false,
-        message: "no access"
+        message: "no access",
       });
     }
 
@@ -373,36 +381,41 @@ export const listRoot = async (req, res, next) => {
 };
 
 export const getSharedVideoFromKey = async (req, res, next) => {
-  try{
+  try {
     const { requester_id, Key } = req.body;
-    console.log("shared vid: ",Key, requester_id)
+    console.log("shared vid: ", Key, requester_id);
     const owner_id = getOwnerIdFromObjectKey(Key);
-// return res.json({d:0})
+    // return res.json({d:0})
     //fetching current metadata
     const command1 = new HeadObjectCommand({
       Bucket: "vidzspace",
-      Key: Key
+      Key: Key,
     });
-  const response = await s3Client.send(command1);
-  const metadata = await getSharingDetails(Key);
-  const {sharing, sharingwith, sharingtype} = metadata;
+    const response = await s3Client.send(command1);
+    const metadata = await getSharingDetails(Key);
+    const { sharing, sharingwith, sharingtype } = metadata;
 
-  const fileParams = {
-    Bucket: "vidzspace",
-    Key: Key,
-    ContentType: "video/mp4",
-  };
+    const fileParams = {
+      Bucket: "vidzspace",
+      Key: Key,
+      ContentType: "video/mp4",
+    };
 
-  const filecommand = new GetObjectCommand(fileParams);
-  const file = await s3Client.send(filecommand);
-  // console.log("file: ",file)
-  file.Key = Key.split("/").filter(Boolean).pop();//ll
-  file.FullKey = Key;
-  const fileData = await addMetadataAndSignedUrl(file);
-  // const url = await getSignedUrl(s3Client, file);
+    const filecommand = new GetObjectCommand(fileParams);
+    const file = await s3Client.send(filecommand);
+    // console.log("file: ",file)
+    file.Key = Key.split("/").filter(Boolean).pop(); //ll
+    file.FullKey = Key;
+    const fileData = await addMetadataAndSignedUrl(file);
+    // const url = await getSignedUrl(s3Client, file);
 
     //checking if user has access to share
-    if((owner_id === requester_id) || (sharing === "public") || (sharing === "limited" && sharingwith.includes(requester_id))){ //requester has access
+    if (
+      owner_id === requester_id ||
+      sharing === "public" ||
+      (sharing === "limited" && sharingwith.includes(requester_id))
+    ) {
+      //requester has access
       // const videoData = {
       //   SignedUrl: "https://vidzspace.s3.ap-south-1.amazonaws.com/" + Key, // for testing. Use the GetSignedUrl wala function instead of this
       //   Key: Key,
@@ -419,16 +432,16 @@ export const getSharedVideoFromKey = async (req, res, next) => {
       });
     }
 
-    return res.status(201).json({ //requester doesnt have access
+    return res.status(201).json({
+      //requester doesnt have access
       success: false,
       videoData: null,
     });
-
-  } catch(error){
-    console.log(error)
-    next(error)
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
-}
+};
 
 export const deleteVideo = async (req, res, next) => {
   const { url } = req.body;
@@ -887,7 +900,6 @@ export const createFolder = async (req, res, next) => {
 
       const command = new PutObjectCommand(params);
       await s3Client.send(command);
-
       res.status(200).send("Folder Created");
     } else {
       res.status(200).send("Folder cannot be created");
@@ -1110,7 +1122,7 @@ export const updateVideoMetadata = async (req, res, next) => {
 
 export const updateVideoMetadataFolder = async (req, res, next) => {
   try {
-    console.log("in updatevideometadatafolder")
+    console.log("in updatevideometadatafolder");
     const {
       path,
       sharing,
@@ -1128,147 +1140,123 @@ export const updateVideoMetadataFolder = async (req, res, next) => {
     let folprefix;
 
     // if (path) {
-      folprefix = prefix + `${userId}/${teamPath}`;
-      if(path) folprefix = folprefix + `/${path}`;
+    folprefix = prefix + `${userId}/${teamPath}`;
+    if (path) folprefix = folprefix + `/${path}`;
 
-      const metadataPath = `${folprefix}/metadata.json`;
-      console.log("folprefix:",folprefix)
-      // const metadataObject = await s3Client
-      //   .getObject({
-      //     Bucket: "vidzspace",
-      //     Key: folprefix,
-      //   })
-      //   .promise();
+    const metadataPath = `${folprefix}/metadata.json`;
+    console.log("folprefix:", folprefix);
+    // const metadataObject = await s3Client
+    //   .getObject({
+    //     Bucket: "vidzspace",
+    //     Key: folprefix,
+    //   })
+    //   .promise();
 
-      const params = {
-        Bucket: 'vidzspace',
-        Prefix: folprefix,
-      };
-      const data = await s3Client.send(new ListObjectsV2Command(params));
-      console.log(data)
-      const metadataExists = data.Contents.some(item => {
-        const relativePath = item.Key.slice(params.Prefix.length);
-        return relativePath === 'metadata.json';
-      });
-      if(!metadataExists){
-          const commandMeta = new PutObjectCommand({
-            Bucket: "vidzspace",
-            Key: metadataPath,
-            ContentType: 'application/json',
-          });
-          const responseMeta = await s3Client.send(commandMeta)
-      }
-
-    
-
-      // try {
-      //   const command1 = new HeadObjectCommand({
-      //     Bucket: "vidzspace",
-      //     Key: metadataPath,
-      //   });
-      //   const response1 = await s3Client.send(command1);
-      // } catch (error) {
-      //   if (error.name === 'NotFound') { 
-      //     //if no metaadata.json
-      //     const commandMeta = new PutObjectCommand({
-      //       Bucket: "vidzspace",
-      //       Key: metadataPath,
-      //       ContentType: 'application/json',
-      //     });
-      //     const responseMeta = await s3Client.send(commandMeta)
-      //   } else {
-      //     console.log(error)
-      //   }
-      // }
-
-      const owner_id = getOwnerIdFromObjectKey(metadataPath); // Implement this function as per your logic
-      console.log("metadatapath:", metadataPath, " ownerid:", owner_id)
-      const ownerFirebaseData = await admin.auth().getUser(owner_id);
-      const ownerEmail = ownerFirebaseData.toJSON().email;
-      console.log("request", requester_id, owner_id);
-      if (requester_id !== owner_id) {
-        return res.status(401).json({
-          success: false,
-          message: "No access to share",
-        });
-      }
-
-      const sharingWithIds = await getUserIdsFromEmails(sharingWith);
-
-      
-
-      const command1 = new HeadObjectCommand({
+    const params = {
+      Bucket: "vidzspace",
+      Prefix: folprefix,
+    };
+    const data = await s3Client.send(new ListObjectsV2Command(params));
+    console.log(data);
+    const metadataExists = data.Contents.some((item) => {
+      const relativePath = item.Key.slice(params.Prefix.length);
+      return relativePath === "metadata.json";
+    });
+    if (!metadataExists) {
+      const commandMeta = new PutObjectCommand({
         Bucket: "vidzspace",
         Key: metadataPath,
+        ContentType: "application/json",
       });
+      const responseMeta = await s3Client.send(commandMeta);
+    }
 
-      const response1 = await s3Client.send(command1);
-
-      let metadataCopy = response1?.Metadata;
-
-      const originalContentType = response1?.ContentType;
-
-      console.log(response1);
-
-      metadataCopy.sharing = sharing || "none";
-      metadataCopy.sharingtype = sharingType || "none";
-      metadataCopy.sharingwith = JSON.stringify(sharingWithIds) || "[]";
-      metadataCopy.ownerId = owner_id;
-      metadataCopy.ownerEmail = ownerEmail;
-      metadataCopy.progress = metadataCopy?.progress; // A
-
-      const command2 = new CopyObjectCommand({
-        Bucket: "vidzspace",
-        CopySource: `/vidzspace/${metadataPath}`,
-        Key: metadataPath,
-        Metadata: metadataCopy,
-        MetadataDirective: "REPLACE",
-        ContentType: originalContentType,
+    const owner_id = getOwnerIdFromObjectKey(metadataPath); // Implement this function as per your logic
+    console.log("metadatapath:", metadataPath, " ownerid:", owner_id);
+    const ownerFirebaseData = await admin.auth().getUser(owner_id);
+    const ownerEmail = ownerFirebaseData.toJSON().email;
+    console.log("request", requester_id, owner_id);
+    if (requester_id !== owner_id) {
+      return res.status(401).json({
+        success: false,
+        message: "No access to share",
       });
-      await s3Client.send(command2);
+    }
 
-      return res.status(200).json({
-        success: true,
-        newMetadata: metadataCopy,
-      });
+    const sharingWithIds = await getUserIdsFromEmails(sharingWith);
 
-      // const metadata = JSON.parse(metadataObject.Body.toString());
+    const command1 = new HeadObjectCommand({
+      Bucket: "vidzspace",
+      Key: metadataPath,
+    });
 
-      // console.log(metadata);
+    const response1 = await s3Client.send(command1);
 
-      // // Check if the requester is the owner
-      // const owner_id = userId; // Implement this function as per your logic
-      // console.log("request", requester_id, owner_id);
-      // if (requester_id !== owner_id) {
-      //   return res.status(401).json({
-      //     success: false,
-      //     message: "No access to share",
-      //   });
-      // }
+    let metadataCopy = response1?.Metadata;
 
-      // // Update metadata
-      // const sharingWithIds = await getUserIdsFromEmails(sharingWith);
-      // metadata.sharing = sharing || "none";
-      // metadata.sharingtype = sharingType || "none";
-      // metadata.sharingwith = JSON.stringify(sharingWithIds) || "[]";
-      // metadata.ownerId = owner_id;
-      // metadata.ownerEmail = ownerEmail; // Assume you have this variable set appropriately
-      // metadata.progress = "Upcoming"; // Assuming progress is a constant value
+    const originalContentType = response1?.ContentType;
 
-      // // Save updated metadata.json back to the folder
-      // await s3Client
-      //   .putObject({
-      //     Bucket: "vidzspace",
-      //     Key: metadataPath,
-      //     Body: JSON.stringify(metadata),
-      //     ContentType: "application/json",
-      //   })
-      //   .promise();
+    console.log(response1);
 
-      // return res.status(200).json({
-      //   success: true,
-      //   newMetadata: metadata,
-      // });
+    metadataCopy.sharing = sharing || "none";
+    metadataCopy.sharingtype = sharingType || "none";
+    metadataCopy.sharingwith = JSON.stringify(sharingWithIds) || "[]";
+    metadataCopy.ownerId = owner_id;
+    metadataCopy.ownerEmail = ownerEmail;
+    metadataCopy.progress = metadataCopy?.progress; // A
+
+    const command2 = new CopyObjectCommand({
+      Bucket: "vidzspace",
+      CopySource: `/vidzspace/${metadataPath}`,
+      Key: metadataPath,
+      Metadata: metadataCopy,
+      MetadataDirective: "REPLACE",
+      ContentType: originalContentType,
+    });
+    await s3Client.send(command2);
+
+    return res.status(200).json({
+      success: true,
+      newMetadata: metadataCopy,
+    });
+
+    // const metadata = JSON.parse(metadataObject.Body.toString());
+
+    // console.log(metadata);
+
+    // // Check if the requester is the owner
+    // const owner_id = userId; // Implement this function as per your logic
+    // console.log("request", requester_id, owner_id);
+    // if (requester_id !== owner_id) {
+    //   return res.status(401).json({
+    //     success: false,
+    //     message: "No access to share",
+    //   });
+    // }
+
+    // // Update metadata
+    // const sharingWithIds = await getUserIdsFromEmails(sharingWith);
+    // metadata.sharing = sharing || "none";
+    // metadata.sharingtype = sharingType || "none";
+    // metadata.sharingwith = JSON.stringify(sharingWithIds) || "[]";
+    // metadata.ownerId = owner_id;
+    // metadata.ownerEmail = ownerEmail; // Assume you have this variable set appropriately
+    // metadata.progress = "Upcoming"; // Assuming progress is a constant value
+
+    // // Save updated metadata.json back to the folder
+    // await s3Client
+    //   .putObject({
+    //     Bucket: "vidzspace",
+    //     Key: metadataPath,
+    //     Body: JSON.stringify(metadata),
+    //     ContentType: "application/json",
+    //   })
+    //   .promise();
+
+    // return res.status(200).json({
+    //   success: true,
+    //   newMetadata: metadata,
+    // });
     // }
   } catch (error) {
     console.log(error);
@@ -1358,7 +1346,7 @@ export const renameTeam = async (req, res, next) => {
         CopySource: `/${listParams.Bucket}/${object.Key}`,
         Key: object.Key.replace(
           `${userId}/${oldName}/`,
-          `${userId}/${newName}/`
+          `${userId}/${newName}'s Team/`
         ),
       };
 
