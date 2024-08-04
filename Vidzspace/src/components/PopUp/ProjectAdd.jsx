@@ -12,6 +12,7 @@ import useDrivePicker from "react-google-drive-picker";
 import ProjectContext from "../../context/project/ProjectContext";
 import axios from "axios";
 import { fetchTeamsData, getUploadPresignedUrl } from "../../api/s3Objects";
+import { loadGapiInsideDOM } from "gapi-script";
 
 const ProjectAdd = () => {
   const dispatch = useDispatch();
@@ -53,7 +54,7 @@ const ProjectAdd = () => {
 
     const uploadResponse = await axios.put(presignedUrl, file, {
       headers: {
-        "Content-Type": file?.type,
+        "Content-Type": file.type,
       },
       onUploadProgress: (progressEvent) => {
         const percentCompleted = Math.round(
@@ -68,51 +69,142 @@ const ProjectAdd = () => {
 
   const [openPicker, authResponse] = useDrivePicker();
 
+
+  
   const handleOpenPicker = () => {
-    openPicker({
-      clientId:
-        "112355236362-jv377gl5mau1ucsf0mghe9h96tfcefj3.apps.googleusercontent.com",
-      developerKey: "AIzaSyB2FDWk9GwFLGsGsFrnpCvh2nzByI73W8o",
-      viewId: "DOCS",
-      // token: token, // pass oauth token in case you already have one
-      showUploadView: true,
-      showUploadFolders: true,
-      supportDrives: true,
-      multiselect: true,
-      views: [
-        {
-          viewId: "DOCS",
-          mimeTypes: "application/vnd.google-apps.folder,video/*",
-          label: "Files and Folders",
-        },
-      ],
-      // customViews: customViewsArray, // custom view
-      callbackFunction: (data) => {
-        if (data.action === "cancel") {
-          console.log("User clicked cancel/close button");
+    const clientId = "112355236362-jv377gl5mau1ucsf0mghe9h96tfcefj3.apps.googleusercontent.com";
+    const apiKey = "AIzaSyB2FDWk9GwFLGsGsFrnpCvh2nzByI73W8o";
+    const scope = 'https://www.googleapis.com/auth/drive.readonly';
+    const ownerId = user?.uid;
+    const userId = user?.uid;
+  
+    const loadGapiInsideDOM = () => {
+      return new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = "https://apis.google.com/js/api.js";
+        script.onload = () => resolve();
+        document.body.appendChild(script);
+      });
+    };
+  
+    loadGapiInsideDOM().then(() => {
+      window.gapi.load('client:auth2:picker', async () => {
+        try {
+          await window.gapi.client.init({
+            apiKey: apiKey,
+            clientId: clientId,
+            scope: scope,
+          });
+  
+          await window.gapi.client.load('drive', 'v3');
+  
+          let authInstance = window.gapi.auth2.getAuthInstance();
+          if (!authInstance) {
+            authInstance = await window.gapi.auth2.init({
+              client_id: clientId,
+              scope: scope,
+            });
+          }
+  
+          if (!authInstance.isSignedIn.get()) {
+            await authInstance.signIn();
+          }
+  
+          const picker = new window.google.picker.PickerBuilder()
+            .addView(new window.google.picker.DocsView()
+              .setIncludeFolders(true)
+              .setMimeTypes('video/mp4,video/webm,video/ogg,video/quicktime')
+              .setSelectFolderEnabled(false))
+            .setOAuthToken(authInstance.currentUser.get().getAuthResponse().access_token)
+            .setDeveloperKey(apiKey)
+            .setCallback(async (data) => {
+              if (data[window.google.picker.Response.ACTION] === window.google.picker.Action.PICKED) {
+                const selectedDocs = data[window.google.picker.Response.DOCUMENTS];
+  
+                if (Array.isArray(selectedDocs) && selectedDocs.length > 0) {
+                  const videoFiles = [];
+  
+                  for (const doc of selectedDocs) {
+                    try {
+                      // Fetch the file as a Blob
+                      const response = await fetch(`https://www.googleapis.com/drive/v3/files/${doc.id}?alt=media`, {
+                        headers: {
+                          Authorization: `Bearer ${authInstance.currentUser.get().getAuthResponse().access_token}`
+                        }
+                      });
+  
+                      const blob = await response.blob();
+                      const file = new File([blob], doc.name, {
+                        type: blob.type || doc.mimeType,
+                        lastModified: new Date(doc.lastEditedUtc).getTime()
+                      });
+  
+                      // Save file locally
+                      const url = URL.createObjectURL(file);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = file.name;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a); // Remove link element
+                      URL.revokeObjectURL(url); 
+  
+                      videoFiles.push(file);
+                    } catch (error) {
+                      console.error(`Error downloading file ${doc.name}:`, error);
+                    }
+                  }
+  
+                  console.log("Downloaded video files:", videoFiles);
+  
+                  for (const file of videoFiles) {
+                    const id = Date.now();
+                    const fileName = `video_${id}_${file.name}`;
+                    const contentType = file.type;
+                    const fullPath = `${ownerId}/${teamPath}/${projectName}`;
+  
+                    try {
+                      const result = await getUploadPresignedUrl({
+                        fileName,
+                        contentType,
+                        user_id: userId,
+                        fullPath,
+                      });
+  
+                      const uploadResult = await uploadToPresignedUrl(result.url, file);
+                      console.log(`File ${fileName} uploaded successfully:`, uploadResult);
+  
+                      setSelectedFilesWithUrls((prevFiles) => [
+                        ...prevFiles,
+                        { file, presignedUrl: result.url, isUploading: false }
+                      ]);
+  
+                    } catch (error) {
+                      console.error(`Error uploading file ${fileName}:`, error);
+                    }
+                  }
+  
+                  setIsUploadingFiles(false);
+                  setLoad(false);
+                  setIsUploadingProgressOpen(false);
+                  await fetchData();
+                } else {
+                  console.error('No documents selected or documents array is empty');
+                }
+              } else {
+                console.error('Action was not PICKED');
+              }
+            })
+            .build();
+          picker.setVisible(true);
+        } catch (error) {
+          console.error('Error initializing gapi client:', error);
         }
-        console.log(data.docs);
-        //const file={}
-
-        const videoFiles = (data.docs || [])
-          ?.filter((doc) => doc.mimeType.startsWith("video/"))
-          ?.map((doc) => ({
-            name: doc.name,
-            type: doc.mimeType,
-            path: doc.name,
-            lastModified: doc.lastEditedUtc,
-            size: doc.sizeBytes,
-          }));
-
-        console.log(videoFiles);
-
-        setSelectedFiles((prevSelectedFiles) => [
-          ...prevSelectedFiles,
-          ...videoFiles,
-        ]);
-      },
+      });
     });
   };
+  
+
 
   const handleCloudOptionClick = (cloudName) => {
     if (cloudName === "Google Drive") {
