@@ -139,15 +139,15 @@ const ProjectAdd = () => {
                         lastModified: new Date(doc.lastEditedUtc).getTime()
                       });
   
-                      // Save file locally
-                      const url = URL.createObjectURL(file);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = file.name;
-                      document.body.appendChild(a);
-                      a.click();
-                      document.body.removeChild(a); // Remove link element
-                      URL.revokeObjectURL(url); 
+                      // // Save file locally
+                      // const url = URL.createObjectURL(file);
+                      // const a = document.createElement('a');
+                      // a.href = url;
+                      // a.download = file.name;
+                      // document.body.appendChild(a);
+                      // a.click();
+                      // document.body.removeChild(a); // Remove link element
+                      // URL.revokeObjectURL(url); 
   
                       videoFiles.push(file);
                     } catch (error) {
