@@ -64,6 +64,7 @@ const TeamProjects = () => {
     setSelectedFiles,
     searchQuery,
     setSearchQuery,
+    setIsOpenShare
   } = useContext(HomeContext);
   const {
     deletePopup,
@@ -172,7 +173,9 @@ const TeamProjects = () => {
   };
 
   const handleMouseEnter = (e) => {
-    e.target.play();
+    setTimeout(()=>{
+      e.target.play();
+    },2000)
   };
 
   const handleMouseLeave = (e) => {
@@ -203,6 +206,8 @@ const TeamProjects = () => {
       });
     }
     if (option_passed === "Share") {
+      setIsOpenShare((prev)=>!prev)
+      closeSidebar()
     }
     if (option_passed === "Copy") {
       handleCopy({ name: file?.Key, type: "file" });

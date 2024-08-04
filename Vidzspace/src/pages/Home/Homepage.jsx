@@ -13,6 +13,7 @@ import {
 import { CgProfile } from "react-icons/cg";
 import { FiLogOut } from "react-icons/fi";
 import { GiHamburgerMenu } from "react-icons/gi";
+import { TbWorld } from "react-icons/tb";
 import {
   addTeamState,
   setCurrentTeam,
@@ -84,7 +85,7 @@ const Homepage = () => {
     setIsPastingObject,
     copiedObject,
     setCopiedObject,
-    teamDeletePopup
+    teamDeletePopup,
   } = useContext(ProjectContext);
 
   const { handleSignOut } = useContext(FirebaseContext);
@@ -96,38 +97,43 @@ const Homepage = () => {
   const [isOwner, setIsOwner] = useState(false);
 
   const setPermissions = (sharingDetails) => {
-    console.log("owner:",owner_id, "userId",user?.user_id)
-    if(sharingDetails?.sharingtype === "edit" || user?.user_id === owner_id){
+    console.log("owner:", owner_id, "userId", user?.user_id);
+    if (sharingDetails?.sharingtype === "edit" || user?.user_id === owner_id) {
       setCanWrite(true);
-      console.log("can Write")
+      console.log("can Write");
     }
-    if(user?.user_id === owner_id){
+    if (user?.user_id === owner_id) {
       setIsOwner(true);
-      console.log("is Owner")
+      console.log("is Owner");
     }
-  }
+  };
 
   const getFolderFromSharedLink = async (encodedFullPath) => {
     const full_Path = atob(encodedFullPath);
     console.log(full_Path);
     const currentTeam = full_Path.split("/")[2];
     const path = full_Path.split("'s Team/")[1];
-    var ownerId = full_Path.split("/")[1]
+    var ownerId = full_Path.split("/")[1];
     setOwner_id(ownerId);
-   
-    // setSelectedTeam(full_Path.split("/")[1]);//might cause extra slash. needs testing
-        const response = await fetchTeamsData(
-          `${ownerId}/${currentTeam}/${path}`,
-          user?.user_id
-        );
-        if(response?.success === false) navigate('/error', {state: {message: "You don't have access to the folder or the link is invalid :("}});
-        const filesData = response?.files;
-        const folderData = response?.folders;
-        dispatch(setCMSData(filesData, folderData));
-        setPermissions(response?.sharingDetails);
-        setEncodedFullPath(null);
-  };
 
+    // setSelectedTeam(full_Path.split("/")[1]);//might cause extra slash. needs testing
+    const response = await fetchTeamsData(
+      `${ownerId}/${currentTeam}/${path}`,
+      user?.user_id
+    );
+    if (response?.success === false)
+      navigate("/error", {
+        state: {
+          message:
+            "You don't have access to the folder or the link is invalid :(",
+        },
+      });
+    const filesData = response?.files;
+    const folderData = response?.folders;
+    dispatch(setCMSData(filesData, folderData));
+    setPermissions(response?.sharingDetails);
+    setEncodedFullPath(null);
+  };
 
   useEffect(() => {
     if (team) {
@@ -145,20 +151,25 @@ const Homepage = () => {
       try {
         if (encodedFullPath) {
           getFolderFromSharedLink(encodedFullPath);
+        } else {
+          const userId = user?.uid;
+          if (!owner_id) setOwner_id(userId);
+          const response = await fetchTeamsData(
+            `${owner_id}/${currentTeamPath}/${path}`,
+            userId
+          );
+          if (response.success === false)
+            navigate("/error", {
+              state: {
+                message:
+                  "You don't have access to the folder or the link is invalid :(",
+              },
+            });
+          const filesData = response?.files;
+          const folderData = response?.folders;
+          setPermissions(response?.sharingDetails);
+          dispatch(setCMSData(filesData, folderData));
         }
-        else{
-        const userId = user?.uid;
-        if(!owner_id) setOwner_id(userId);
-        const response = await fetchTeamsData(
-          `${owner_id}/${currentTeamPath}/${path}`,
-          userId
-        ); 
-        if(response.success === false) navigate('/error', {state: {message: "You don't have access to the folder or the link is invalid :("}});
-        const filesData = response?.files;
-        const folderData = response?.folders;
-        setPermissions(response?.sharingDetails);
-        dispatch(setCMSData(filesData, folderData));
-      }
       } catch (err) {
         console.log("Unable to fetch data");
       }
@@ -361,23 +372,29 @@ const Homepage = () => {
               </motion.div>
             </motion.div>
 
-            {teamProjectsInfoList.map((option) => {
-              return (
-                <div
-                  key={option.label}
-                  onClick={() => handleOptionClick(option.label)}
-                  className={`options flex w-full p-2 h-fit justify-center items-center rounded-xl shadow-2xl hover:bg-[#1B1B1B] hover:text-[#f8ff2a]  cursor-pointer ${
-                    optionState === option.label
-                      ? "bg-[#1B1B1B] text-[#f8ff2a]"
-                      : "bg-[#aaacb0] text-[#1B1B1B]"
-                  }`}
-                >
-                  <div className="flex flex-row- gap-2 justify-center items-center">
-                    <p>{option.label}</p>
+            <div className="flex flex-col w-full flex-grow gap-2">
+              {teamProjectsInfoList.map((option) => {
+                return (
+                  <div
+                    key={option.label}
+                    onClick={() => handleOptionClick(option.label)}
+                    className={`options flex w-full p-2 h-fit justify-center items-center rounded-xl shadow-2xl hover:bg-[#1B1B1B] hover:text-[#f8ff2a] cursor-pointer ${
+                      optionState === option.label
+                        ? "bg-[#1B1B1B] text-[#f8ff2a]"
+                        : "bg-[#aaacb0] text-[#1B1B1B]"
+                    }`}
+                  >
+                    <div className="flex flex-row- gap-2 justify-center items-center">
+                      <p>{option.label}</p>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+            <div className="flex flex-row w-full p-2 h-fit justify-start items-center rounded-xl text-black cursor-pointer gap-2">
+            <TbWorld className="text-lg"/>
+              <p className="text-lg">Explore</p>
+            </div>
           </div>
         </div>
 
@@ -397,19 +414,21 @@ const Homepage = () => {
             </div>
 
             <div className="flex flex-row gap-4 justify-center items-center cursor-pointer ">
-              { isOwner && 
-              <div
-                onClick={() => {
-                  setIsOpenShare((prev) => !prev);
-                }}
-              >
-                <img
-                  src="/icons/Share.png"
-                  alt="Share"
-                  className="h-6 w-10 hidden lg:block"
-                />
-                <p className="text-[#f8ff2a]">Share</p>
-              </div>}
+              {isOwner && (
+                <div
+                  onClick={() => {
+                    setIsOpenShare((prev) => !prev);
+                  }}
+                  className="flex flex-row gap-2"
+                >
+                  <img
+                    src="/icons/Share.png"
+                    alt="Share"
+                    className="h-6 w-8 hidden lg:block"
+                  />
+                  <p className="text-[#f8ff2a]">Share</p>
+                </div>
+              )}
               <div className="bg-[#1B1B1B] text-[#f8ff2a] p-2 rounded-full h-7 w-7 flex justify-center items-center hover:bg-[#242426]">
                 ?
               </div>
@@ -420,7 +439,7 @@ const Homepage = () => {
           <div className="relative flex flex-col w-full h-full bg-[#242426] rounded-lg p-5 overflow-y-auto">
             {projectState && <ProjectAdd />}
             {deletePopup && <Delete />}
-            {teamDeletePopup && <TeamDelete/>}
+            {teamDeletePopup && <TeamDelete />}
             {isOpenShare && <SharePopup />}
             {isUploadingProgressOpen && <UploadProgress />}
             {addFolder && <FolderAdd />}
