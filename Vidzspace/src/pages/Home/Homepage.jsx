@@ -76,6 +76,8 @@ const Homepage = () => {
     setOwner_id,
     sharedPath,
     setSharedPath,
+    setLoad,
+    setIsInSharedProjects,
   } = useContext(HomeContext);
   const {
     isUploadingProgressOpen,
@@ -90,8 +92,7 @@ const Homepage = () => {
   const { handleSignOut } = useContext(FirebaseContext);
   // console.log(path)
   const [searchParams] = useSearchParams();
-  const encodedFullPath1 = searchParams?.get("v");
-  const [encodedFullPath, setEncodedFullPath] = useState(encodedFullPath1);
+  const [encodedFullPath, setEncodedFullPath] = useState(null);
   const [canWrite, setCanWrite] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
 
@@ -111,13 +112,17 @@ const Homepage = () => {
     const full_Path = atob(encodedFullPath);
     console.log(full_Path);
     const currentTeam = full_Path.split("/")[2];
-    const path = full_Path.split("'s Team/")[1];
+    const new_path = full_Path.split("'s Team/")[1];
     var ownerId = full_Path.split("/")[1]
     setOwner_id(ownerId);
+    if(!path){
+      dispatch(setPath(new_path));
+      console.log("new path", new_path, "old path", path);
+    }
    
     // setSelectedTeam(full_Path.split("/")[1]);//might cause extra slash. needs testing
         const response = await fetchTeamsData(
-          `${ownerId}/${currentTeam}/${path}`,
+          `${ownerId}/${currentTeam}/${new_path}`,
           user?.user_id
         );
         if(response?.success === false) navigate('/error', {state: {message: "You don't have access to the folder or the link is invalid :("}});
@@ -128,6 +133,31 @@ const Homepage = () => {
         setEncodedFullPath(null);
   };
 
+  const openSharedProjectsSection = async () => { // Open 'shared projects' wala section
+    try{
+      setLoad(true);
+      const userId = user?.uid;
+      const response = await fetchTeamsData(
+        `${userId}/${currentTeam}/sharedProjectsOfUser`,
+        userId
+      ); 
+      // if(response.success === false) navigate('/error', {state: {message: "You don't have access to the folder or the link is invalid :("}});
+      const filesData = response?.files;
+      const folderData = response?.folders;
+      setPermissions(response?.sharingDetails);
+      dispatch(setCMSData(filesData, folderData));
+      setIsInSharedProjects(true);
+      setLoad(false);
+    } catch (err) {
+      console.log("Unable to open shared projects section");
+    }
+  } 
+
+  useEffect(() => {
+  const encodedFullPath1 = searchParams?.get("v");
+  setEncodedFullPath(encodedFullPath1);
+  }, [])
+  
 
   useEffect(() => {
     if (team) {
@@ -383,7 +413,7 @@ const Homepage = () => {
                 </div>
               );
             })}
-            <div className="bg-black text-white w-28" onClick={()=>{dispatch(setPath("sharedProjectsOfUser"))}}>Shared Projects</div>
+            <div className="bg-black text-white w-28 cursor-pointer" onClick={openSharedProjectsSection}>Shared Projects</div>
           </div>
         </div>
 

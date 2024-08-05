@@ -47,10 +47,34 @@ export const listTeams = async (req, res, next) => {
     const uniqueTeamNames = [...new Set(filteredTeamNames)];
     console.log(uniqueTeamNames)
 
-    return res.status(200).json(uniqueTeamNames); // Send OK (200) with the list of teams
+    const paramsShared = {
+      Bucket: "vidzspace",
+      Key: prefix + `${user_id}/sharedTeams.json`,
+    };
+    const responseShared = await s3Client.send(new GetObjectCommand(paramsShared));
+    const jsonString = await responseShared.Body?.transformToString();
+    const array = JSON.parse(jsonString ?? '');
+    console.log("got shared teams array");
+    const responseArray = [];
+
+    for (const teamName of uniqueTeamNames) {
+      responseArray.push({
+        name: teamName,
+        isShared: false,
+      })
+    }
+    for (const teamPath of array){
+      responseArray.push({
+        name: teamPath.split("/").filter(Boolean).pop(),
+        isShared: true
+      })
+    }
+
+    // return res.status(200).json(responseArray); 
+    return res.status(200).json([...uniqueTeamNames, ...array]); 
   } catch (err) {
-    console.error(err); // Log the error for debugging
-    return res.status(500).json({ message: "Internal Server Error" }); // Send Internal Server Error (500) with a generic message
+    console.error(err); 
+    return res.status(500).json({ message: "Internal Server Error" }); 
   }
 };
 

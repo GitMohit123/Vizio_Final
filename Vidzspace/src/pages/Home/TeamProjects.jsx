@@ -65,6 +65,8 @@ const TeamProjects = () => {
     searchQuery,
     setSearchQuery,
     setSharedPath,
+    isInSharedProjects, 
+    setIsInSharedProjects,
   } = useContext(HomeContext);
   const {
     deletePopup,
@@ -576,7 +578,7 @@ const TeamProjects = () => {
                         key={folder.Key}
                         onClick={() => {
                           console.log(path)
-                          if(path.includes("sharedProjectsOfUser")){
+                          if(isInSharedProjects){
                             setLoad(true);
                             console.log("setting shared path: ", folder.fullPath);
                             setSharedPath(folder.fullPath);
