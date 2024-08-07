@@ -2,12 +2,11 @@ import React, { useContext, useEffect, useState } from "react";
 import { FaArrowRightLong } from "react-icons/fa6";
 import { teamProjectsInfoList } from "../../constants/homePage";
 import { motion } from "framer-motion";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import {
   createTeam,
   fetchTeamsData,
   listTeams,
-  copyObject,
   deleteTeam,
 } from "../../api/s3Objects";
 import { CgProfile } from "react-icons/cg";
@@ -15,16 +14,13 @@ import { FiLogOut } from "react-icons/fi";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { TbWorld } from "react-icons/tb";
 import {
-  addTeamState,
   setCurrentTeam,
   setOptionState,
   setTeams,
 } from "../../app/Actions/teamActions";
-import { Route, Routes, useNavigate, useSearchParams } from "react-router-dom";
-import HomeContext from "../../context/homePage/HomeContext";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { FaPlus } from "react-icons/fa";
-import TeamAdd from "../../components/PopUp/TeamAdd";
-import { Md10K, MdDelete, MdOutlineKeyboardArrowDown } from "react-icons/md";
+import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import { FaSearch } from "react-icons/fa";
 import {
   setCMSData,
@@ -32,18 +28,11 @@ import {
   setProjectState,
   setTeamPath,
 } from "../../app/Actions/cmsAction";
-import TeamProjects from "./TeamProjects";
-import SharePopup from "../../components/PopUp/SharePopup";
-import TeamInfo from "./TeamInfo";
-import UpgradePlan from "./UpgradePlan";
-import ProjectAdd from "../../components/PopUp/ProjectAdd";
+import HomeContext from "../../context/homePage/HomeContext";
 import FirebaseContext from "../../context/firebase/FirebaseContext";
 import ProjectContext from "../../context/project/ProjectContext";
-import UploadProgress from "../../components/PopUp/UploadProgress";
-import Delete from "../../components/PopUp/Delete";
-import FolderAdd from "../../components/PopUp/FolderAdd";
-import RenameTeam from "../../components/PopUp/RenameTeam";
-import TeamDelete from "../../components/PopUp/TeamDelete";
+import { Delete, FolderAdd, ProjectAdd, RenameTeam, SharePopup, TeamAdd, TeamDelete, UploadProgress } from "../../components";
+import {TeamProjects,TeamInfo,UpgradePlan} from "./index";
 
 const Homepage = () => {
   const dispatch = useDispatch();
@@ -223,18 +212,6 @@ const Homepage = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const handleDeleteTeam = () => {
-    const userId = user?.uid;
-
-    deleteTeam(userId, teamPath)
-      .then((data) => {
-        console.log(data);
-      })
-      .catch((error) => console.log(error));
-  };
-
-  // console.log("team", team, currentTeam, teamPath);
-
   return (
     <div className="h-screen w-screen bg-[#1B1B1B] flex flex-row justify-between">
       {/* Section1 */}
@@ -254,13 +231,6 @@ const Homepage = () => {
                 onClick={() => handleTeamClick(team)}
               >
                 <p>{displayName(team)}</p>
-                {/* <MdDelete onClick={handleDeleteTeam} /> */}
-                {/* <Md10K
-                  onClick={() => {
-                    handleTeamRename();
-                    setTeamToRename(team);
-                  }}
-                /> */}
               </motion.div>
             );
           })}

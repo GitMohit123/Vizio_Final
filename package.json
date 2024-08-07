@@ -11,6 +11,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "concurrently": "^8.2.2"
+    "@googlemaps/js-api-loader": "^1.16.8",
+    "concurrently": "^8.2.2",
+    "gapi-script": "^1.2.0"
   }
 }

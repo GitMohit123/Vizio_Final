@@ -1,0 +1,10 @@
+export {default as Delete} from "./PopUp/Delete"
+export {default as FolderAdd} from "./PopUp/FolderAdd";
+export {default as ProjectAdd} from "./PopUp/ProjectAdd";
+export {default as Rename} from "./PopUp/Rename";
+export {default as RenameTeam} from "./PopUp/RenameTeam";
+export {default as ShareCommentPopup} from "./PopUp/ShareCommentPopup";
+export {default as SharePopup} from "./PopUp/SharePopup";
+export {default as TeamAdd} from "./PopUp/TeamAdd";
+export {default as TeamDelete} from "./PopUp/TeamDelete";
+export {default as UploadProgress} from "./PopUp/UploadProgress";

@@ -87,7 +87,7 @@ const SharePopup = () => {
       ref={popupRef}
       className="absolute top-0 right-0 p-4 max-w-lg max-h-full mx-auto w-full text-white z-20 drop-shadow-md"
     >
-      <div className="relative bg-[#242426] rounded-lg shadow dark:bg-gray-700 ">
+      <div className="relative bg-[#242426] rounded-lg shadow-lg dark:bg-[#2f2f2f]">
         <div className="flex items-center justify-between p-4 border-b rounded-t dark:border-gray-600">
           <h3 className="text-lg font-semibold">{`Share`}</h3>
           <div className="flex space-x-2">
@@ -126,26 +126,15 @@ const SharePopup = () => {
               <label htmlFor="email" className="block text-sm font-medium">
                 Add People
               </label>
-              <div className="flex flex-wrap items-center  border   text-sm rounded-lg focus:ring-primary-600 border-white p-2.5 mt-2">
-                {/* {peopleWithAccess?.map((email, index) => (
-                      <span
-                        key={index}
-                        className="bg-gray-200 text-gray-700 rounded-full px-2 py-1 mr-2 mb-2"
-                      >
-                        {email}
-                      </span>
-                    ))} */}
+              <div className="flex flex-wrap items-center  border   text-sm rounded-lg focus:ring-primary-600 border-white p-2.5 mt-2 bg-white">
                 <input
                   type="email"
                   name="email"
                   id="email"
-                  className="flex-grow bg-transparent outline-none text-white"
+                  className="flex-grow bg-transparent outline-none text-black"
                   placeholder="Enter email"
                   value={peopleWithAccess}
                   onChange={(e) => setPeopleWithAccess([e.target.value])}
-                  //   value={emailInput}
-                  //   onChange={handleEmailInputChange}
-                  //   onKeyPress={handleEmailKeyPress}
                   style={{
                     flex: "1 1 auto",
                     minWidth: "150px",
@@ -171,7 +160,7 @@ const SharePopup = () => {
                 id="access"
                 // value={accessLevel}
                 // onChange={handleAccessChange}
-                className=" border bg-transparent  text-gray-400 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 mt-4 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 placeholder-gray-300 border-white"
+                className=" border bg-transparent  text-gray-400 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 mt-4 block w-full p-2.5 dark:bg-white dark:border-gray-500 placeholder-gray-300 border-white"
                 value={accessLevel}
                 onChange={(e) => setAccessLevel(e.target.value)}
               >
@@ -186,7 +175,7 @@ const SharePopup = () => {
                 id="sharing"
                 value={sharing}
                 onChange={(e) => setSharing(e.target.value)}
-                className="border bg-transparent border-white text-gray-400 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 mt-4 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-300"
+                className="border bg-transparent border-white text-gray-400 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 mt-4 block w-full p-2.5 dark:bg-white dark:border-gray-500 dark:placeholder-gray-300"
               >
                 <option value="onlyMe" className="text-black">
                   Only Me
