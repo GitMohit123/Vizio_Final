@@ -686,6 +686,7 @@ const TeamProjects = () => {
                         <video
                           className="rounded-lg object-cover aspect-square w-full h-40"
                           key={index}
+                          muted
                           src={file?.SignedUrl}
                           onMouseEnter={handleMouseEnter}
                           onMouseLeave={handleMouseLeave}

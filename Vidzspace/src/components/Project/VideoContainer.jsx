@@ -27,7 +27,6 @@ const VideoContainer = ({ url,index }) => {
             id={`video-${index}`}
             src={url}
             alt="Technology"
-            muted
             onClick={togglePlayPause}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}

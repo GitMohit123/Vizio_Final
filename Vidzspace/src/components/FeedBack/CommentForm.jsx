@@ -25,11 +25,7 @@ const CommentForm = ({ drawings, file, toolMode, setToolMode, saveDrawing, clear
       const videoName = file?.Key || ""; 
       const reply_id = "null";
       const videoTime = videoTimeMin * 60 + videoTimeSec;
-
-     
       saveDrawing();
-
-  
       console.log("drawings", drawings)
       const response = await createComment(comment, userId, territory_id, videoName, reply_id, videoTime, drawings);
       console.log("Comment Created: Message from Frontend");
@@ -85,6 +81,9 @@ const CommentForm = ({ drawings, file, toolMode, setToolMode, saveDrawing, clear
                 className="w-full bg-transparent border-none focus:outline-none text-gray-700"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e)=>{if(e.key==="Enter"){
+                  handleSaveOrComment()
+              }}}
               />
               <div className="flex gap-4 justify-center">
                 <FaPaintBrush

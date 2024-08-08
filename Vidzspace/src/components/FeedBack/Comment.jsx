@@ -82,7 +82,7 @@ const Comment = ({
         territory_id,
         videoName,
         reply_id,
-        videoTime
+        videoTime,
       );
       console.log("Reply Created : Message from Frontend");
       console.log(response);

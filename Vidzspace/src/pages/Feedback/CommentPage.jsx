@@ -68,8 +68,6 @@ const CommentPage = () => {
     const response = await getSharedVideoFromKey({Key, requester_id: user?.user_id});
     console.log(response)
     if(response.success === false) navigate('/error', {state: {message: "You dont have access to the file or the link is invalid :("}});
-    // setFetchedVideo(response?.videoData);
-    // const ownerId = owner_id ?? getOwnerIdFromKey(Key);
     console.log("current Path = ", Key)
     setPermissions(response?.videoData);
     setFile(response?.videoData);

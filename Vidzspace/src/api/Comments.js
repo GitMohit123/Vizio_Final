@@ -35,7 +35,7 @@ export const deleteComment = async(userId,commentId)=>{
     }
   };
 
-  export const createComment = async (comment, userId, territory_id, videoName, reply_id, videoTime, drawings) => {
+  export const createComment = async (comment, userId, territory_id, videoName, reply_id, videoTime, drawings="") => {
     try {
       const response = await axios.post(`/vidzspaceApi/users/comments/createComment`, {
         text: comment,
