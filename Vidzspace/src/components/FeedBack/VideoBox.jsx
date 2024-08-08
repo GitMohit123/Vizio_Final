@@ -12,8 +12,7 @@ const VideoBox = ({ file }) => {
   const [drawings, setDrawings] = useState([]);
   const [toolMode, setToolMode] = useState('pencil');
   const [color, setColor] = useState('red'); 
-  const { showDrawing } = useDrawing()
-
+  // const { showDrawing } = useDrawing()
   useEffect(() => {
     const video = videoRef.current;
 
@@ -107,11 +106,16 @@ const VideoBox = ({ file }) => {
   };
 
   const saveDrawing = () => {
-    if (canvasRef.current) {
-      const dataUrl = canvasRef.current.toDataURL();
-      const timestamp = videoRef.current.currentTime;
-      setDrawings(dataUrl);
-    }
+    return new Promise((resolve) => {
+      if (canvasRef.current) {
+        const dataUrl = canvasRef.current.toDataURL();
+        setDrawings(dataUrl);
+        resolve(dataUrl); // Resolve with the data URL
+        console.log(dataUrl,"Very very very")
+      } else {
+        resolve(null); // Resolve with null if there's no drawing
+      }
+    });
   };
 
   return (
@@ -144,6 +148,7 @@ const VideoBox = ({ file }) => {
           clearCanvas={clearCanvas}
           setColor={setColor}
           drawings={drawings}
+          setDrawings={setDrawings}
         />
       </div>
     </div>

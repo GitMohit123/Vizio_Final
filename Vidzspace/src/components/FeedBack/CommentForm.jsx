@@ -8,7 +8,7 @@ import { GrPowerReset } from "react-icons/gr";
 import { createComment } from "../../api/Comments";
 import { FaPaintBrush } from "react-icons/fa";
 
-const CommentForm = ({ drawings, file, toolMode, setToolMode, saveDrawing, clearCanvas, setColor }) => {
+const CommentForm = ({ drawings, file, toolMode, setToolMode, saveDrawing, clearCanvas, setColor,setDrawings }) => {
   const { user, load, setLoad } = useContext(HomeContext);
   const { videoTimeMin, videoTimeSec, getDifferenceText } = useContext(ProjectContext);
   const firstLetterCommenting = user?.name?.charAt(0).toUpperCase();
@@ -25,14 +25,15 @@ const CommentForm = ({ drawings, file, toolMode, setToolMode, saveDrawing, clear
       const videoName = file?.Key || ""; 
       const reply_id = "null";
       const videoTime = videoTimeMin * 60 + videoTimeSec;
-      saveDrawing();
-      console.log("drawings", drawings)
-      const response = await createComment(comment, userId, territory_id, videoName, reply_id, videoTime, drawings);
+      const drawingDataUrl = await saveDrawing();
+      console.log(drawingDataUrl)
+      const response = await createComment(comment, userId, territory_id, videoName, reply_id, videoTime, drawingDataUrl);
       console.log("Comment Created: Message from Frontend");
-     
+      setDrawings([]);
       setText("");
     } catch (err) {
       console.log("Unable to create Comment", err);
+      setDrawings([]);
     } finally {
       setLoad(false);
     }
