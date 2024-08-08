@@ -173,9 +173,7 @@ const TeamProjects = () => {
   };
 
   const handleMouseEnter = (e) => {
-    setTimeout(()=>{
-      e.target.play();
-    },2000)
+    e.target.play()
   };
 
   const handleMouseLeave = (e) => {
@@ -262,6 +260,7 @@ const TeamProjects = () => {
 
   const handleDoubleClick = (file) => {
     navigate("/feedback", { state: { file: file } });
+    // handleMouseLeave();
     setTimeout(() => {
       setVideoContainer(false);
     }, 2000);

@@ -1,6 +1,4 @@
-// VideoBox.js
-import  { useRef, useEffect, useState, useContext } from 'react';
-
+import { useRef, useEffect, useState, useContext } from 'react';
 import ProjectContext from "../../context/project/ProjectContext";
 import CommentForm from './CommentForm';
 import { useDrawing } from '../../context/drawing/DrawingContext';
@@ -15,21 +13,29 @@ const VideoBox = ({ file }) => {
   const [toolMode, setToolMode] = useState('pencil');
   const [color, setColor] = useState('red'); 
   const { showDrawing } = useDrawing()
+
   useEffect(() => {
     const video = videoRef.current;
+
+    const updateVideoTime = () => {
+      const currentTime = Math.floor(video.currentTime);
+      const mins = Math.floor(currentTime / 60);
+      const seconds = currentTime % 60;
+      setVideoTimeSec(seconds);
+      setVideoTimeMin(mins);
+    };
+
     if (video) {
       video.addEventListener("seeked", () => {
-        const currentTime = Math.floor(video.currentTime);
-        const mins = Math.floor(currentTime / 60);
-        const seconds = currentTime % 60;
-        setVideoTimeSec(seconds);
-        setVideoTimeMin(mins);
+        updateVideoTime();
         clearCanvas(); 
       });
 
       video.addEventListener("play", () => {
         clearCanvas(); 
       });
+
+      video.addEventListener("pause", updateVideoTime);
     }
 
     const canvas = canvasRef.current;
@@ -40,6 +46,14 @@ const VideoBox = ({ file }) => {
       ctx.lineWidth = 3;
       ctx.strokeStyle = color; 
     }
+
+    return () => {
+      if (video) {
+        video.removeEventListener("seeked", updateVideoTime);
+        video.removeEventListener("play", clearCanvas);
+        video.removeEventListener("pause", updateVideoTime);
+      }
+    };
   }, [setVideoTimeMin, setVideoTimeSec, color, setCanvasContext]);
 
   const getCanvasCoordinates = (event) => {
@@ -100,8 +114,6 @@ const VideoBox = ({ file }) => {
     }
   };
 
-
-
   return (
     <div className="w-full lg:w-[56rem] lg:ml-24 lg:mt-10 relative">
       <div className="flex flex-col gap-8 text-white justify-center px-4 mt-4 items-center">
@@ -123,43 +135,6 @@ const VideoBox = ({ file }) => {
           />
         </div>
         <div className="flex gap-2 mt-4">
-          {/* {drawings.map((drawing, index) => (
-            <div
-              key={index}
-              className="relative flex items-center justify-center"
-              style={{
-                width: '24px',
-                height: '24px',
-                backgroundColor: 'white',
-                borderRadius: '50%',
-                cursor: 'pointer',
-                transform: 'scale(1)',
-                transition: 'transform 0.2s ease-in-out'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.2)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-              onClick={() => showDrawing(drawing.drawing)}
-            >
-              <div
-                className="absolute flex items-center justify-center"
-                style={{
-                  width: '20px',
-                  height: '20px',
-                  backgroundColor: '#3399FF',
-                  borderRadius: '50%',
-                  color: 'white',
-                  fontSize: '10px'
-                }}
-              >
-                {Math.floor(drawing.timestamp / 60)}:
-                {Math.floor(drawing.timestamp % 60)}
-              </div>
-            </div>
-          ))} */}
         </div>
         <CommentForm
           file={file}
