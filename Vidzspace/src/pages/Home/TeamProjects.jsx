@@ -19,6 +19,7 @@ import CMSLoader from "../../components/CMSLoader";
 import { useNavigate } from "react-router-dom";
 import { threeDotsMenuList } from "../../constants/projectsPage";
 import VideoContainer from "../../components/Project/VideoContainer";
+import { IoPerson } from "react-icons/io5";
 import { useEffect } from "react";
 import {
   deleteVideo,
@@ -64,7 +65,7 @@ const TeamProjects = () => {
     setSelectedFiles,
     searchQuery,
     setSearchQuery,
-    setIsOpenShare
+    setIsOpenShare,
   } = useContext(HomeContext);
   const {
     deletePopup,
@@ -173,7 +174,7 @@ const TeamProjects = () => {
   };
 
   const handleMouseEnter = (e) => {
-    e.target.play()
+    e.target.play();
   };
 
   const handleMouseLeave = (e) => {
@@ -204,8 +205,8 @@ const TeamProjects = () => {
       });
     }
     if (option_passed === "Share") {
-      setIsOpenShare((prev)=>!prev)
-      closeSidebar()
+      setIsOpenShare((prev) => !prev);
+      closeSidebar();
     }
     if (option_passed === "Copy") {
       handleCopy({ name: file?.Key, type: "file" });
@@ -450,6 +451,13 @@ const TeamProjects = () => {
   };
   console.log(isMetaDataJson(folders));
 
+  const displayFileName = (file)=>{
+    if(file.length>8){
+      return file.substring(0,8)+".mp4";
+    }
+    return file;
+  }
+
   return (
     <>
       <div className="flex flex-row w-full p-2 justify-between items-center">
@@ -547,9 +555,7 @@ const TeamProjects = () => {
       </div>
       {load && <CMSLoader />}
       {renamePopup && <Rename />}
-      {files?.length === 0 &&
-      folders?.length === 0 &&
-      !path  ? (
+      {files?.length === 0 && folders?.length === 0 && !path ? (
         <div className="h-full w-full flex justify-center items-center">
           <motion.div
             onClick={() => dispatch(setProjectState(true))}
@@ -579,13 +585,14 @@ const TeamProjects = () => {
                 <div
                   key={index}
                   className={`p-4 bg-[#35353a] rounded-lg text-white relative cursor-pointer ${
-                    path == "" ? "border-2 border-[#b2b62d]" : ""
+                    path == "" ? "backdrop-blur-3xl" : ""
                   }`}
                 >
                   <ProgressBar document={folder} />
                   <div className="flex flex-col gap-2 w-full px-2 rounded-md">
                     {(folder?.innerFiles.length !== 0 ||
-                    folder?.innerFolders.length !== 0) && (folder?.innerFiles.length!==1) ? (
+                      folder?.innerFolders.length !== 0) &&
+                    folder?.innerFiles.length !== 1 ? (
                       <div
                         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-3 gap-4 h-40 overflow-y-auto no-scrollbar"
                         key={folder.Key}
@@ -630,40 +637,46 @@ const TeamProjects = () => {
                     )}
 
                     {/* Meta data of the folder */}
-                    <div className="flex flex-row items-center w-full ">
-                      <div className="flex flex-col gap-1 w-[91%]">
+                    <div className="flex flex-col items-center w-full gap-1">
+                      <div className="flex w-full">
                         <div className="flex flex-row gap-4 justify-start items-center">
                           <p className="text-xl font-bold">{folder.Key}</p>
-                          <p>{convertBytesToGB(folder.size)}</p>
-                        </div>
-                        <div className="text-lg text-gray-400">
-                          {folder?.Metadata?.ownername} -{" "}
-                          {folder.LastModified
-                            ? getDifferenceText(folder.LastModified)
-                            : "Unknown"}
+                          <p className="text-[#f8ff2ad1] text-base">
+                            {convertBytesToGB(folder.size)}
+                          </p>
                         </div>
                       </div>
-
-                      <div className="flex justify-center items-center relative">
-                        <BsThreeDotsVertical
-                          onClick={() => {
-                            setSelectedItem({
-                              type: "folder",
-                              index: `folder-${index}`,
-                              path: folder.Key,
-                            });
-                          }}
-                          className="font-black text-3xl cursor-pointer"
-                        />
-                        {selectedItem?.type === "folder" &&
-                          selectedItem?.index === `folder-${index}` &&
-                          selectedItem?.path === folder?.Key && (
-                            <SidebarComponent
-                              folderfile={folder}
-                              closeSidebar={closeSidebar}
-                              handleThreeDotClick={handleThreeDotFolderClick}
-                            />
-                          )}
+                      <div className="flex flex-row items-center justify-between w-full">
+                        <div className="text-base text-gray-400 flex flex-col gap-1 w-full justify-center items-start">
+                          <div className="flex flex-row items-center gap-2">
+                            <IoPerson className="text-[#f8ff2a]"/>
+                          <p>{folder?.Metadata?.ownername}</p>
+                          </div>
+                          <p className="text-[#f8ff2ac7]">{folder.LastModified
+                            ? getDifferenceText(folder.LastModified)
+                            : "Unknown"}</p>
+                        </div>
+                        <div className="flex justify-center items-center relative">
+                          <BsThreeDotsVertical
+                            onClick={() => {
+                              setSelectedItem({
+                                type: "folder",
+                                index: `folder-${index}`,
+                                path: folder.Key,
+                              });
+                            }}
+                            className="font-black text-3xl cursor-pointer"
+                          />
+                          {selectedItem?.type === "folder" &&
+                            selectedItem?.index === `folder-${index}` &&
+                            selectedItem?.path === folder?.Key && (
+                              <SidebarComponent
+                                folderfile={folder}
+                                closeSidebar={closeSidebar}
+                                handleThreeDotClick={handleThreeDotFolderClick}
+                              />
+                            )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -698,70 +711,48 @@ const TeamProjects = () => {
                           }}
                         ></video>
                       </motion.div>
-                      <div className="flex flex-row items-center w-full ">
-                        <div className="flex flex-col gap-1 w-[91%]">
-                          <div className="flex flex-row gap-4 justify-start items-center">
-                            <p className="text-xl font-bold">
-                              {extractName(file.Key)}
-                            </p>
-                            <p>{convertBytesToGB(file.Size)}</p>
-                          </div>
-                          <div className="text-lg text-gray-400">
-                            {file?.Metadata?.ownername} -{" "}
-                            {file.LastModified
-                              ? getDifferenceText(file.LastModified)
-                              : "Unknown"}
-                          </div>
+                      <div className="flex flex-col items-center w-full gap-1">
+                      <div className="flex w-full">
+                        <div className="flex flex-row gap-4 justify-start items-center">
+                          <p className="text-xl font-bold">{displayFileName(file?.Key)}</p>
+                          <p className="text-[#f8ff2ad1] text-base">
+                            {convertBytesToGB(file?.Size)}
+                          </p>
                         </div>
-
+                      </div>
+                      <div className="flex flex-row items-center justify-between w-full">
+                        <div className="text-base text-gray-400 flex flex-col gap-1 w-full justify-center items-start">
+                          <div className="flex flex-row items-center gap-2">
+                            <IoPerson className="text-[#f8ff2a]"/>
+                          <p>{file?.Metadata?.ownername}</p>
+                          </div>
+                          <p className="text-[#f8ff2ac7]">{file?.LastModified
+                            ? getDifferenceText(file?.LastModified)
+                            : "Unknown"}</p>
+                        </div>
                         <div className="flex justify-center items-center relative">
                           <BsThreeDotsVertical
                             onClick={() => {
                               setSelectedItem({
                                 type: "file",
                                 index: `file-${index}`,
-                                path: file.Key,
+                                path: file?.Key,
                               });
                             }}
                             className="font-black text-3xl cursor-pointer"
                           />
                           {selectedItem?.type === "file" &&
                             selectedItem?.index === `file-${index}` &&
-                            selectedItem?.path === file.Key && (
-                              // <div className="absolute left-2 top-10 h-50 bg-gray-900 z-30 py-1 rounded-xl">
-                              //   <div className="flex flex-col text-left">
-                              //     <p
-                              //       className="text-[#f8ff2a] hover:bg-slate-800 py-1 px-6 rounded-xl"
-                              //       onClick={closeSidebar}
-                              //     >
-                              //       Close
-                              //     </p>
-                              //     {threeDotsMenuList.map((option, index) => {
-                              //       return (
-                              //         <p
-                              //           onClick={() =>
-                              //             handleThreeDotClick(
-                              //               option.option,
-                              //               file,
-                              //               index
-                              //             )
-                              //           }
-                              //           className="text-white hover:bg-slate-800 py-1 px-6 rounded-xl"
-                              //         >
-                              //           {option.option}
-                              //         </p>
-                              //       );
-                              //     })}
-                              //   </div>
-                              // </div>
+                            selectedItem?.path === file?.Key && (
                               <SidebarComponent
                                 folderfile={file}
                                 closeSidebar={closeSidebar}
-                                handleThreeDotClick={handleThreeDotFileClick}
+                                handleThreeDotClick={handleThreeDotFolderClick}
                               />
                             )}
                         </div>
                       </div>
+                    </div>
                     </motion.div>
 
                     {videoPreview === index && videoContainer && (

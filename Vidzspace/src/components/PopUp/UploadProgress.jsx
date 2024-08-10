@@ -7,12 +7,7 @@ import { ImCross } from "react-icons/im";
 import { FaFolder, FaPhotoVideo } from "react-icons/fa";
 
 const UploadProgress = () => {
-  const {
-    setSelectedFiles,
-    setSelectedFolders,
-    selectedFiles,
-    selectedFolders,
-  } = useContext(HomeContext);
+  const { setSelectedFiles, selectedFiles } = useContext(HomeContext);
 
   const {
     selectedFilesWithUrls,
@@ -23,17 +18,27 @@ const UploadProgress = () => {
   const getFolderName = (path) => {
     const parts = path.split("/");
     if (parts.length > 1) {
-      return parts.slice(0, -1);
+      let firstPart = parts[0];
+      if (firstPart.length > 7) {
+        firstPart = firstPart.substring(0, 7) + "...";
+      }
+      return firstPart;
     }
     return path;
   };
+  const getFileName = (name)=>{
+    if(name?.length>12){
+      return name.substring(0, 7) + "...";
+    }
+    return name;
+  }
 
   return (
-    <div className="absolute w-1/5 max-h-[167.2px] flex flex-col justify-end items-end z-30 right-5 bottom-5 rounded-lg">
+    <div className="absolute w-1/5 max-h-[167.2px] flex flex-col justify-end items-center z-30 right-5 bottom-5 rounded-lg">
       <h3 className="text-lg w-full text-black bg-gray-200 p-2 rounded-tr-lg px-3 rounded-tl-lg">
         Uploading files
       </h3>
-      <div className="bg-white popup h-full max-h-[167.2px] overflow-auto no-scrollbar w-full flex flex-col text-black p-2 px-3 rounded-b-lg gap-2">
+      <div className="bg-white popup h-full max-h-[167.2px] w-full flex flex-col text-black p-2 px-3 rounded-b-lg gap-2">
         {selectedFiles?.map((file, index) => (
           <div
             key={index}
@@ -51,7 +56,7 @@ const UploadProgress = () => {
                 <>
                   <FaPhotoVideo />
                   <p className="text-sm truncate max-w-[150px] overflow-hidden whitespace-nowrap text-ellipsis flex flex-row justify-between items-center">
-                    <p>{file.path || file.name}</p>
+                    <p>{getFileName(file.path) || getFileName(file.name)}</p>
                   </p>
                 </>
               )}

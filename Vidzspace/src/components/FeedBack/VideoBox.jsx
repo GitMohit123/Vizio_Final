@@ -113,7 +113,7 @@ const VideoBox = ({ file }) => {
         resolve(dataUrl); // Resolve with the data URL
         console.log(dataUrl,"Very very very")
       } else {
-        resolve(null); // Resolve with null if there's no drawing
+        resolve(null);
       }
     });
   };
@@ -137,8 +137,6 @@ const VideoBox = ({ file }) => {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
           />
-        </div>
-        <div className="flex gap-2 mt-4">
         </div>
         <CommentForm
           file={file}

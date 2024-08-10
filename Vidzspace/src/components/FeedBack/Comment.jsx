@@ -1,6 +1,6 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import ProjectContext from "../../context/project/ProjectContext";
-import { FaCheck, FaRegHeart } from "react-icons/fa";
+import { FaCheck, FaPaintBrush, FaRegHeart } from "react-icons/fa";
 import { FaHeart } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { FaPencil } from "react-icons/fa6";
@@ -25,7 +25,6 @@ const Comment = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editedComment, setEditedComment] = useState(commentObject?.comment);
   const [clickCount, setClickCount] = useState(0);
-
   const isReplying =
     activeComments && activeComments.id === commentObject?.video_comment_id;
 
@@ -36,12 +35,12 @@ const Comment = ({
   const handleCommentChange = (e) => {
     setEditedComment(e.target.value);
   };
-
   const handleCommentClick = (videoTime) => {
     const video = document.getElementById("myVideo");
     console.log("clicked");
     if (video) {
-      video.currentTime = parseInt(videoTime); // Optional: play the video after setting the time
+      video.currentTime = parseInt(videoTime);
+      // Optional: play the video after setting the time
     }
   };
   const handleDeleteComment = async (video_comment_id) => {
@@ -82,7 +81,7 @@ const Comment = ({
         territory_id,
         videoName,
         reply_id,
-        videoTime,
+        videoTime
       );
       console.log("Reply Created : Message from Frontend");
       console.log(response);
@@ -151,7 +150,8 @@ const Comment = ({
     <div key={index} className="flex flex-col w-full gap-1">
       <p>{convertVideoTimeDisplay(commentObject?.videoTime)}</p>
       <div
-        onClick={() => handleCommentClick(commentObject?.videoTime)}
+        onClick={() => 
+          handleCommentClick(commentObject?.videoTime)}
         className="cursor-pointer flex flex-col w-full bg-gray-800 h-fit p-3 rounded-lg gap-2 relative"
       >
         <div className="absolute -top-0 right-2 transform translate-x-1/2 -translate-y-1/2">

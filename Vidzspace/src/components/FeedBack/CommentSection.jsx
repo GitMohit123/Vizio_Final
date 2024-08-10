@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import Comment from "./Comment";
 import { MdOutlineCommentsDisabled } from "react-icons/md";
 import { FaPaintBrush } from "react-icons/fa";
-import { useDrawing } from "../../context/drawing/DrawingContext";
+import { useDrawing} from "../../context/drawing/DrawingContext"
 
 const CommentSection = ({ backendComments }) => {
   const [activeComments, setActiveComments] = useState(null);
-  const { showDrawing } = useDrawing(); 
+  const {showDrawing} = useDrawing();
 
   const rootComments = backendComments?.filter(
     (backendComment) => backendComment.reply_id === "null"
@@ -39,7 +39,7 @@ const CommentSection = ({ backendComments }) => {
               : null;
 
             return (
-              <div key={commentObject.video_comment_id} className="flex items-center">
+              <div key={commentObject.video_comment_id} className="flex items-center" >
                 <Comment
                   commentObject={commentObject}
                   index={index}

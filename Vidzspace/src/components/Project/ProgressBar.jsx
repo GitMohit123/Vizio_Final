@@ -9,24 +9,6 @@ import { updateProgress } from "../../api/s3Objects";
 const RectBar = ({ document }) => {
   const dispatch = useDispatch();
   const [showDropdown, setShowDropdown] = useState(false);
-  // const getProgressForFolder = (innerFiles) => {
-  //   if (innerFiles.length === 0) {
-  //     return "Upcoming";
-  //   }
-  //   if (
-  //     innerFiles &&
-  //     innerFiles.some((file) => file?.Metadata?.progress === "Upcoming")
-  //   ) {
-  //     return "Upcoming";
-  //   } else if (
-  //     innerFiles &&
-  //     innerFiles.some((file) => file?.Metadata?.progress === "In Progress")
-  //   ) {
-  //     return "In Progress";
-  //   }
-
-  //   return innerFiles && innerFiles[0]?.Metadata?.progress;
-  // };
   const { teamPath, path, user, fetchData } = useContext(HomeContext);
   const updateMetadata = async (type, name, progress) => {
     console.log(type, name, progress);
@@ -55,17 +37,13 @@ const RectBar = ({ document }) => {
     }
   };
   const insetBorderStyle = {
-    boxShadow: "inset 0 0 0 2px rgba(105, 105, 105, 0.7)",
+    boxShadow: "inset 0 0 0 1px rgba(105, 105, 105, 0.7)",
   };
   return (
-    // <motion.div style={insetBorderStyle} className="absolute flex gap-2 rounded-md top-2 right-2 text-black items-center justify-center px-3 py-1 bg-[#7A7B99] bg-opacity-60 backdrop-blur-3xl z-4">
-    //   <FaCircle className={getStatusColor(progress)} size={20} />
-    //   <span>{progress}</span>
-    // </motion.div>
     <div>
       <motion.div
         style={insetBorderStyle}
-        className="absolute flex gap-2 rounded-md top-[4px] right-2 text-black items-center justify-center px-3 py-1 bg-[#7A7B99] bg-opacity-60 backdrop-blur-3xl z-10"
+        className="absolute flex gap-2 rounded-md top-[4px] right-2 text-white items-center justify-between px-3 py-1 bg-transparent bg-opacity-90 backdrop-blur-3xl z-10 w-[172px]"
       >
         <div className="flex items-center gap-2 justify-center">
           <FaCircle size={20} className={getStatusColor(progress)} />
@@ -82,18 +60,19 @@ const RectBar = ({ document }) => {
         </div>
       </motion.div>
       {showDropdown && (
-        <div className="absolute top-10 right-2 bg-[#4b4b5a] shadow-md rounded-md z-10 text-white py-1 px-1">
+        <div style={insetBorderStyle} className="absolute top-11 right-2 bg-transparent shadow-md rounded-md z-10 text-white py-1 px-1 bg-opacity-90 backdrop-blur-3xl w-[172px]">
           {["In Progress", "Upcoming", "Done"]
             .filter((item) => item !== document?.Metadata?.progress)
             .map((status) => (
               <div
                 key={status}
-                className="px-4 py-2 cursor-pointer hover:bg-gray-500 hover:rounded-md text-white"
+                className="px-4 py-2 cursor-pointer hover:bg-gray-500 hover:rounded-md text-white flex flex-row items-center justify-start gap-3"
                 onClick={() => {
                   setShowDropdown(false);
                   updateMetadata(document?.Type, document?.Key, status);
                 }}
               >
+                <FaCircle size={20} className={getStatusColor(status)} />
                 {status}
               </div>
             ))}

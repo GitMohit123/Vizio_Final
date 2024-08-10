@@ -189,8 +189,8 @@ const ProjectAdd = () => {
                           );
                         }
                       }
-                      console.log("Downloaded video files:", videoFiles);
                       setSelectedFiles((prev)=>[...prev,...videoFiles]);
+                      console.log("Downloaded video files:", videoFiles);
                     } else {
                       console.error(
                         "No documents selected or documents array is empty"
@@ -421,10 +421,6 @@ const ProjectAdd = () => {
 
   const uploadFile = async (filesWithUrls) => {
     console.log("hi");
-    const sharing = "none";
-    const sharing_type = "none";
-    const sharing_with = [];
-    const progress = "upcoming";
     for (let i = 0; i < filesWithUrls.length; i++) {
       const { file, presignedUrl } = filesWithUrls[i];
 
@@ -446,24 +442,6 @@ const ProjectAdd = () => {
         // Handle error if required
       }
     }
-    // for (let i = 0; i < selectedFolderWithUrls.length; i++) {
-    //   const { file, presignedUrl } = selectedFolderWithUrls[i];
-
-    //   try {
-    //     const data = await uploadToPresignedUrl(
-    //       presignedUrl,
-    //       file,
-    //       sharing,
-    //       sharing_type,
-    //       sharing_with
-    //     );
-    //     toast.success("Uploaded successful");
-    //     console.log(data);
-    //   } catch (error) {
-    //     console.log("Error uploading file", file.name, error);
-    //     // Handle error if required
-    //   }
-    // }
 
     if (!selectedFilesWithUrls) {
       console.log("Files not found");
@@ -495,116 +473,6 @@ const ProjectAdd = () => {
     }
   };
 
-  // const handleCreateProjectClick = async () => {
-  //   dispatch(setProjectState(false));
-  //   setIsUploadingFiles(true);
-  //   setLoad(true);
-
-  //   const ownerId = user?.uid; //for testing only
-  //   const userId = user?.uid;
-  //   const files = selectedFiles;
-  //   await getUploadPresignedUrl({
-  //     fullPath: `${ownerId}/${teamPath}/${projectName}`,
-  //   });
-
-  //   var folderName = "";
-  //   const createFoldersPromises = selectedFolders.map(async (folder) => {
-  //     var folderName1 = folder.path.split("/")[1];
-  //     console.log(folderName1);
-  //     if (folderName1 !== folderName) {
-  //       folderName = folderName1;
-  //       console.log(`create empty folder at: ${ownerId}/${teamPath}/${projectName}/${folderName}`)
-  //       await getUploadPresignedUrl({
-  //         fullPath: `${ownerId}/${teamPath}/${projectName}/${folderName}`,
-  //       });
-  //     }
-  //   });
-  //   await Promise.all(createFoldersPromises);
-  //       console.log(`create empty folder at: ${ownerId}/${teamPath}/${projectName}/${folderName}`)
-  //   const uploadPromises = files.map(async (file) => {
-  //     const id = Date.now();
-  //     const fileName = `video_${id}_${file.name}`;
-  //     const contentType = file.type;
-  //     const isInAFolder = file.path && file.path.includes("/");
-  //     const fullPath = isInAFolder
-  //       ? `${ownerId}/${teamPath}/${projectName}/${file.path.slice(
-  //           1,
-  //           file.name.length * -1 - 1
-  //         )}`
-  //       : `${ownerId}/${teamPath}/${projectName}`;
-  //     // const fullPath = `${ownerId}/${teamPath}/${path}/${projectName}`; //if want nested projects
-  //     try {
-  //       const result = await getUploadPresignedUrl(
-  //         fileName,
-  //         contentType,
-  //         userId,
-  //         fullPath
-  //       );
-  //       console.log(result.url);
-  //       return { file, presignedUrl: result.url, isUploading: false };
-  //     } catch (error) {
-  //       console.log("Error generating urls", error);
-  //       return null;
-  //     }
-  //   });
-
-  //   // Wait for all uploads to finish
-  //   try {
-  //     const validFilesWithUrls = (await Promise.all(uploadPromises)).filter(
-  //       (fileWithUrl) => fileWithUrl !== null
-  //     );
-  //     const filesWithUrls = [...validFilesWithUrls, ...selectedFilesWithUrls];
-  //     setSelectedFilesWithUrls((prevSelectedFiles) => [
-  //       ...prevSelectedFiles,
-  //       ...validFilesWithUrls,
-  //     ]);
-  //     console.log("All files url generated successfully");
-  //     uploadFile(filesWithUrls);
-  //   } catch (error) {
-  //     console.log("Error generating urls", error);
-  //   }
-  // };
-  // const uploadFile = async (filesWithUrls) => {
-  //   console.log("hi");
-  //   const sharing = "none";
-  //   const sharing_type = "none";
-  //   const sharing_with = [];
-  //   const progress = "upcoming";
-  //   for (let i = 0; i < filesWithUrls.length; i++) {
-  //     const { file, presignedUrl } = filesWithUrls[i];
-  //     setSelectedFilesWithUrls((files) => {
-  //       files[i].isUploading = true;
-  //       return files;
-  //     });
-
-  //     try {
-  //       const data = await uploadToPresignedUrl(presignedUrl, file);
-  //       // toast.success("Uploaded successful");
-  //       console.log("File uploaded successfully", data);
-  //       setSelectedFilesWithUrls((files) => {
-  //         files[i].isUploading = false;
-  //         return files;
-  //       });
-  //     } catch (error) {
-  //       console.log("Error uploading file", file.name, error);
-  //       // Handle error if required
-  //     }
-  //   }
-  //   if (!selectedFilesWithUrls) {
-  //     console.log("Files not found");
-  //   }
-
-  //   setIsUploadingFiles(false);
-  //   // dispatch(setLoader(false));
-  //   setLoad(false);
-  //   setIsUploadingProgressOpen(false);
-  //   setSelectedFilesWithUrls([]);
-  //   setSelectedFiles([]);
-  //   setSelectedFolders([]);
-  //   setVideoPercentageUploaded(0);
-  //   // setRefresh((prev) => !prev);
-  // };
-
   useEffect(() => {
     if (selectedFiles.length > 0 || selectedFolders.length > 0) {
       setIsUploadingProgressOpen(true);
@@ -612,26 +480,9 @@ const ProjectAdd = () => {
     console.log(selectedFiles, selectedFolders, selectedFilesWithUrls);
   }, [selectedFiles, selectedFolders, selectedFilesWithUrls]);
 
-  const popupRef = useRef(null);
-
-  const handleOutsideClick = (event) => {
-    if (popupRef.current && !popupRef.current.contains(event.target)) {
-      handleCancelClick();
-    }
-  };
-
-  useEffect(() => {
-    document.addEventListener("mousedown", handleOutsideClick);
-
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-    };
-  }, [projectState]);
-
   return (
     <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-30 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
       <div
-        ref={popupRef}
         className="popup bg-[#383838] w-3/6 h-auto p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c]"
       >
         {/* Title Section */}
