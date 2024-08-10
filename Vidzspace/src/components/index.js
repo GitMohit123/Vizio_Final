@@ -8,3 +8,4 @@ export {default as SharePopup} from "./PopUp/SharePopup";
 export {default as TeamAdd} from "./PopUp/TeamAdd";
 export {default as TeamDelete} from "./PopUp/TeamDelete";
 export {default as UploadProgress} from "./PopUp/UploadProgress";
+export {default as ImageSkeleton} from "./ImageSkeleton";

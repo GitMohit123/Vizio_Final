@@ -37,6 +37,7 @@ import ProjectContext from "../../context/project/ProjectContext";
 import SidebarComponent from "../../components/Project/SidebarComponent";
 import axios from "axios";
 import _ from "lodash";
+import { ImageSkeleton } from "../../components";
 
 const TeamProjects = () => {
   const {
@@ -454,21 +455,24 @@ const TeamProjects = () => {
   };
   console.log(isMetaDataJson(folders));
 
-  const displayFileName = (file)=>{
-    if(file.length>8){
-      return file.substring(0,8)+".mp4";
+  const displayFileName = (file) => {
+    if (file.length > 8) {
+      return file.substring(0, 8) + ".mp4";
     }
     return file;
-  }
+  };
 
   return (
     <>
       <div className="flex flex-row w-full p-2 justify-between items-center">
         <div className="flex flex-row gap-3 items-center justify-between text-[#9B9DA0] w-full">
           <div className="flex flex-row gap-3 justify-center items-center">
-            {path!=="" ?(
-              <FaArrowLeft className="cursor-pointer" onClick={()=>dispatch(popPath(path))}/>
-            ):(
+            {path !== "" ? (
+              <FaArrowLeft
+                className="cursor-pointer"
+                onClick={() => dispatch(popPath(path))}
+              />
+            ) : (
               <FaHome />
             )}
             <FaPhotoVideo />
@@ -589,6 +593,7 @@ const TeamProjects = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6">
+              {/* Folders Section */}
               {folders?.map((folder, index) => (
                 <div
                   key={index}
@@ -610,13 +615,22 @@ const TeamProjects = () => {
                           folder?.innerFiles
                             ?.filter((file) => !file?.Key.endsWith(".json"))
                             .map((file, index) => (
-                              <div className="rounded-lg" key={file?.SignedUrl}>
-                                <video
-                                  className="rounded-lg object-cover aspect-square w-full"
-                                  key={index}
-                                  src={file?.SignedUrl}
-                                ></video>
-                              </div>
+                              // <div className="rounded-lg" key={file?.SignedUrl}>
+                              //   <video
+                              //     className="rounded-lg object-cover aspect-square w-full"
+                              //     key={index}
+                              //     src={file?.SignedUrl}
+                              //   ></video>
+                              // </div>
+                              file?.SignedUrl ? ( // Check if SignedUrl exists
+                                <div className="rounded-lg" key={file?.SignedUrl}>
+                                  <video
+                                    className="rounded-lg object-cover aspect-square w-full"
+                                    key={index}
+                                    src={file?.SignedUrl}
+                                  ></video>
+                                </div>
+                              ) : <ImageSkeleton/>
                             ))}
                         {folder?.innerFolders &&
                           folder.innerFolders.map((inFolder, index) => (
@@ -657,12 +671,14 @@ const TeamProjects = () => {
                       <div className="flex flex-row items-center justify-between w-full">
                         <div className="text-base text-gray-400 flex flex-col gap-1 w-full justify-center items-start">
                           <div className="flex flex-row items-center gap-2">
-                            <IoPerson className="text-[#f8ff2a]"/>
-                          <p>{folder?.Metadata?.ownername}</p>
+                            <IoPerson className="text-[#f8ff2a]" />
+                            <p>{folder?.Metadata?.ownername}</p>
                           </div>
-                          <p className="text-[#f8ff2ac7]">{folder.LastModified
-                            ? getDifferenceText(folder.LastModified)
-                            : "Unknown"}</p>
+                          <p className="text-[#f8ff2ac7]">
+                            {folder.LastModified
+                              ? getDifferenceText(folder.LastModified)
+                              : "Unknown"}
+                          </p>
                         </div>
                         <div className="flex justify-center items-center relative">
                           <BsThreeDotsVertical
@@ -690,6 +706,8 @@ const TeamProjects = () => {
                   </div>
                 </div>
               ))}
+
+              {/* Files Section */}
               {files
                 ?.filter((file) => !file.Key.endsWith(".json"))
                 .map((file, index) => (
@@ -720,47 +738,53 @@ const TeamProjects = () => {
                         ></video>
                       </motion.div>
                       <div className="flex flex-col items-center w-full gap-1">
-                      <div className="flex w-full">
-                        <div className="flex flex-row gap-4 justify-start items-center">
-                          <p className="text-xl font-bold">{displayFileName(file?.Key)}</p>
-                          <p className="text-[#f8ff2ad1] text-base">
-                            {convertBytesToGB(file?.Size)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex flex-row items-center justify-between w-full">
-                        <div className="text-base text-gray-400 flex flex-col gap-1 w-full justify-center items-start">
-                          <div className="flex flex-row items-center gap-2">
-                            <IoPerson className="text-[#f8ff2a]"/>
-                          <p>{file?.Metadata?.ownername}</p>
+                        <div className="flex w-full">
+                          <div className="flex flex-row gap-4 justify-start items-center">
+                            <p className="text-xl font-bold">
+                              {displayFileName(file?.Key)}
+                            </p>
+                            <p className="text-[#f8ff2ad1] text-base">
+                              {convertBytesToGB(file?.Size)}
+                            </p>
                           </div>
-                          <p className="text-[#f8ff2ac7]">{file?.LastModified
-                            ? getDifferenceText(file?.LastModified)
-                            : "Unknown"}</p>
                         </div>
-                        <div className="flex justify-center items-center relative">
-                          <BsThreeDotsVertical
-                            onClick={() => {
-                              setSelectedItem({
-                                type: "file",
-                                index: `file-${index}`,
-                                path: file?.Key,
-                              });
-                            }}
-                            className="font-black text-3xl cursor-pointer"
-                          />
-                          {selectedItem?.type === "file" &&
-                            selectedItem?.index === `file-${index}` &&
-                            selectedItem?.path === file?.Key && (
-                              <SidebarComponent
-                                folderfile={file}
-                                closeSidebar={closeSidebar}
-                                handleThreeDotClick={handleThreeDotFolderClick}
-                              />
-                            )}
+                        <div className="flex flex-row items-center justify-between w-full">
+                          <div className="text-base text-gray-400 flex flex-col gap-1 w-full justify-center items-start">
+                            <div className="flex flex-row items-center gap-2">
+                              <IoPerson className="text-[#f8ff2a]" />
+                              <p>{file?.Metadata?.ownername}</p>
+                            </div>
+                            <p className="text-[#f8ff2ac7]">
+                              {file?.LastModified
+                                ? getDifferenceText(file?.LastModified)
+                                : "Unknown"}
+                            </p>
+                          </div>
+                          <div className="flex justify-center items-center relative">
+                            <BsThreeDotsVertical
+                              onClick={() => {
+                                setSelectedItem({
+                                  type: "file",
+                                  index: `file-${index}`,
+                                  path: file?.Key,
+                                });
+                              }}
+                              className="font-black text-3xl cursor-pointer"
+                            />
+                            {selectedItem?.type === "file" &&
+                              selectedItem?.index === `file-${index}` &&
+                              selectedItem?.path === file?.Key && (
+                                <SidebarComponent
+                                  folderfile={file}
+                                  closeSidebar={closeSidebar}
+                                  handleThreeDotClick={
+                                    handleThreeDotFolderClick
+                                  }
+                                />
+                              )}
+                          </div>
                         </div>
                       </div>
-                    </div>
                     </motion.div>
 
                     {videoPreview === index && videoContainer && (

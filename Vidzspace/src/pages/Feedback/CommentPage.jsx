@@ -23,7 +23,7 @@ const CommentPage = () => {
   const { load, path, teamPath, handleTeamClick, currentTeam, owner_id, setOwner_id } =
     useContext(HomeContext);
   const [searchParams] = useSearchParams();
-  const { extractName } = useContext(ProjectContext);
+  const { extractName,setVideoTimeMin, setVideoTimeSec } = useContext(ProjectContext);
   const encodedKey = searchParams?.get("v");
 
   const [backendComments, setBackendComments] = useState([]);
@@ -93,6 +93,8 @@ const CommentPage = () => {
   }, [load]);
   const handleBack = () => {
     navigate("/home");
+    setVideoTimeMin(0);
+    setVideoTimeSec(0);
     console.log(currentTeam);
     handleTeamClick(currentTeam);
   };
