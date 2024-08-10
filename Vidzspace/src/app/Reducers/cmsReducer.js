@@ -41,6 +41,11 @@ const cmsReducer = (state = initialState, action) => {
         ...state,
         path: action.path,
       };
+    case "POP_PATH":
+      return{
+        ...state,
+        path:action.path
+      }
     default:
       return state;
   }

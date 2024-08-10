@@ -37,3 +37,12 @@ export const routePath = (path)=>{
         path:path
     }
 }
+export const popPath = (path)=>{
+    const pathSegments = path.split("/");
+    pathSegments.pop();
+    const newPath = pathSegments.join("/");
+    return{
+        type:"POP_PATH",
+        path:newPath
+    }
+}

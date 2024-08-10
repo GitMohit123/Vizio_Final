@@ -5,6 +5,7 @@ import { TbCloudUpload } from "react-icons/tb";
 import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
 import {
+  popPath,
   routePath,
   setCMSData,
   setPath,
@@ -21,6 +22,8 @@ import { threeDotsMenuList } from "../../constants/projectsPage";
 import VideoContainer from "../../components/Project/VideoContainer";
 import { IoPerson } from "react-icons/io5";
 import { useEffect } from "react";
+import { FaArrowLeft } from "react-icons/fa";
+import { FaHome } from "react-icons/fa";
 import {
   deleteVideo,
   deleteVideoFolder,
@@ -463,6 +466,11 @@ const TeamProjects = () => {
       <div className="flex flex-row w-full p-2 justify-between items-center">
         <div className="flex flex-row gap-3 items-center justify-between text-[#9B9DA0] w-full">
           <div className="flex flex-row gap-3 justify-center items-center">
+            {path!=="" ?(
+              <FaArrowLeft className="cursor-pointer" onClick={()=>dispatch(popPath(path))}/>
+            ):(
+              <FaHome />
+            )}
             <FaPhotoVideo />
             <p
               className="text-[#f8ff2a] cursor-pointer"

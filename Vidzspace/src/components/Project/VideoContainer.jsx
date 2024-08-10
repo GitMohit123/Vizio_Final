@@ -20,7 +20,7 @@ const VideoContainer = ({ url,index }) => {
   return (
     <>
       <div className=" fixed flex justify-center items-center inset-0 z-50 bg-opacity-70 bg-black">
-        <div className="relative bg-[#090f24f5] rounded-lg w-[1024px] h-[720px]">
+        <div className="relative bg-[#090f24f5] rounded-lg w-[724px] h-[512px]">
           <video
             ref={videoRef}
             className="rounded-xl object-cover aspect-square w-full h-full"
