@@ -38,6 +38,7 @@ import SidebarComponent from "../../components/Project/SidebarComponent";
 import axios from "axios";
 import _ from "lodash";
 import { ImageSkeleton } from "../../components";
+import { Triangle } from "react-loader-spinner";
 
 const TeamProjects = () => {
   const {
@@ -457,10 +458,24 @@ const TeamProjects = () => {
 
   const displayFileName = (file) => {
     if (file.length > 8) {
-      return file.substring(0, 8) + ".mp4";
+      const segments = file.split("_");
+      return segments[2].substring(0, 8) + ".mp4";
     }
     return file;
   };
+
+  const displayTitleName = (file) => {
+    if (file.length > 12) {
+      return file.substring(0, 11) + "....";
+    }
+    return file;
+  };
+  const [workspaceLoading, setWorkSpaceLoading] = useState(true);
+  useEffect(() => {
+    setTimeout(() => {
+      setWorkSpaceLoading(false);
+    }, 500);
+  }, []);
 
   return (
     <>
@@ -591,6 +606,21 @@ const TeamProjects = () => {
                 <p>Empty Folder</p>
               </div>
             </div>
+          ) : workspaceLoading ? (
+            <div className="absolute top-0 right-0 h-full w-full z-20">
+              <div className="flex items-center justify-center flex-col gap-4 h-full">
+                <div className="transform rotate-180">
+                  <Triangle
+                    type="Triangle"
+                    color="gray"
+                    height={60}
+                    width={60}
+                    visible={true} // Assuming you want it visible by default
+                  />
+                </div>
+                <p className="text-gray-300 text-xl animate-pulse">Retrieving data ...</p>
+              </div>
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6">
               {/* Folders Section */}
@@ -614,24 +644,23 @@ const TeamProjects = () => {
                         {folder?.innerFiles &&
                           folder?.innerFiles
                             ?.filter((file) => !file?.Key.endsWith(".json"))
-                            .map((file, index) => (
-                              // <div className="rounded-lg" key={file?.SignedUrl}>
-                              //   <video
-                              //     className="rounded-lg object-cover aspect-square w-full"
-                              //     key={index}
-                              //     src={file?.SignedUrl}
-                              //   ></video>
-                              // </div>
+                            .map((file, index) =>
                               file?.SignedUrl ? ( // Check if SignedUrl exists
-                                <div className="rounded-lg" key={file?.SignedUrl}>
+                                <div
+                                  className="rounded-lg"
+                                  key={file?.SignedUrl}
+                                >
                                   <video
                                     className="rounded-lg object-cover aspect-square w-full"
                                     key={index}
                                     src={file?.SignedUrl}
+                                    loading="lazy"
                                   ></video>
                                 </div>
-                              ) : <ImageSkeleton/>
-                            ))}
+                              ) : (
+                                <ImageSkeleton />
+                              )
+                            )}
                         {folder?.innerFolders &&
                           folder.innerFolders.map((inFolder, index) => (
                             <div className="flex flex-col justify-start items-center gap-1">
@@ -661,8 +690,10 @@ const TeamProjects = () => {
                     {/* Meta data of the folder */}
                     <div className="flex flex-col items-center w-full gap-1">
                       <div className="flex w-full">
-                        <div className="flex flex-row gap-4 justify-start items-center">
-                          <p className="text-xl font-bold">{folder.Key}</p>
+                        <div className="flex flex-row w-full justify-between items-center">
+                          <p className="text-xl font-bold">
+                            {displayTitleName(folder.Key)}
+                          </p>
                           <p className="text-[#f8ff2ad1] text-base">
                             {convertBytesToGB(folder.size)}
                           </p>
@@ -670,15 +701,15 @@ const TeamProjects = () => {
                       </div>
                       <div className="flex flex-row items-center justify-between w-full">
                         <div className="text-base text-gray-400 flex flex-col gap-1 w-full justify-center items-start">
-                          <div className="flex flex-row items-center gap-2">
-                            <IoPerson className="text-[#f8ff2a]" />
+                          <div className="flex flex-row items-center gap-2 text-sm text-gray-400">
+                            {/* <IoPerson /> */}
                             <p>{folder?.Metadata?.ownername}</p>
+                            <p>
+                              {folder.LastModified
+                                ? getDifferenceText(folder.LastModified)
+                                : "Unknown"}
+                            </p>
                           </div>
-                          <p className="text-[#f8ff2ac7]">
-                            {folder.LastModified
-                              ? getDifferenceText(folder.LastModified)
-                              : "Unknown"}
-                          </p>
                         </div>
                         <div className="flex justify-center items-center relative">
                           <BsThreeDotsVertical
@@ -706,7 +737,6 @@ const TeamProjects = () => {
                   </div>
                 </div>
               ))}
-
               {/* Files Section */}
               {files
                 ?.filter((file) => !file.Key.endsWith(".json"))
@@ -739,7 +769,7 @@ const TeamProjects = () => {
                       </motion.div>
                       <div className="flex flex-col items-center w-full gap-1">
                         <div className="flex w-full">
-                          <div className="flex flex-row gap-4 justify-start items-center">
+                          <div className="flex flex-row w-full justify-between items-center">
                             <p className="text-xl font-bold">
                               {displayFileName(file?.Key)}
                             </p>
@@ -751,7 +781,7 @@ const TeamProjects = () => {
                         <div className="flex flex-row items-center justify-between w-full">
                           <div className="text-base text-gray-400 flex flex-col gap-1 w-full justify-center items-start">
                             <div className="flex flex-row items-center gap-2">
-                              <IoPerson className="text-[#f8ff2a]" />
+                              <IoPerson className="text-white" />
                               <p>{file?.Metadata?.ownername}</p>
                             </div>
                             <p className="text-[#f8ff2ac7]">

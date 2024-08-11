@@ -35,9 +35,9 @@ const ProjectState = ({ children }) => {
       }
     } else if (hours > 0) {
       if(hours===1){
-        return `${hours} hour ago`;
+        return `${hours} hr ago`;
       }else{
-        return `${hours} hours ago`;
+        return `${hours} hrs ago`;
       }
     } else if (minutes > 0) {
       return `${minutes} mins ago`;
@@ -62,10 +62,10 @@ const ProjectState = ({ children }) => {
       return `${days} days ago`;
     } else if (hours > 0) {
       if(hours===1){
-        return `${hours} hour ago`;
+        return `${hours} hr ago`;
       }
       else{
-        return `${hours} hours ago`;
+        return `${hours} hrs ago`;
       }
     } else if (minutes > 0) {
       return `${minutes} mins ago`;
@@ -93,6 +93,7 @@ const ProjectState = ({ children }) => {
       return convertedGB.toFixed(2) + " GB";
     }
   };
+  const[progressBarLoading,setProgressBarLoading] = useState("");
 
   return (
     <ProjectContext.Provider
@@ -131,7 +132,7 @@ const ProjectState = ({ children }) => {
         setVideoTimeSec,
         extractName,
         convertBytesToGB,
-        teamDeletePopup,setTeamDeletePopup
+        teamDeletePopup,setTeamDeletePopup,progressBarLoading,setProgressBarLoading
       }}
     >
       {children}
