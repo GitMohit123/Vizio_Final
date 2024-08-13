@@ -39,7 +39,7 @@ const CommentSection = ({ backendComments }) => {
               : null;
 
             return (
-              <div key={commentObject.video_comment_id} className="flex items-center" >
+              <div key={commentObject.video_comment_id} className="flex items-center gap-2" >
                 <Comment
                   commentObject={commentObject}
                   index={index}
@@ -48,11 +48,12 @@ const CommentSection = ({ backendComments }) => {
                   setActiveComments={setActiveComments}
                 />
                 {hasDrawing && (
-                  <FaPaintBrush
-                    size={20}
-                    className="text-blue-500 cursor-pointer ml-2"
-                    onClick={() => showDrawing(cleanedDrawing)} 
-                  />
+                  <img
+                  src="/images/paint-palette.png"
+                  alt=""
+                  onClick={() => showDrawing(cleanedDrawing)}
+                  className={`w-10 h-7 cursor-pointer `}
+                />
                 )}
               </div>
             );

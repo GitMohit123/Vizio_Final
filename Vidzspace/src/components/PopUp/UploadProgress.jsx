@@ -35,8 +35,9 @@ const UploadProgress = () => {
 
   return (
     <div className="absolute w-1/5 max-h-[167.2px] flex flex-col justify-end items-center z-30 right-5 bottom-5 rounded-lg">
-      <h3 className="text-lg w-full text-black bg-gray-200 p-2 rounded-tr-lg px-3 rounded-tl-lg">
-        Uploading files
+      <h3 className="text-lg w-full text-black bg-gray-200 p-2 rounded-tr-lg px-3 rounded-tl-lg flex flex-row justify-between items-center">
+        <p>Uploading Files</p>
+        {videoPercentageUploaded>0?(<p>{`${videoPercentageUploaded}%`}</p>):(<p>..</p>)}
       </h3>
       <div className="bg-white popup h-full max-h-[167.2px] w-full flex flex-col text-black p-2 px-3 rounded-b-lg gap-2">
         {selectedFiles?.map((file, index) => (
@@ -61,7 +62,6 @@ const UploadProgress = () => {
                 </>
               )}
             </div>
-            <p>{`${videoPercentageUploaded}%`}</p>
 
             {
               //  isUploadingFiles?

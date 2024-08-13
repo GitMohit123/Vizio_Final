@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import HomeContext from "../../context/homePage/HomeContext";
 import { useRef, useEffect } from "react";
-
+import emailjs from '@emailjs/browser';
 import { shareVideo } from "../../api/s3Objects";
 const ShareCommentPopup = ({ file }) => {
   console.log(file);
@@ -16,7 +16,27 @@ const ShareCommentPopup = ({ file }) => {
   const [sharingLink, setSharingLink] = useState("");
 
   //http://127.0.0.1:3000/home/dXNlcnMvVWZCM3dXbEtmMlVBYXVkVHdLdUNUQnRCTXdtMS9BbnVyYWcgTGVlbGEgS2Fuc3dhbCdzIFRlYW0vYW51L3ZpZGVvXzE3MjEwNDM1NTIyMDhfZm9yZXN0IC0gQ29weSAtIENvcHkubXA0
-
+  const sendEmail = (link) => {
+    const serviceID = 'service_9a66w2u';
+    const templateID = 'template_civ28jp';
+    const userID = 'B_ASROg3yW9J0SFad';
+    const to_name = peopleWithAccess[0];
+    const name = user.name;
+    const email = user.email;
+    const templateParams = {
+      from_name: name,
+      to_name: to_name,
+      reply_to: email,
+      link: link,
+    };
+    emailjs.send(serviceID, templateID, templateParams, userID)
+      .then((result) => {
+        console.log("SUCCESS!", result.status, result.text);
+      }, (error) => {
+        console.log(error);
+          console.log('Failed to send email:', error.text);
+      });
+  };
   const { isShareCommentPopup, setIsShareCommentPopup } =
     useContext(HomeContext);
 
@@ -63,6 +83,7 @@ const ShareCommentPopup = ({ file }) => {
         });
 
         setSharingLink(response?.sharingLink);
+        sendEmail(response.sharingLink)
       }
     } catch (error) {
       console.log(error);
@@ -91,7 +112,7 @@ const ShareCommentPopup = ({ file }) => {
     <div className="absolute top-0 right-0 p-2 max-w-lg max-h-full mx-auto w-full text-white z-20 drop-shadow-xl">
       <div
         ref={popupRef}
-        className="relative bg-[#242426] rounded-lg shadow dark:bg-gray-700 "
+        className="relative bg-[#242426] rounded-lg shadow-lg dark:bg-[#2f2f2f] "
       >
         <div className="flex items-center justify-between p-4 border-b rounded-t dark:border-gray-600">
           <h3 className="text-lg font-semibold">{`Share`}</h3>
@@ -131,7 +152,7 @@ const ShareCommentPopup = ({ file }) => {
               <label htmlFor="email" className="block text-sm font-medium">
                 Add People
               </label>
-              <div className="flex flex-wrap items-center  border   text-sm rounded-lg focus:ring-primary-600 border-white p-2.5 mt-2">
+              <div className="flex flex-wrap items-center  border   text-sm rounded-lg focus:ring-primary-600 border-white p-2.5 mt-2 bg-white">
                 {/* {peopleWithAccess?.map((email, index) => (
                       <span
                         key={index}
@@ -144,7 +165,7 @@ const ShareCommentPopup = ({ file }) => {
                   type="email"
                   name="email"
                   id="email"
-                  className="flex-grow bg-transparent outline-none text-white"
+                  className="flex-grow bg-transparent outline-none text-black"
                   placeholder="Enter email"
                   //   value={emailInput}
                   //   onChange={handleEmailInputChange}
@@ -176,7 +197,7 @@ const ShareCommentPopup = ({ file }) => {
                 id="access"
                 // value={accessLevel}
                 // onChange={handleAccessChange}
-                className=" border bg-transparent  text-gray-400 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 mt-4 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 placeholder-gray-300 border-white"
+                className=" border bg-transparent  text-gray-400 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 mt-4 block w-full p-2.5 dark:bg-white dark:border-gray-500 placeholder-gray-300 border-white"
                 value={accessLevel}
                 onChange={(e) => setAccessLevel(e.target.value)}
               >
@@ -191,7 +212,7 @@ const ShareCommentPopup = ({ file }) => {
                 id="sharing"
                 // value={sharing}
                 // onChange={handleSharing}
-                className="border bg-transparent border-white text-gray-400 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 mt-4 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-300"
+                className="border bg-transparent  text-gray-400 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 mt-4 block w-full p-2.5 dark:bg-white dark:border-gray-500 placeholder-gray-300 border-white"
                 value={sharing}
                 onChange={(e) => setSharing(e.target.value)}
               >

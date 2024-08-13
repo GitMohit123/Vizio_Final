@@ -2,6 +2,7 @@ import React, { useContext } from "react";
 import HomeContext from "../../context/homePage/HomeContext";
 import Input from "../Auth Inputs/Input";
 import { useRef, useEffect, useState } from "react";
+import emailjs from '@emailjs/browser';
 import { shareVideoFolder } from "../../api/s3Objects";
 
 const SharePopup = () => {
@@ -9,7 +10,27 @@ const SharePopup = () => {
 
   const { user, path, teamPath } = useContext(HomeContext);
 
-  console.log(path);
+  const sendEmail = (link) => {
+    const serviceID = 'service_9a66w2u';
+    const templateID = 'template_civ28jp';
+    const userID = 'B_ASROg3yW9J0SFad';
+    const to_name = peopleWithAccess[0];
+    const name = user.name;
+    const email = user.email;
+    const templateParams = {
+      from_name: name,
+      to_name: to_name,
+      reply_to: email,
+      link: link,
+    };
+    emailjs.send(serviceID, templateID, templateParams, userID)
+      .then((result) => {
+        console.log("SUCCESS!", result.status, result.text);
+      }, (error) => {
+        console.log(error);
+          console.log('Failed to send email:', error.text);
+      });
+  };
 
   const [emailInput, setEmailInput] = useState("");
   const [peopleWithAccess, setPeopleWithAccess] = useState([]);
@@ -59,6 +80,7 @@ const SharePopup = () => {
       });
 
       setSharingLink(response.sharingLink);
+      sendEmail(response.sharingLink);
     } catch (error) {
       console.log(error);
     }

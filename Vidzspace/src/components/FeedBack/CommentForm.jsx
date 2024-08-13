@@ -8,26 +8,44 @@ import { GrPowerReset } from "react-icons/gr";
 import { createComment } from "../../api/Comments";
 import { FaPaintBrush } from "react-icons/fa";
 
-const CommentForm = ({ drawings, file, toolMode, setToolMode, saveDrawing, clearCanvas, setColor,setDrawings }) => {
+const CommentForm = ({
+  drawings,
+  file,
+  toolMode,
+  setToolMode,
+  saveDrawing,
+  clearCanvas,
+  setColor,
+  setDrawings,
+}) => {
   const { user, load, setLoad } = useContext(HomeContext);
-  const { videoTimeMin, videoTimeSec, getDifferenceText } = useContext(ProjectContext);
+  const { videoTimeMin, videoTimeSec, getDifferenceText } =
+    useContext(ProjectContext);
   const firstLetterCommenting = user?.name?.charAt(0).toUpperCase();
   const [text, setText] = useState("");
-  const [isToolsVisible, setIsToolsVisible] = useState(false); 
+  const [isToolsVisible, setIsToolsVisible] = useState(false);
   const isTextAreaDisabled = text.length === 0;
 
   const handleCreateComment = async () => {
     setLoad(true);
     try {
-      const comment = text || ""; 
+      const comment = text || "";
       const userId = user?.uid || "";
-      const territory_id = user?.name || ""; 
-      const videoName = file?.Key || ""; 
+      const territory_id = user?.name || "";
+      const videoName = file?.Key || "";
       const reply_id = "null";
       const videoTime = videoTimeMin * 60 + videoTimeSec;
       const drawingDataUrl = await saveDrawing();
-      console.log(drawingDataUrl)
-      const response = await createComment(comment, userId, territory_id, videoName, reply_id, videoTime, drawingDataUrl);
+      console.log(drawingDataUrl);
+      const response = await createComment(
+        comment,
+        userId,
+        territory_id,
+        videoName,
+        reply_id,
+        videoTime,
+        drawingDataUrl
+      );
       console.log("Comment Created: Message from Frontend");
       setDrawings([]);
       setText("");
@@ -45,7 +63,7 @@ const CommentForm = ({ drawings, file, toolMode, setToolMode, saveDrawing, clear
 
   const handleColorChange = (color) => {
     setColor(color);
-    setToolMode('pencil'); 
+    setToolMode("pencil");
   };
 
   return (
@@ -82,38 +100,49 @@ const CommentForm = ({ drawings, file, toolMode, setToolMode, saveDrawing, clear
                 className="w-full bg-transparent border-none focus:outline-none text-gray-700"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                onKeyDown={(e)=>{if(e.key==="Enter"){
-                  handleSaveOrComment()
-              }}}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSaveOrComment();
+                  }
+                }}
               />
               <div className="flex gap-4 justify-center">
-                <FaPaintBrush
-                  size={24}
+                <img
+                  src="/images/paint-palette.png"
+                  alt=""
                   onClick={() => setIsToolsVisible(!isToolsVisible)}
-                  className={`cursor-pointer ${toolMode === 'pencil' ? 'text-blue-500' : 'text-blue-500'}`}
+                  className={`w-10 h-7 cursor-pointer ${
+                    toolMode === "pencil" ? "text-blue-500" : "text-blue-500"
+                  }`}
                 />
                 {isToolsVisible && (
                   <div className="flex gap-2">
                     <FaEraser
                       size={24}
-                      onClick={() => setToolMode('eraser')}
-                      className={`cursor-pointer ${toolMode === 'eraser' ? 'text-black' : 'text-blue-500'}`}
+                      onClick={() => setToolMode("eraser")}
+                      className={`cursor-pointer ${
+                        toolMode === "eraser" ? "text-black" : "text-blue-500"
+                      }`}
                     />
                     <div className="flex gap-2">
                       <div
                         className="h-6 w-6 bg-yellow-400 rounded-full cursor-pointer"
-                        onClick={() => handleColorChange('yellow')}
+                        onClick={() => handleColorChange("yellow")}
                       />
                       <div
                         className="h-6 w-6 bg-blue-400 rounded-full cursor-pointer"
-                        onClick={() => handleColorChange('blue')}
+                        onClick={() => handleColorChange("blue")}
                       />
                       <div
                         className="h-6 w-6 bg-red-400 rounded-full cursor-pointer"
-                        onClick={() => handleColorChange('red')}
+                        onClick={() => handleColorChange("red")}
                       />
                     </div>
-                    <GrPowerReset onClick={clearCanvas} size={25} color="blue" />
+                    <GrPowerReset
+                      onClick={clearCanvas}
+                      size={25}
+                      color="blue"
+                    />
                   </div>
                 )}
               </div>
