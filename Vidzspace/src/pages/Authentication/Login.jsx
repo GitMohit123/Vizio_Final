@@ -9,6 +9,8 @@ import { loginOptions } from "../../constants/authPage";
 import FirebaseContext from "../../context/firebase/FirebaseContext";
 import { useSelector } from "react-redux";
 import InputLoader from "../../components/Auth Inputs/InputLoader";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -31,6 +33,7 @@ const Login = () => {
 
   return (
     <div className="login-page">
+      <ToastContainer/>
       <div className="header">VidzSpace</div>
       <div className="hero">
         <div className="login-container">

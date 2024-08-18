@@ -4,6 +4,13 @@ export const setUserDetails = (user)=>{
         user:user
     }
 }
+export const setUserDetailsWithName = (user,userName)=>{
+    return{
+        type:"SET_USER_DETAIL",
+        user:user,
+        name:userName
+    }
+}
 export const getUserDetails = (user)=>{
     return {
         type:"GET_USER",

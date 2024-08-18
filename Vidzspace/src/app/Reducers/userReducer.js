@@ -35,6 +35,17 @@ const userReducer = (state=intitialState, actions)=>{
                     ...state,
                     componentLoading:actions.value
                 }
+            case "SET_USER_DETAIL":
+                return {
+                    ...state,
+                    componentLoading: false,
+                    info: {
+                        ...state.info, // Keep existing info
+                        name: actions.name, // Update name
+                        ...actions.user // Merge in new user details
+                    },
+                    loading: false
+                };
         default:
             return state;
     }

@@ -3,10 +3,14 @@ import { Route, Routes, useNavigate } from "react-router-dom";
 import { CommentPage, HomePage, LandingPage, Login, SignUp } from "./pages";
 import FirebaseState from "./context/firebase/FirebaseState";
 import { useDispatch, useSelector } from "react-redux";
-import { setUserDetails, userLoading } from "./app/Actions/userAction";
+import {
+  setUserDetails,
+  setUserDetailsWithName,
+  userLoading,
+} from "./app/Actions/userAction";
 import { motion } from "framer-motion";
 import { getAuth } from "firebase/auth";
-import { validateUserJWTToken } from "./api/auth";
+import { fetchUserDetails, validateUserJWTToken } from "./api/auth";
 import MainLoader from "./components/MainLoader";
 import HomeState from "./context/homePage/HomeState";
 import ProjectState from "./context/project/ProjectState";
@@ -21,8 +25,14 @@ const App = () => {
     firebaseAuth.onAuthStateChanged((cred) => {
       if (cred) {
         cred.getIdToken().then((token) => {
-          validateUserJWTToken(token).then((data) => {
-            dispatch(setUserDetails(data));
+          validateUserJWTToken(token).then(async (data) => {
+            const response = await fetchUserDetails(data?.user_id);
+            const userName = response.data?.name;
+            if (!data.name) {
+              dispatch(setUserDetailsWithName(data, userName));
+            } else {
+              dispatch(setUserDetails(data));
+            }
             // navigate("/home",{replace:true});
           });
         });
@@ -52,7 +62,7 @@ const App = () => {
               <Route path="/signup" element={<SignUp />} />
               <Route path="/home" element={<HomePage />} />
               <Route path="/feedback" element={<CommentPage />} />
-              <Route path="/error" element={<ErrorNoAccess/>}/>
+              <Route path="/error" element={<ErrorNoAccess />} />
             </Routes>
           </ProjectState>
         </HomeState>

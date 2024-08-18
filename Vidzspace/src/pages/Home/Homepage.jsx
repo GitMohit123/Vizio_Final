@@ -110,7 +110,7 @@ const Homepage = () => {
       `${ownerId}/${currentTeam}/${path}`,
       user?.user_id
     );
-    if (response?.success === false)
+    if (response?.success === false && window.location.pathname!=="/login")
       navigate("/error", {
         state: {
           message:
@@ -147,7 +147,7 @@ const Homepage = () => {
             `${owner_id}/${currentTeamPath}/${path}`,
             userId
           );
-          if (response.success === false)
+          if (response.success === false && window.location.pathname!=="/login")
             navigate("/error", {
               state: {
                 message:
