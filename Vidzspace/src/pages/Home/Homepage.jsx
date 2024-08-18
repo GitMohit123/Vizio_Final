@@ -31,8 +31,17 @@ import {
 import HomeContext from "../../context/homePage/HomeContext";
 import FirebaseContext from "../../context/firebase/FirebaseContext";
 import ProjectContext from "../../context/project/ProjectContext";
-import { Delete, FolderAdd, ProjectAdd, RenameTeam, SharePopup, TeamAdd, TeamDelete, UploadProgress } from "../../components";
-import {TeamProjects,TeamInfo,UpgradePlan} from "./index";
+import {
+  Delete,
+  FolderAdd,
+  ProjectAdd,
+  RenameTeam,
+  SharePopup,
+  TeamAdd,
+  TeamDelete,
+  UploadProgress,
+} from "../../components";
+import { TeamProjects, TeamInfo, UpgradePlan } from "./index";
 
 const Homepage = () => {
   const dispatch = useDispatch();
@@ -110,7 +119,7 @@ const Homepage = () => {
       `${ownerId}/${currentTeam}/${path}`,
       user?.user_id
     );
-    if (response?.success === false && window.location.pathname!=="/login")
+    if (response?.success === false && window.location.pathname !== "/login")
       navigate("/error", {
         state: {
           message:
@@ -147,7 +156,10 @@ const Homepage = () => {
             `${owner_id}/${currentTeamPath}/${path}`,
             userId
           );
-          if (response.success === false && window.location.pathname!=="/login")
+          if (
+            response.success === false &&
+            window.location.pathname !== "/login"
+          )
             navigate("/error", {
               state: {
                 message:
@@ -171,24 +183,19 @@ const Homepage = () => {
       if (user) {
         try {
           const userId = user?.uid;
-          listTeams(userId).then(async (data) => {
-            console.log(!data);
-            if (!data) {
-              try {
-                const userName = user?.name;
-                await createTeam(userName, userId).then(() => {
-                  fetchTeams();
-                  console.log("added");
-                });
-                // handleCancelClick();
-              } catch (err) {
-                console.log(err);
-              }
-            } else {
-              console.log("Data found", data);
-              dispatch(setTeams(data));
+          const data = await listTeams(userId);
+          if (!data || data.length==0) {
+            try {
+              const userName = user?.name;
+              const response = await createTeam(userName, userId, userName);
+              fetchTeams();
+            } catch (err) {
+              console.log(err);
             }
-          });
+          } else {
+            console.log("Data found", data);
+            dispatch(setTeams(data));
+          }
         } catch (err) {
           console.log("Not able to fetch data");
         }
@@ -197,7 +204,7 @@ const Homepage = () => {
       }
     };
     fetchTeams();
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     dispatch(setTeamPath(currentTeam));
@@ -362,7 +369,7 @@ const Homepage = () => {
               })}
             </div>
             <div className="flex flex-row w-full p-2 h-fit justify-start items-center rounded-xl text-black cursor-pointer gap-2">
-            <TbWorld className="text-lg"/>
+              <TbWorld className="text-lg" />
               <p className="text-lg">Explore</p>
             </div>
           </div>

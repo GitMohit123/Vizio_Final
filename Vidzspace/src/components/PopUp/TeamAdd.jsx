@@ -42,7 +42,8 @@ const TeamAdd = () => {
   const handleCreateTeamClick = async () => {
     try {
       const userId = user?.uid;
-      await createTeam(teamName, userId).then(() => {
+      const userName = user?.name;
+      await createTeam(teamName, userId,userName).then(() => {
         fetchTeams();
         console.log("added");
         dispatch(setCurrentTeam(`${teamName}'s Team`));

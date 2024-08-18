@@ -17,6 +17,7 @@ import {
   renameTeam,
   getSharedVideoFromKey,
 } from "../controllers/s3Objects.js";
+import { addTeamDetail, deleteTeam1, fetchTeam } from "../controllers/Team.js";
 
 const s3router = Router();
 s3router.get("/listTeams", listTeams);
@@ -35,5 +36,8 @@ s3router.post("/updateVideoMetadataFolder", updateVideoMetadataFolder);
 s3router.post("/getSharedVideoFromKey", getSharedVideoFromKey);
 s3router.post("/deleteteam", deleteTeam);
 s3router.post("/renameteam", renameTeam);
+
+// s3router.delete("/deleteTeam/:ownerId/:teamId",deleteTeam1);
+// s3router.get("/fetch/:OwnerId",fetchTeam);
 
 export default s3router;

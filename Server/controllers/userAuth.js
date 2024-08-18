@@ -60,7 +60,6 @@ export const addUserDetails = async (req, res, next) => {
 
 export const fetchUserDetails = async(req,res,next)=>{
   const { userId } = req.params;
-
   try {
     const userDetails = await getUserDetails(userId);
 

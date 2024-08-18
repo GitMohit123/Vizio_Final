@@ -32,7 +32,7 @@ export const listTeams = async (userId) => {
   }
 };
 
-export const createTeam = async (teamName, userId) => {
+export const createTeam = async (teamName, userId,owner_name) => {
   try {
     let encodedTeamName = teamName.includes("/")
       ? teamName.split("/")[0] // Extract the first part before the first slash
@@ -43,6 +43,7 @@ export const createTeam = async (teamName, userId) => {
     const response = await axios.post("/vidzspaceApi/users/s3/createTeam", {
       teamName: `${encodedTeamName}'s Team`,
       user_id: userId,
+      ownerName:owner_name
     });
 
     if (response.status === 200) {
