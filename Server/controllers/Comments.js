@@ -9,7 +9,7 @@ import {
 
 export const getComments = async (req, res, next) => {
   const { userId, videoName } = req.body;
-  console.log(userId, videoName);
+  // console.log(userId, videoName);
 
   try {
     const data = await fetchComments(userId, videoName);
@@ -30,11 +30,11 @@ export const getComments = async (req, res, next) => {
 export const generateComment = async (req, res, next) => {
   const { text, userId, userName, videoName, reply_id, videoTime, drawings } = req.body;
   const timestamp = Date.now();
-  console.log("Drawing draw it ",drawings);
+  // console.log("Drawing draw it ",drawings);
   if(drawings.length>0){
     try {
       const cleanedDrawing = drawings.replace(/^"|"$/g, '');
-      console.log("hola",cleanedDrawing);
+      // console.log("hola",cleanedDrawing);
       const existingComments = await fetchComments(userId, videoName);
       const commentCount = existingComments.length;
       const commentId = commentCount + 1;
@@ -52,7 +52,7 @@ export const generateComment = async (req, res, next) => {
         drawings: cleanedDrawing, 
         progress: false,
       };
-      console.log("hola 60",cleanedDrawing);
+      // console.log("hola 60",cleanedDrawing);
       await createComment(comment);
   
       return res.status(201).json({
@@ -67,7 +67,7 @@ export const generateComment = async (req, res, next) => {
   }else{
     try {
       const cleanedDrawing = "";
-      console.log("hola",cleanedDrawing);
+      // console.log("hola",cleanedDrawing);
       const existingComments = await fetchComments(userId, videoName);
       const commentCount = existingComments.length;
       const commentId = commentCount + 1;
@@ -85,7 +85,7 @@ export const generateComment = async (req, res, next) => {
         drawings: cleanedDrawing, 
         progress: false,
       };
-      console.log("hola 60",cleanedDrawing);
+      // console.log("hola 60",cleanedDrawing);
       await createComment(comment);
   
       return res.status(201).json({

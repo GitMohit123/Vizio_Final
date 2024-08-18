@@ -92,7 +92,7 @@ export const getUserDetails = async (userId) => {
       }
   
       // Return the user details, mapping DynamoDB format to plain object
-      console.log(result.Item)
+      // console.log(result.Item)
       const userDetails = {
         userId: result.Item.UserId.S,
         email: result.Item.Email.S,

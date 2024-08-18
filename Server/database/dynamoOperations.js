@@ -53,7 +53,7 @@ export const fetchComments = async (userId, videoName) => {
 };
 
 export const createComment = async (comment) => {
-  console.log("comment.drawing", JSON.stringify(comment.drawings) )
+  // console.log("comment.drawing", JSON.stringify(comment.drawings) )
   const params = {
     TableName: commentTable,
     Item: {
