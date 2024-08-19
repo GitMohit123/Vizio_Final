@@ -38,6 +38,6 @@ s3router.post("/deleteteam", deleteTeam);
 s3router.post("/renameteam", renameTeam);
 
 // s3router.delete("/deleteTeam/:ownerId/:teamId",deleteTeam1);
-// s3router.get("/fetch/:OwnerId",fetchTeam);
+s3router.get("/fetch/:OwnerId",fetchTeam);
 
 export default s3router;

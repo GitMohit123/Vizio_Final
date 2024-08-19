@@ -21,7 +21,7 @@ export const fetchTeam = async(req,res,next)=>{
   const {OwnerId} = req.params;
   try{
     const response = await getTeamsByOwnerID(OwnerId);
-    return res.send({response:response});
+    return res.send(response);
   }catch(err){
     console.log(err);
   }
