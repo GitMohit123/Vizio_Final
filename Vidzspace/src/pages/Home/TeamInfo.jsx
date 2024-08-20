@@ -20,8 +20,6 @@ const TeamInfo = () => {
    setTeamDeletePopup(true);
   };
 
-  console.log("team", currentTeam);
-
   const teamMembers = [
     {
       name: "Adarsh Ramteke",
@@ -50,7 +48,7 @@ const TeamInfo = () => {
             size={22}
             onClick={() => {
               handleTeamRename();
-              setTeamToRename(currentTeam);
+              setTeamToRename(currentTeam.TeamName);
             }}
             className="text-white cursor-pointer hover:text-[#f8ff2a] transition"
           />

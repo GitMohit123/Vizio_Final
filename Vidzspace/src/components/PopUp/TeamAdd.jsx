@@ -36,7 +36,7 @@ const TeamAdd = () => {
     }
   };
   useEffect(() => {
-    dispatch(setTeamPath(currentTeam));
+    dispatch(setTeamPath(currentTeam.TeamName));
   }, [currentTeam]);
 
   const handleCreateTeamClick = async () => {
@@ -46,7 +46,7 @@ const TeamAdd = () => {
       await createTeam(teamName, userId,userName).then(() => {
         fetchTeams();
         console.log("added");
-        dispatch(setCurrentTeam(`${teamName}'s Team`));
+        // dispatch(setCurrentTeam(`${teamName}'s Team`));
       });
       handleCancelClick();
     } catch (err) {

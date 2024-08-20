@@ -17,6 +17,7 @@ import admin from "../index.js";
 import { params } from "firebase-functions";
 import { PassThrough } from "stream";
 import { addTeamDetail } from "./Team.js";
+import { deleteTeamOperation } from "../database/teamOperations.js";
 
 const prefix = "users/";
 
@@ -1278,9 +1279,9 @@ export const updateVideoMetadataFolder = async (req, res, next) => {
 
 export const deleteTeam = async (req, res, next) => {
   const { teamPath } = req.body;
-  const { userId } = req.query;
+  const { userId,teamId } = req.query;
 
-  console.log("teamPath", userId, teamPath);
+  console.log("teamPath", userId, teamPath,teamId);
 
   try {
     const teamPref = `${userId}/${teamPath}`;
@@ -1315,7 +1316,7 @@ export const deleteTeam = async (req, res, next) => {
 
     const commandDel = new DeleteObjectsCommand(delParams);
     await s3Client.send(commandDel);
-
+    await deleteTeamOperation(teamId,userId);
     return res.status(200).send({ message: "Team deleted successfully" });
   } catch (error) {
     console.log(error);

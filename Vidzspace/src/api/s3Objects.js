@@ -2,31 +2,39 @@ import axios from "axios";
 
 export const prefix = "users/";
 
+// export const listTeams = async (userId) => {
+//   try {
+//     const response = await axios.get("/vidzspaceApi/users/s3/listTeams", {
+//       params: {
+//         user_id: userId,
+//       },
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//     });
+//     if (response.status === 200) {
+//       // Successful response, process the data as needed
+//       if (response.data.length === 0) {
+//         return null;
+//       } else if (!response.data) {
+//         return null;
+//       } else {
+//         return response.data;
+//       }
+//     } else {
+//       // Handle non-200 status codes (errors)
+//       throw new Error(
+//         `API request failed with status code: ${response.status}`
+//       );
+//     }
+//   } catch (err) {
+//     console.log(err);
+//   }
+// };
 export const listTeams = async (userId) => {
   try {
-    const response = await axios.get("/vidzspaceApi/users/s3/listTeams", {
-      params: {
-        user_id: userId,
-      },
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    if (response.status === 200) {
-      // Successful response, process the data as needed
-      if (response.data.length === 0) {
-        return null;
-      } else if (!response.data) {
-        return null;
-      } else {
-        return response.data;
-      }
-    } else {
-      // Handle non-200 status codes (errors)
-      throw new Error(
-        `API request failed with status code: ${response.status}`
-      );
-    }
+    const response = await axios.get(`/vidzspaceApi/users/s3/fetch/${userId}`);
+    return response.data;
   } catch (err) {
     console.log(err);
   }
@@ -477,9 +485,9 @@ export const getSharedVideoFromKey = async ({Key, requester_id}) => {
 };
 
 
-export const deleteTeam = async (userId, teamPath) => {
+export const deleteTeam = async (userId, teamPath,teamID) => {
   try {
-    console.log(userId, teamPath);
+    console.log(userId, teamPath,teamID);
     const { data } = await axios.post(
       `/vidzspaceApi/users/s3/deleteteam`,
       {
@@ -489,6 +497,7 @@ export const deleteTeam = async (userId, teamPath) => {
       {
         params: {
           userId,
+          teamId:teamID
         },
         headers: {
           "Content-Type": "application/json",

@@ -8,13 +8,14 @@ import { deleteTeam } from "../../api/s3Objects";
 const TeamDelete = () => {
   const { setTeamDeletePopup, teamDeletePopup } =
     useContext(ProjectContext);
-    const {user,setLoad,load,teamPath} = useContext(HomeContext);
+    const {user,setLoad,load,teamPath,currentTeam} = useContext(HomeContext);
 
   const handleDeleteClick = () => {
     const userId = user?.uid;
+    const teamID = currentTeam?.TeamId;
     setLoad(true);
-
-    deleteTeam(userId, teamPath).then((data) => {
+    console.log("deleting");
+    deleteTeam(userId, teamPath,teamID).then((data) => {
       console.log(data);
     });
     window.location
@@ -26,7 +27,7 @@ const TeamDelete = () => {
   const handleCancelClick = () => {
     setTeamDeletePopup(false);
   };
-
+  console.log("Current Team",currentTeam);
   const popupRef = useRef(null);
 
   const handleOutsideClick = (event) => {

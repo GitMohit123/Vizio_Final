@@ -144,7 +144,7 @@ const Homepage = () => {
   }, [team]);
 
   useEffect(() => {
-    const currentTeamPath = currentTeam;
+    const currentTeamPath = currentTeam?.TeamName;
     const fetchData = async () => {
       try {
         if (encodedFullPath) {
@@ -184,7 +184,7 @@ const Homepage = () => {
         try {
           const userId = user?.uid;
           const data = await listTeams(userId);
-          if (!data || data.length==0) {
+          if (data.length==0) {
             try {
               const userName = user?.name;
               const response = await createTeam(userName, userId, userName);
@@ -207,7 +207,7 @@ const Homepage = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(setTeamPath(currentTeam));
+    dispatch(setTeamPath(currentTeam?.TeamName));
   }, [currentTeam]);
 
   const handleOptionClick = (optionName) => {
@@ -231,13 +231,13 @@ const Homepage = () => {
                 whileHover={{ scale: 1.03 }}
                 key={index}
                 className={`w-full p-2 flex justify-center items-center cursor-pointer hover:shadow-[#f8ff2a] ${
-                  team === currentTeam
+                  team.TeamName === currentTeam?.TeamName
                     ? "bg-[#1B1B1B] text-[#f8ff2a] border-2 border-[#f8ff2a]"
                     : "bg-[#2f2f2f] text-[#f8ff2a]"
                 }`}
                 onClick={() => handleTeamClick(team)}
               >
-                <p>{displayName(team)}</p>
+                <p>{displayName(team.TeamName)}</p>
               </motion.div>
             );
           })}
@@ -264,7 +264,7 @@ const Homepage = () => {
             onClick={handleDropDownClick}
             className="bg-[#2f2f2f] flex w-full lg:h-fit h-full lg:p-2 md:p-2 p-1 rounded-lg justify-center items-center text-[#f8ff2a] cursor-pointer "
           >
-            {currentTeam ? decodeURIComponent(currentTeam) : "Team"}
+            {currentTeam?.TeamName ? decodeURIComponent(currentTeam.TeamName) : "Team"}
             <MdOutlineKeyboardArrowDown />
           </motion.div>
           {isTeamDropDownOpen && (

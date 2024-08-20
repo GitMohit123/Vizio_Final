@@ -17,7 +17,7 @@ import {
   renameTeam,
   getSharedVideoFromKey,
 } from "../controllers/s3Objects.js";
-import { addTeamDetail, deleteTeam1, fetchTeam } from "../controllers/Team.js";
+import { addTeamDetail, fetchTeam } from "../controllers/Team.js";
 
 const s3router = Router();
 s3router.get("/listTeams", listTeams);

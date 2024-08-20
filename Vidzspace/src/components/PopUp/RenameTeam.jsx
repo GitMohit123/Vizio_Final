@@ -52,7 +52,7 @@ const RenameTeam = () => {
       dispatch(userLoading(false));
       dispatch(setTeamPath(reName+"'s Team"));
       dispatch(setOptionState("Team Info"));
-      dispatch(setCurrentTeam(reName+"'s Team"))
+      // dispatch(setCurrentTeam(reName+"'s Team"))
       setLoad(false);
       setReName("");
     }

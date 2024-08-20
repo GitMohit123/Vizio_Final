@@ -37,9 +37,10 @@ const HomeState = ({ children }) => {
   const teamPath = useSelector((state) => state.cms.teamPath);
   const projectState = useSelector((state) => state.cms.projectState);
   //setting current team
-  const handleTeamClick = (currentTeamName) => {
-    dispatch(setCurrentTeam(currentTeamName));
-    dispatch(setTeamPath(currentTeam));
+  const handleTeamClick = (teamState) => {
+    console.log(teamState);
+    dispatch(setCurrentTeam(teamState));
+    dispatch(setTeamPath(currentTeam.TeamName));
     dispatch(setPathEmpty(""));
   };
   //open team add popup
