@@ -19,16 +19,16 @@ const UploadProgress = () => {
     const parts = path.split("/");
     if (parts.length > 1) {
       let firstPart = parts[0];
-      if (firstPart.length > 7) {
-        firstPart = firstPart.substring(0, 7) + "...";
+      if (firstPart.length > 10) {
+        firstPart = firstPart.substring(0, 10) + "...";
       }
       return firstPart;
     }
     return path;
   };
   const getFileName = (name)=>{
-    if(name?.length>12){
-      return name.substring(0, 7) + "...";
+    if(name?.length>18){
+      return name.substring(0, 18) + "...";
     }
     return name;
   }

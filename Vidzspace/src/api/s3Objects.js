@@ -2,35 +2,6 @@ import axios from "axios";
 
 export const prefix = "users/";
 
-// export const listTeams = async (userId) => {
-//   try {
-//     const response = await axios.get("/vidzspaceApi/users/s3/listTeams", {
-//       params: {
-//         user_id: userId,
-//       },
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//     });
-//     if (response.status === 200) {
-//       // Successful response, process the data as needed
-//       if (response.data.length === 0) {
-//         return null;
-//       } else if (!response.data) {
-//         return null;
-//       } else {
-//         return response.data;
-//       }
-//     } else {
-//       // Handle non-200 status codes (errors)
-//       throw new Error(
-//         `API request failed with status code: ${response.status}`
-//       );
-//     }
-//   } catch (err) {
-//     console.log(err);
-//   }
-// };
 export const listTeams = async (userId) => {
   try {
     const response = await axios.get(`/vidzspaceApi/users/s3/fetch/${userId}`);
@@ -514,14 +485,15 @@ export const deleteTeam = async (userId, teamPath,teamID) => {
   }
 };
 
-export const renameTeam = async (newName, oldName, userId) => {
+export const renameTeam = async (newName, oldName, userId,teamID) => {
   try {
-    console.log(userId, newName, oldName);
+    console.log(userId, newName, oldName,teamID);
     const { data } = await axios.post(
       `/vidzspaceApi/users/s3/renameteam`,
       {
         newName,
         oldName,
+        teamID
       },
 
       {

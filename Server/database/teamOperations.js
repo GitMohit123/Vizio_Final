@@ -75,3 +75,28 @@ export const deleteTeamOperation = async (teamId, ownerId) => {
     throw error;
   }
 };
+
+export const renameTeamDB = async (teamId, newTeamName,ownerId) => {
+  const params = {
+    TableName: "Teams",
+    Key: {
+      TeamId: { S: teamId },
+      OwnerId: { S: ownerId } 
+    },
+    UpdateExpression: "SET TeamName = :newTeamName",
+    ExpressionAttributeValues: {
+      ":newTeamName": { S: newTeamName }, // New team name value
+    },
+    ReturnValues: "UPDATED_NEW", // Return the updated attributes
+  };
+
+  try {
+    const command = new UpdateItemCommand(params);
+    const response = await dynamoDBClient.send(command);
+    console.log("Team name updated successfully:", response);
+  } catch (error) {
+    console.error("Error updating team name:", error);
+    throw error;
+  }
+};
+

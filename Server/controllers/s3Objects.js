@@ -17,7 +17,10 @@ import admin from "../index.js";
 import { params } from "firebase-functions";
 import { PassThrough } from "stream";
 import { addTeamDetail } from "./Team.js";
-import { deleteTeamOperation } from "../database/teamOperations.js";
+import {
+  deleteTeamOperation,
+  renameTeamDB,
+} from "../database/teamOperations.js";
 
 const prefix = "users/";
 
@@ -56,13 +59,12 @@ export const listTeams = async (req, res, next) => {
 };
 
 export const createTeam = async (req, res, next) => {
-  const { teamName, user_id,ownerName } = req.body;
+  const { teamName, user_id, ownerName } = req.body;
   if (!teamName || !user_id || !ownerName) {
     return res
       .status(400)
       .json({ message: "Missing required fields: teamName and user_id" });
-  }
-  else{
+  } else {
     try {
       const userParams = {
         Bucket: "vidzspace",
@@ -79,7 +81,7 @@ export const createTeam = async (req, res, next) => {
           Body: "",
         };
         await s3Client.send(new PutObjectCommand(userIdParams));
-      }else{
+      } else {
         console.log("User found");
       }
       const params = {
@@ -91,7 +93,7 @@ export const createTeam = async (req, res, next) => {
         OwnerId: user_id, // Sort Key
         TeamName: teamName, // Team's name
         OwnerName: ownerName,
-      }
+      };
       await addTeamDetail(teamDetails);
       await s3Client.send(new PutObjectCommand(params));
       return res.status(200).json({ message: "Team created successfully" });
@@ -1279,9 +1281,9 @@ export const updateVideoMetadataFolder = async (req, res, next) => {
 
 export const deleteTeam = async (req, res, next) => {
   const { teamPath } = req.body;
-  const { userId,teamId } = req.query;
+  const { userId, teamId } = req.query;
 
-  console.log("teamPath", userId, teamPath,teamId);
+  console.log("teamPath", userId, teamPath, teamId);
 
   try {
     const teamPref = `${userId}/${teamPath}`;
@@ -1316,7 +1318,7 @@ export const deleteTeam = async (req, res, next) => {
 
     const commandDel = new DeleteObjectsCommand(delParams);
     await s3Client.send(commandDel);
-    await deleteTeamOperation(teamId,userId);
+    await deleteTeamOperation(teamId, userId);
     return res.status(200).send({ message: "Team deleted successfully" });
   } catch (error) {
     console.log(error);
@@ -1325,30 +1327,37 @@ export const deleteTeam = async (req, res, next) => {
 };
 
 export const renameTeam = async (req, res, next) => {
-  const { newName, oldName } = req.body;
-
+  const { newName, oldName, teamID } = req.body;
   const { userId } = req.query;
-
-  console.log("name", newName, oldName, userId);
-
   const teamPrefix = `${prefix}${userId}/${oldName}/`;
-
   try {
-    // List all objects under the old team name prefix
     const listParams = {
       Bucket: "vidzspace",
       Prefix: teamPrefix,
     };
-
     const listCommand = new ListObjectsV2Command(listParams);
     const listedObjects = await s3Client.send(listCommand);
+    if (!listedObjects.Contents || listedObjects.Contents.length === 0) {
+      const placeholderParams = {
+        Bucket: "vidzspace",
+        Key: `${userId}/${newName}'s Team/`,
+        Body: "",
+      };
+      const putCommand = new PutObjectCommand(placeholderParams);
+      await s3Client.send(putCommand);
 
-    if (listedObjects.Contents.length === 0) {
-      return res.status(404).json({
-        message: "No objects found under the old team name",
+      // Optionally, delete the placeholder in the old prefix
+      const deleteParams = {
+        Bucket: "vidzspace",
+        Key: `${userId}/${oldName}/`,
+      };
+      const deleteCommand = new DeleteObjectCommand(deleteParams);
+      await s3Client.send(deleteCommand);
+      await renameTeamDB(teamID, `${newName}'s Team`,userId);
+      return res.status(200).json({
+        message: "Team renamed successfully with a placeholder file",
       });
     }
-
     // Copy each object to the new location with the new team name prefix
     for (const object of listedObjects.Contents) {
       const copyParams = {
@@ -1372,6 +1381,7 @@ export const renameTeam = async (req, res, next) => {
       const deleteCommand = new DeleteObjectCommand(deleteParams);
       await s3Client.send(deleteCommand);
     }
+    await renameTeamDB(teamID, `${newName}'s Team`,userId);
 
     res.status(200).json({
       message: "Team renamed successfully",

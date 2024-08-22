@@ -1,5 +1,9 @@
 import React, { useContext, useState } from "react";
-import { renameTeamState, setCurrentTeam, setOptionState } from "../../app/Actions/teamActions";
+import {
+  renameTeamState,
+  setCurrentTeam,
+  setOptionState,
+} from "../../app/Actions/teamActions";
 import { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
@@ -12,12 +16,16 @@ import { setTeamPath } from "../../app/Actions/cmsAction";
 
 const RenameTeam = () => {
   const dispatch = useDispatch();
-
-  const { user,setLoad,load } = useContext(HomeContext);
-
-  const { teamToRename, setTeamToRename } = useContext(HomeContext);
-
-  const [reName, setReName] = useState("");
+  const [updatedTeam, setUpdatedTeam] = useState(null);
+  const { user, setLoad, teamToRename, currentTeam } =
+    useContext(HomeContext);
+    const [reName, setReName] = useState("");
+    useEffect(() => {
+      setUpdatedTeam({
+        ...currentTeam, // Copy all properties of the existing team
+        TeamName: `${reName}'s Team`, // Override the TeamName with the new name
+      });
+    }, [reName]);
   const handleCancelClick = () => {
     dispatch(renameTeamState(false));
   };
@@ -44,15 +52,17 @@ const RenameTeam = () => {
     handleCancelClick();
     setLoad(true);
     try {
-      const response = await renameTeam(reName, teamToRename, userId);
+      const teamID = currentTeam?.TeamId;
+      const response = await renameTeam(reName, teamToRename, userId, teamID);
       console.log(response);
     } catch (error) {
       console.error("Error renaming team:", error);
     } finally {
       dispatch(userLoading(false));
-      dispatch(setTeamPath(reName+"'s Team"));
+      dispatch(setCurrentTeam(updatedTeam));
+      dispatch(setTeamPath(`${reName}'s Team`));
       dispatch(setOptionState("Team Info"));
-      // dispatch(setCurrentTeam(reName+"'s Team"))
+      // dispatch(setCurrentTeam(reName+ "'s Team"))
       setLoad(false);
       setReName("");
     }

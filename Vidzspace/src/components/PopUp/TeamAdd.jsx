@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState, useRef } from "react";
 import Input from "../HomeInputs/Input";
 import { MdDriveFileRenameOutline } from "react-icons/md";
 import HomeContext from "../../context/homePage/HomeContext";
@@ -9,52 +9,52 @@ import {
   setCurrentTeam,
   setTeams,
 } from "../../app/Actions/teamActions";
-import { useRef } from "react";
 import { createTeam, listTeams } from "../../api/s3Objects";
 import { setTeamPath } from "../../app/Actions/cmsAction";
 import ProjectContext from "../../context/project/ProjectContext";
 
 const TeamAdd = () => {
-  const { teamName, setTeamName, user, currentTeam, teamState } =
-    useContext(HomeContext);
+  const { teamName, setTeamName, user, currentTeam, team } = useContext(HomeContext);
   const { addFolder } = useContext(ProjectContext);
   const dispatch = useDispatch();
+  
+  const popupRef = useRef(null);
+
   const handleCancelClick = () => {
     dispatch(addTeamState(false));
     setTeamName("");
   };
+
   const fetchTeams = async () => {
     if (user) {
       try {
         const userId = user?.uid;
-        await listTeams(userId).then((data) => {
-          dispatch(setTeams(data));
-        });
+        const teamsData = await listTeams(userId); // Combined async/await syntax
+        dispatch(setTeams(teamsData));
       } catch (err) {
-        console.log("Not able to fetch data");
+        console.error("Not able to fetch data", err); // Added error logging
       }
     }
   };
+
   useEffect(() => {
-    dispatch(setTeamPath(currentTeam.TeamName));
+    if (currentTeam?.TeamName) {
+      dispatch(setTeamPath(currentTeam.TeamName));
+    }
   }, [currentTeam]);
 
   const handleCreateTeamClick = async () => {
     try {
       const userId = user?.uid;
       const userName = user?.name;
-      await createTeam(teamName, userId,userName).then(() => {
-        fetchTeams();
-        console.log("added");
-        // dispatch(setCurrentTeam(`${teamName}'s Team`));
-      });
+      await createTeam(teamName, userId, userName);
+      await fetchTeams();
+      console.log("Team added");
       handleCancelClick();
     } catch (err) {
-      console.log(err);
+      console.error("Error creating team", err); // Improved error handling
     }
   };
-
-  const popupRef = useRef(null);
 
   const handleOutsideClick = (event) => {
     if (popupRef.current && !popupRef.current.contains(event.target)) {
@@ -64,7 +64,6 @@ const TeamAdd = () => {
 
   useEffect(() => {
     document.addEventListener("mousedown", handleOutsideClick);
-
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
