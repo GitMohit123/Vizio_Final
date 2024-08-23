@@ -5,15 +5,23 @@ import { useDispatch } from "react-redux";
 import { motion } from "framer-motion";
 import { TbCloudUpload } from "react-icons/tb";
 import { cloudOptions } from "../../constants/homePage";
-import { setCMSData, setProjectState } from "../../app/Actions/cmsAction";
+import {
+  setCMSData,
+  setProjects,
+  setProjectState,
+} from "../../app/Actions/cmsAction";
 import { useDropzone } from "react-dropzone";
 import HomeContext from "../../context/homePage/HomeContext";
 import useDrivePicker from "react-google-drive-picker";
 import ProjectContext from "../../context/project/ProjectContext";
 import axios from "axios";
-import { createProject, fetchTeamsData, getUploadPresignedUrl } from "../../api/s3Objects";
+import {
+  createProject,
+  fetchTeamsData,
+  getUploadPresignedUrl,
+} from "../../api/s3Objects";
 import { loadGapiInsideDOM } from "gapi-script";
-import { useGoogleLogin } from '@react-oauth/google';
+import { useGoogleLogin } from "@react-oauth/google";
 
 const ProjectAdd = () => {
   const dispatch = useDispatch();
@@ -126,7 +134,7 @@ const ProjectAdd = () => {
                           );
                         }
                       }
-                      setSelectedFiles((prev)=>[...prev,...videoFiles]);
+                      setSelectedFiles((prev) => [...prev, ...videoFiles]);
                       console.log("Downloaded video files:", videoFiles);
                     } else {
                       console.error(
@@ -151,7 +159,6 @@ const ProjectAdd = () => {
       console.error("Error loading GAPI script:", error);
     }
   };
-
 
   /////////////////////////////////////// Dropzone /////////////////////////////////////////////////////////////
   const onDrop = useCallback((acceptedFiles) => {
@@ -236,7 +243,6 @@ const ProjectAdd = () => {
     OneDrive.open(odOptions);
   };
 
-
   ////////////////////////////////////////////// Button Click //////////////////////////////////////////////////
   const toggleDropdown = () => {
     setIsOpenVisibility(!isOpenVisibility);
@@ -287,12 +293,11 @@ const ProjectAdd = () => {
     const user_id = user?.uid;
     const user_name = user?.name;
     const files = selectedFiles;
-    const teamID = currentTeam?.TeamId;
-    console.log(files);
+    console.log(selectedFolders);
     await getUploadPresignedUrl({
       fullPath: `${ownerId}/${teamPath}/${projectName}`,
     });
-    await createProject(teamID, user_id,projectName,user_name);
+
     var folderName = "";
     const createFoldersPromises = selectedFolders.map(async (folder) => {
       var folderName1 = folder.path.split("/")[1];
@@ -319,7 +324,7 @@ const ProjectAdd = () => {
         : `${ownerId}/${teamPath}/${projectName}`;
       // const fullPath = `${ownerId}/${teamPath}/${path}/${projectName}`; //if want nested projects
       try {
-        console.log("isin", isInAFolder);
+        // console.log("isin", isInAFolder);
 
         const metadataUrlResult = await getUploadPresignedUrl({
           fileName: "metadata.json",
@@ -327,8 +332,6 @@ const ProjectAdd = () => {
           user_id,
           fullPath: `${fullPath}`,
         });
-
-        console.log("metada", metadataUrlResult);
 
         const metadata = {
           fullPath,
@@ -349,7 +352,6 @@ const ProjectAdd = () => {
           user_id,
           fullPath,
         });
-        console.log(result.url);
         return { file, presignedUrl: result.url, isUploading: false };
       } catch (error) {
         console.log("Error generating urls", error);
@@ -366,16 +368,44 @@ const ProjectAdd = () => {
         ...prevSelectedFiles,
         ...validFilesWithUrls,
       ]);
-      console.log("All files url generated successfully");
-
+      // console.log("All files url generated successfully");
       uploadFile(filesWithUrls);
     } catch (error) {
       console.log("Error generating urls", error);
     }
   };
+  const transformFileArray = (files) => {
+    return files.map(({ file, presignedUrl }) => {
+      // Create a URL object
+      const url = new URL(presignedUrl);
+      // Extract the pathname (base URL without query parameters)
+      const baseUrl = url.origin + url.pathname;
+      return {
+        file: file.name,
+        signedUrl: baseUrl,
+      };
+    });
+  };
+  const transformFileNames = (files) => {
+    return files.map(({ name }) => ({
+      folder: name,
+    }));
+  };
 
   const uploadFile = async (filesWithUrls) => {
-    console.log("hi");
+    const filesArray = transformFileArray(filesWithUrls);
+    const folderArray = transformFileNames(selectedFolders);
+    const teamID = currentTeam?.TeamId;
+    const user_id = user?.uid;
+    const user_name = user?.name;
+    await createProject(
+      teamID,
+      user_id,
+      projectName,
+      user_name,
+      filesArray,
+      folderArray
+    );
     for (let i = 0; i < filesWithUrls.length; i++) {
       const { file, presignedUrl } = filesWithUrls[i];
 
@@ -413,16 +443,10 @@ const ProjectAdd = () => {
     // setRefresh((prev) => !prev);
   };
   const fetchData = async () => {
-    const currentTeamPath = currentTeam?.TeamName;
+    const TeamId = currentTeam?.TeamId;
     try {
-      const userId = user?.uid;
-      const response = await fetchTeamsData(
-        `${userId}/${currentTeamPath}/${path}`,
-        userId
-      );
-      const filesData = response?.files || [];
-      const folderData = response?.folders || [];
-      dispatch(setCMSData(filesData, folderData));
+      const response = await fetchTeamsData(TeamId);
+      dispatch(setProjects(response));
     } catch (err) {
       console.log("Unable to fetch data");
     }
@@ -437,9 +461,7 @@ const ProjectAdd = () => {
 
   return (
     <div className="absolute h-[95%] w-[95%] flex justify-center items-center z-30 bg-opacity-10 bg-[#2f2f2f] backdrop-blur-sm">
-      <div
-        className="popup bg-[#383838] w-3/6 h-auto p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c]"
-      >
+      <div className="popup bg-[#383838] w-3/6 h-auto p-5 flex flex-col rounded-xl border-2 border-[#4c4c4c]">
         {/* Title Section */}
         <div className="flex w-full px-2 mb-4">
           <p className="text-white text-3xl font-bold">Create New Project</p>

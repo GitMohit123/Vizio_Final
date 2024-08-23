@@ -10,6 +10,7 @@ import {
   setCMSData,
   setPath,
   setPathEmpty,
+  setProjects,
   setProjectState,
 } from "../../app/Actions/cmsAction";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -24,6 +25,7 @@ import { IoPerson } from "react-icons/io5";
 import { useEffect } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { FaHome } from "react-icons/fa";
+import { FaFolder } from "react-icons/fa";
 import {
   deleteVideo,
   deleteVideoFolder,
@@ -71,6 +73,7 @@ const TeamProjects = () => {
     searchQuery,
     setSearchQuery,
     setIsOpenShare,
+    projects,
   } = useContext(HomeContext);
   const {
     deletePopup,
@@ -98,25 +101,16 @@ const TeamProjects = () => {
   const navigate = useNavigate();
 
   const fetchData = async (query = "") => {
-    const currentTeamPath = currentTeam?.TeamName;
+    const TeamId = currentTeam?.TeamId;
     try {
-      const userId = user?.uid;
-      const response = await fetchTeamsData(
-        `${userId}/${currentTeamPath}/${path}`,
-        userId
-      );
-      let filesData = response?.files || [];
-      let folderData = response?.folders || [];
-
+      const response = await fetchTeamsData(TeamId);
+      let Projects = response;
       if (query != "") {
-        filesData = filesData.filter((file) =>
-          file.Key.toLowerCase().startsWith(query.toLowerCase())
-        );
-        folderData = folderData.filter((folder) =>
-          folder.Key.toLowerCase().startsWith(query.toLowerCase())
+        Projects = Projects.filter((project) =>
+          project.ProjectName.toLowerCase().startsWith(query.toLowerCase())
         );
       }
-      dispatch(setCMSData(filesData, folderData));
+      dispatch(setProjects(Projects));
     } catch (err) {
       console.log("Unable to fetch data");
     }
@@ -454,7 +448,6 @@ const TeamProjects = () => {
       folder.innerFiles.some((file) => file.Key.endsWith("metadata.json"))
     );
   };
-  console.log(isMetaDataJson(folders));
 
   const displayFileName = (file) => {
     if (file.length > 8) {
@@ -582,7 +575,7 @@ const TeamProjects = () => {
       </div>
       {load && <CMSLoader />}
       {renamePopup && <Rename />}
-      {files?.length === 0 && folders?.length === 0 && !path ? (
+      {projects?.length === 0 && !path ? (
         <div className="h-full w-full flex justify-center items-center">
           <motion.div
             onClick={() => dispatch(setProjectState(true))}
@@ -618,10 +611,12 @@ const TeamProjects = () => {
                     visible={true} // Assuming you want it visible by default
                   />
                 </div>
-                <p className="text-gray-300 text-xl animate-pulse">Retrieving data ...</p>
+                <p className="text-gray-300 text-xl animate-pulse">
+                  Retrieving data ...
+                </p>
               </div>
             </div>
-          ) : (
+          ) : path !== "" ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6">
               {/* Folders Section */}
               {folders?.map((folder, index) => (
@@ -822,6 +817,120 @@ const TeamProjects = () => {
                     )}
                   </div>
                 ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6">
+              {/* Folders Section */}
+              {projects?.map((project, index) => (
+                <div
+                  key={index}
+                  className={`p-4 bg-[#35353a] rounded-lg text-white relative cursor-pointer ${
+                    path == "" ? "backdrop-blur-3xl" : ""
+                  }`}
+                >
+                  {/* <ProgressBar document={folder} /> */}
+                  <div className="flex flex-col gap-2 w-full rounded-md">
+                    {projects.length !== 0 ? (
+                      <div
+                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-3 gap-4 h-40 overflow-y-auto no-scrollbar"
+                        key={project.ProjectId}
+                        // onClick={() => handleRoute(folder.Key)}
+                      >
+                        {project?.NestedFiles &&
+                          project?.NestedFiles.map((file, index) =>
+                            file?.signedUrl ? ( // Check if SignedUrl exists
+                              <div className="rounded-lg" key={file?.signedUrl}>
+                                <video
+                                  className="rounded-lg object-cover aspect-square w-full"
+                                  key={index}
+                                  src={file?.signedUrl}
+                                  loading="lazy"
+                                ></video>
+                              </div>
+                            ) : (
+                              <ImageSkeleton />
+                            )
+                          )}
+                        {project?.NestedFolders &&
+                          project.NestedFolders.map((folder, index) => (
+                            <div
+                              className="flex flex-col justify-start items-center gap-1"
+                              key={index}
+                            >
+                              <img
+                                src="/icons/Folder.png"
+                                alt="Folder"
+                                className="lg:h-16 md:h-16 h-16 lg:w-20 md:w-20 w-20"
+                              />
+                              <p className="text-sm text-gray-200">
+                                {folder.folder}
+                              </p>
+                            </div>
+                          ))}
+                      </div>
+                    ) : (
+                      <div
+                        className="h-40 w-full flex justify-center items-center"
+                        // onClick={() => handleRoute(folder.Key)}
+                      >
+                        <div className="flex flex-col justify-center items-center gap-3 text-gray-400">
+                          <ImFilesEmpty className="text-5xl" />
+                          <p>Empty Project</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Meta data of the folder */}
+                    <div className="flex flex-col items-center w-full gap-1">
+                      <div className="flex w-full">
+                        <div className="flex flex-row w-full justify-between items-center">
+                          <p className="text-xl font-bold">
+                            {displayTitleName(project.ProjectName)}
+                          </p>
+                          <p className="text-[#f8ff2ad1] text-base">
+                            {/* {convertBytesToGB(folder.size)} */}
+                            1.108GB
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-row items-center justify-between w-full">
+                        <div className="text-base text-gray-400 flex flex-col gap-1 w-full justify-center items-start">
+                          <div className="flex flex-row items-center gap-2 text-sm text-gray-400">
+                            {/* <IoPerson /> */}
+                            <p>{project.OwnerName}</p>
+                            <p>
+                              {project.UpdatedAt
+                                ? getDifferenceText(project.UpdatedAt)
+                                : "Unknown"}
+                            </p>
+                          </div>
+                        </div>
+                        {/* <div className="flex justify-center items-center relative">
+                          <BsThreeDotsVertical
+                            // onClick={() => {
+                            //   setSelectedItem({
+                            //     type: "folder",
+                            //     index: `folder-${index}`,
+                            //     path: folder.Key,
+                            //   });
+                            // }}
+                            className="font-black text-3xl cursor-pointer"
+                          />
+                          {selectedItem?.type === "folder" &&
+                            selectedItem?.index === `folder-${index}` &&
+                            selectedItem?.path === folder?.Key && (
+                              <SidebarComponent
+                                folderfile={folder}
+                                closeSidebar={closeSidebar}
+                                handleThreeDotClick={handleThreeDotFolderClick}
+                              />
+                            )}
+                        </div> */}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

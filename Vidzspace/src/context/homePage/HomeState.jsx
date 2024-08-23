@@ -32,6 +32,7 @@ const HomeState = ({ children }) => {
   const folders = useSelector((state) => state.cms.folders);
   const files = useSelector((state) => state.cms.files);
   const path = useSelector((state) => state.cms.path);
+  const projects = useSelector((state)=>state.cms.projects)
 
   //cms State
   const teamPath = useSelector((state) => state.cms.teamPath);
@@ -207,6 +208,7 @@ const HomeState = ({ children }) => {
         fetchData,
         deleteTeamState,
         setDeleteTeamState,
+        projects
       }}
     >
       {children}

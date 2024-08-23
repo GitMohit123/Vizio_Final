@@ -5,6 +5,7 @@ const initialState = {
   projectState: false,
   files: [],
   folders: [],
+  projects:[]
 };
 
 const cmsReducer = (state = initialState, action) => {
@@ -45,6 +46,11 @@ const cmsReducer = (state = initialState, action) => {
       return{
         ...state,
         path:action.path
+      }
+    case "SET_PROJECTS":
+      return{
+        ...state,
+        projects:action.value
       }
     default:
       return state;

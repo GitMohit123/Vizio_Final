@@ -25,6 +25,7 @@ import { FaSearch } from "react-icons/fa";
 import {
   setCMSData,
   setPath,
+  setProjects,
   setProjectState,
   setTeamPath,
 } from "../../app/Actions/cmsAction";
@@ -126,9 +127,7 @@ const Homepage = () => {
             "You don't have access to the folder or the link is invalid :(",
         },
       });
-    const filesData = response?.files;
-    const folderData = response?.folders;
-    dispatch(setCMSData(filesData, folderData));
+    dispatch(setProjects(response));
     setPermissions(response?.sharingDetails);
     setEncodedFullPath(null);
   };
@@ -144,7 +143,7 @@ const Homepage = () => {
   }, [team]);
 
   useEffect(() => {
-    const currentTeamPath = currentTeam?.TeamName;
+    const TeamId = currentTeam?.TeamId;
     const fetchData = async () => {
       try {
         if (encodedFullPath) {
@@ -152,10 +151,7 @@ const Homepage = () => {
         } else {
           const userId = user?.uid;
           if (!owner_id) setOwner_id(userId);
-          const response = await fetchTeamsData(
-            `${owner_id}/${currentTeamPath}/${path}`,
-            userId
-          );
+          const response = await fetchTeamsData(TeamId);
           if (
             response.success === false &&
             window.location.pathname !== "/login"
@@ -166,10 +162,8 @@ const Homepage = () => {
                   "You don't have access to the folder or the link is invalid :(",
               },
             });
-          const filesData = response?.files;
-          const folderData = response?.folders;
-          setPermissions(response?.sharingDetails);
-          dispatch(setCMSData(filesData, folderData));
+          // setPermissions(response?.sharingDetails);
+          dispatch(setProjects(response));
         }
       } catch (err) {
         console.log("Unable to fetch data");

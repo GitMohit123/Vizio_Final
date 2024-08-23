@@ -38,21 +38,21 @@ export const createTeam = async (teamName, userId,owner_name) => {
   }
 };
 
-export const fetchTeamsData = async (path, user_id) => {
-  try {
-    console.log("in fetch teams data with path", path, ", requestorid: ", user_id);
-    const response = await axios.get(`/vidzspaceApi/users/s3/fetchTeamsData`, {
-      params: {
-        requester_id: user_id,
-        path: path,
-      },
-    });
-    console.log(response.data);
-    return response.data;
-  } catch (err) {
-    console.log(err);
-  }
-};
+// export const fetchTeamsData = async (path, user_id) => {
+//   try {
+//     console.log("in fetch teams data with path", path, ", requestorid: ", user_id);
+//     const response = await axios.get(`/vidzspaceApi/users/s3/fetchTeamsData`, {
+//       params: {
+//         requester_id: user_id,
+//         path: path,
+//       },
+//     });
+//     console.log(response.data);
+//     return response.data;
+//   } catch (err) {
+//     console.log(err);
+//   }
+// };
 
 export const deleteVideo = async (url, idToken) => {
   try {
@@ -517,16 +517,27 @@ export const renameTeam = async (newName, oldName, userId,teamID) => {
 
 
 ////////////////////////////////////////  Create Project Api /////////////////////////////////////////
-export const createProject = async(TeamId, OwnerId, ProjectName,OwnerName)=>{
+export const createProject = async(TeamId, OwnerId, ProjectName,OwnerName,nestedFiles, nestedFolders)=>{
   try{
     const response = await axios.post(`/vidzspaceApi/users/s3/createProject`,{
       TeamId:TeamId,
       ProjectName:ProjectName,
       OwnerId:OwnerId,
-      OwnerName:OwnerName
+      OwnerName:OwnerName,
+      nestedFiles:nestedFiles,
+      nestedFolders:nestedFolders
     })
     console.log(response.data);
   }catch(err){
     console.log(err);
   }
 }
+
+export const fetchTeamsData = async (teamId) => {
+  try {
+    const response = await axios.get(`/vidzspaceApi/users/s3/getProjectsById/${teamId}`);
+    return response.data;
+  } catch (err) {
+    console.log(err);
+  }
+};

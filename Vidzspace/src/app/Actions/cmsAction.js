@@ -10,6 +10,12 @@ export const setProjectState = (value)=>{
         value:value
     }
 }
+export const setProjects = (projects)=>{
+    return{
+        type:"SET_PROJECTS",
+        value:projects
+    }
+}
 export const setCMSData = (files,folders)=>{
     return{
         type:"SET_CMS_DATA",

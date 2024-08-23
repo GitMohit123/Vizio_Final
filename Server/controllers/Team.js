@@ -26,13 +26,3 @@ export const fetchTeam = async(req,res,next)=>{
     console.log(err);
   }
 }
-
-// export const deleteTeam1 = async(req,res,next)=>{
-//   const {teamId,ownerId} = req.params;
-//   try{
-//     const response = await deleteTeamOperation(teamId,ownerId);
-//     return res.send({message:"Team deleted successfully"});
-//   }catch(err){
-//     console.log(err);
-//   }
-// }
