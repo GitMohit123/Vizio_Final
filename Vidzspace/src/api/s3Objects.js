@@ -514,3 +514,19 @@ export const renameTeam = async (newName, oldName, userId,teamID) => {
     throw error;
   }
 };
+
+
+////////////////////////////////////////  Create Project Api /////////////////////////////////////////
+export const createProject = async(TeamId, OwnerId, ProjectName,OwnerName)=>{
+  try{
+    const response = await axios.post(`/vidzspaceApi/users/s3/createProject`,{
+      TeamId:TeamId,
+      ProjectName:ProjectName,
+      OwnerId:OwnerId,
+      OwnerName:OwnerName
+    })
+    console.log(response.data);
+  }catch(err){
+    console.log(err);
+  }
+}

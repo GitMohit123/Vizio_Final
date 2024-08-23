@@ -1,6 +1,5 @@
 import { Router } from "express";
 import {
-  listTeams,
   createTeam,
   listRoot,
   deleteVideo,
@@ -18,9 +17,10 @@ import {
   getSharedVideoFromKey,
 } from "../controllers/s3Objects.js";
 import { addTeamDetail, fetchTeam } from "../controllers/Team.js";
+import { addProject } from "../controllers/Projects.js";
 
 const s3router = Router();
-s3router.get("/listTeams", listTeams);
+// s3router.get("/listTeams", listTeams);
 s3router.post("/createTeam", createTeam);
 s3router.get("/fetchTeamsData", listRoot);
 s3router.delete("/delete", deleteVideo);
@@ -39,5 +39,6 @@ s3router.post("/renameteam", renameTeam);
 
 // s3router.delete("/deleteTeam/:ownerId/:teamId",deleteTeam1);
 s3router.get("/fetch/:OwnerId",fetchTeam);
+s3router.post("/createProject", addProject);
 
 export default s3router;

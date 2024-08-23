@@ -128,7 +128,7 @@ const HomeState = ({ children }) => {
       });
   };
   const fetchData = async () => {
-    const currentTeamPath = currentTeam;
+    const currentTeamPath = currentTeam?.TeamName;
     console.log(currentTeamPath);
     try {
       const userId = user?.uid;

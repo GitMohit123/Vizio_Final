@@ -11,7 +11,7 @@ import HomeContext from "../../context/homePage/HomeContext";
 import useDrivePicker from "react-google-drive-picker";
 import ProjectContext from "../../context/project/ProjectContext";
 import axios from "axios";
-import { fetchTeamsData, getUploadPresignedUrl } from "../../api/s3Objects";
+import { createProject, fetchTeamsData, getUploadPresignedUrl } from "../../api/s3Objects";
 import { loadGapiInsideDOM } from "gapi-script";
 import { useGoogleLogin } from '@react-oauth/google';
 
@@ -45,71 +45,8 @@ const ProjectAdd = () => {
     setVideoPercentageUploaded,
   } = useContext(ProjectContext);
 
-  const uploadToPresignedUrl = async (presignedUrl, file) => {
-    console.log("in apii: ", presignedUrl, file);
-    const uploadResponse = await axios.put(presignedUrl, file, {
-      headers: {
-        "Content-Type": file?.type,
-      },
-      onUploadProgress: (progressEvent) => {
-        const percentCompleted = Math.round(
-          (progressEvent.loaded * 100) / progressEvent.total
-        );
-        console.log(`Upload Progress: ${percentCompleted}%`);
-        setVideoPercentageUploaded(percentCompleted);
-      },
-    });
-    return uploadResponse.status;
-  };
-
+  //////////////////////////////////////// Google Drive Api ////////////////////////////////////////////////////////////
   const [openPicker, authResponse] = useDrivePicker();
-
-  // const handleOpenPicker = () => {
-  //   openPicker({
-  //     clientId:
-  //       "112355236362-jv377gl5mau1ucsf0mghe9h96tfcefj3.apps.googleusercontent.com",
-  //     developerKey: "AIzaSyB2FDWk9GwFLGsGsFrnpCvh2nzByI73W8o",
-  //     viewId: "DOCS",
-  //     // token: token, // pass oauth token in case you already have one
-  //     showUploadView: true,
-  //     showUploadFolders: true,
-  //     supportDrives: true,
-  //     multiselect: true,
-  //     views: [
-  //       {
-  //         viewId: "DOCS",
-  //         mimeTypes: "application/vnd.google-apps.folder,video/*",
-  //         label: "Files and Folders",
-  //       },
-  //     ],
-  //     // customViews: customViewsArray, // custom view
-  //     callbackFunction: (data) => {
-  //       if (data.action === "cancel") {
-  //         console.log("User clicked cancel/close button");
-  //       }
-  //       console.log(data.docs);
-  //       //const file={}
-
-  //       const videoFiles = (data.docs || [])
-  //         ?.filter((doc) => doc.mimeType.startsWith("video/"))
-  //         ?.map((doc) => ({
-  //           name: doc.name,
-  //           type: doc.mimeType,
-  //           path: doc.name,
-  //           lastModified: doc.lastEditedUtc,
-  //           size: doc.sizeBytes,
-  //         }));
-
-  //       console.log(videoFiles);
-
-  //       setSelectedFiles((prevSelectedFiles) => [
-  //         ...prevSelectedFiles,
-  //         ...videoFiles,
-  //       ]);
-  //     },
-  //   });
-  // };
-
   const loadGapiInsideDOM = () => {
     return new Promise((resolve) => {
       const script = document.createElement("script");
@@ -215,28 +152,8 @@ const ProjectAdd = () => {
     }
   };
 
-  const handleCloudOptionClick = (cloudName) => {
-    if (cloudName === "Google Drive") {
-      handleOpenPicker();
-    } else {
-      openOneDrivePicker();
-    }
-  };
 
-  const toggleDropdown = () => {
-    setIsOpenVisibility(!isOpenVisibility);
-  };
-  const handleCancelClick = () => {
-    dispatch(setProjectState(false));
-    setIsUploadingProgressOpen(false);
-    setSelectedFiles([]);
-    setSelectedFolders([]);
-  };
-
-  const toggleFilesDropdown = () => {
-    setIsUploadDropdownOpen(!isUploadDropdownOpen);
-  };
-
+  /////////////////////////////////////// Dropzone /////////////////////////////////////////////////////////////
   const onDrop = useCallback((acceptedFiles) => {
     const filesList = [];
     const foldersList = [];
@@ -319,24 +236,63 @@ const ProjectAdd = () => {
     OneDrive.open(odOptions);
   };
 
+
+  ////////////////////////////////////////////// Button Click //////////////////////////////////////////////////
+  const toggleDropdown = () => {
+    setIsOpenVisibility(!isOpenVisibility);
+  };
+  const handleCancelClick = () => {
+    dispatch(setProjectState(false));
+    setIsUploadingProgressOpen(false);
+    setSelectedFiles([]);
+    setSelectedFolders([]);
+  };
+
+  const toggleFilesDropdown = () => {
+    setIsUploadDropdownOpen(!isUploadDropdownOpen);
+  };
+
+  const handleCloudOptionClick = (cloudName) => {
+    if (cloudName === "Google Drive") {
+      handleOpenPicker();
+    } else {
+      openOneDrivePicker();
+    }
+  };
+
+  ////////////////////////////////////////////////// Project Creation api ////////////////////////////////////////////////////////////
+
+  const uploadToPresignedUrl = async (presignedUrl, file) => {
+    console.log("in apii: ", presignedUrl, file);
+    const uploadResponse = await axios.put(presignedUrl, file, {
+      headers: {
+        "Content-Type": file?.type,
+      },
+      onUploadProgress: (progressEvent) => {
+        const percentCompleted = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
+        console.log(`Upload Progress: ${percentCompleted}%`);
+        setVideoPercentageUploaded(percentCompleted);
+      },
+    });
+    return uploadResponse.status;
+  };
+
   const handleCreateProjectClick = async () => {
     dispatch(setProjectState(false));
     setIsUploadingFiles(true);
-    // dispatch(setLoader(true));
     setLoad(true);
-
     const ownerId = user?.uid; //for testing only
     const user_id = user?.uid;
-    // const response = await generate(`${ownerId}/${teamPath}/${path}`)
+    const user_name = user?.name;
     const files = selectedFiles;
-
+    const teamID = currentTeam?.TeamId;
     console.log(files);
-
-    // create empty project first
     await getUploadPresignedUrl({
       fullPath: `${ownerId}/${teamPath}/${projectName}`,
     });
-
+    await createProject(teamID, user_id,projectName,user_name);
     var folderName = "";
     const createFoldersPromises = selectedFolders.map(async (folder) => {
       var folderName1 = folder.path.split("/")[1];
@@ -401,7 +357,6 @@ const ProjectAdd = () => {
       }
     });
 
-    // Wait for all uploads to finish
     try {
       const validFilesWithUrls = (await Promise.all(uploadPromises)).filter(
         (fileWithUrl) => fileWithUrl !== null
@@ -458,7 +413,7 @@ const ProjectAdd = () => {
     // setRefresh((prev) => !prev);
   };
   const fetchData = async () => {
-    const currentTeamPath = currentTeam;
+    const currentTeamPath = currentTeam?.TeamName;
     try {
       const userId = user?.uid;
       const response = await fetchTeamsData(

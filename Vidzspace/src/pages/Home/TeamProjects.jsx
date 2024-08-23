@@ -98,7 +98,7 @@ const TeamProjects = () => {
   const navigate = useNavigate();
 
   const fetchData = async (query = "") => {
-    const currentTeamPath = currentTeam;
+    const currentTeamPath = currentTeam?.TeamName;
     try {
       const userId = user?.uid;
       const response = await fetchTeamsData(
