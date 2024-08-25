@@ -16,12 +16,14 @@ import useDrivePicker from "react-google-drive-picker";
 import ProjectContext from "../../context/project/ProjectContext";
 import axios from "axios";
 import {
+  createItem,
   createProject,
   fetchTeamsData,
   getUploadPresignedUrl,
 } from "../../api/s3Objects";
 import { loadGapiInsideDOM } from "gapi-script";
 import { useGoogleLogin } from "@react-oauth/google";
+import { v4 as uuidv4 } from "uuid";
 
 const ProjectAdd = () => {
   const dispatch = useDispatch();
@@ -268,32 +270,13 @@ const ProjectAdd = () => {
 
   ////////////////////////////////////////////////// Project Creation api ////////////////////////////////////////////////////////////
 
-  const uploadToPresignedUrl = async (presignedUrl, file) => {
-    console.log("in apii: ", presignedUrl, file);
-    const uploadResponse = await axios.put(presignedUrl, file, {
-      headers: {
-        "Content-Type": file?.type,
-      },
-      onUploadProgress: (progressEvent) => {
-        const percentCompleted = Math.round(
-          (progressEvent.loaded * 100) / progressEvent.total
-        );
-        console.log(`Upload Progress: ${percentCompleted}%`);
-        setVideoPercentageUploaded(percentCompleted);
-      },
-    });
-    return uploadResponse.status;
-  };
-
   const handleCreateProjectClick = async () => {
     dispatch(setProjectState(false));
     setIsUploadingFiles(true);
     setLoad(true);
     const ownerId = user?.uid; //for testing only
     const user_id = user?.uid;
-    const user_name = user?.name;
     const files = selectedFiles;
-    console.log(selectedFolders);
     await getUploadPresignedUrl({
       fullPath: `${ownerId}/${teamPath}/${projectName}`,
     });
@@ -322,17 +305,13 @@ const ProjectAdd = () => {
             file.name.length * -1 - 1
           )}`
         : `${ownerId}/${teamPath}/${projectName}`;
-      // const fullPath = `${ownerId}/${teamPath}/${path}/${projectName}`; //if want nested projects
       try {
-        // console.log("isin", isInAFolder);
-
         const metadataUrlResult = await getUploadPresignedUrl({
           fileName: "metadata.json",
           contentType: "application/json",
           user_id,
           fullPath: `${fullPath}`,
         });
-
         const metadata = {
           fullPath,
           createdAt: new Date().toISOString(),
@@ -340,12 +319,10 @@ const ProjectAdd = () => {
           sharing_type: "none",
           progress: "Upcoming",
         };
-
         await uploadToPresignedUrl(
           metadataUrlResult.url,
           new Blob([JSON.stringify(metadata)], { type: "application/json" })
         );
-
         const result = await getUploadPresignedUrl({
           fileName,
           contentType,
@@ -358,7 +335,6 @@ const ProjectAdd = () => {
         return null;
       }
     });
-
     try {
       const validFilesWithUrls = (await Promise.all(uploadPromises)).filter(
         (fileWithUrl) => fileWithUrl !== null
@@ -374,31 +350,30 @@ const ProjectAdd = () => {
       console.log("Error generating urls", error);
     }
   };
-  const transformFileArray = (files) => {
-    return files.map(({ file, presignedUrl }) => {
-      // Create a URL object
-      const url = new URL(presignedUrl);
-      // Extract the pathname (base URL without query parameters)
-      const baseUrl = url.origin + url.pathname;
-      return {
-        file: file.name,
-        signedUrl: baseUrl,
-      };
+  const uploadToPresignedUrl = async (presignedUrl, file) => {
+    const uploadResponse = await axios.put(presignedUrl, file, {
+      headers: {
+        "Content-Type": file?.type,
+      },
+      onUploadProgress: (progressEvent) => {
+        const percentCompleted = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
+        console.log(`Upload Progress: ${percentCompleted}%`);
+        setVideoPercentageUploaded(percentCompleted);
+      },
     });
+    return uploadResponse.status;
   };
-  const transformFileNames = (files) => {
-    return files.map(({ name }) => ({
-      folder: name,
-    }));
-  };
-
   const uploadFile = async (filesWithUrls) => {
     const filesArray = transformFileArray(filesWithUrls);
     const folderArray = transformFileNames(selectedFolders);
     const teamID = currentTeam?.TeamId;
     const user_id = user?.uid;
     const user_name = user?.name;
+    const projectId = uuidv4();
     await createProject(
+      projectId,
       teamID,
       user_id,
       projectName,
@@ -416,7 +391,15 @@ const ProjectAdd = () => {
 
       try {
         const data = await uploadToPresignedUrl(presignedUrl, file);
-        // toast.success("Uploaded successful");
+        if (file instanceof File) {
+          await createItem(
+            projectId,
+            file?.name,
+            file?.size,
+            presignedUrl,
+            file?.path || file?.name
+          );
+        }
         console.log("File uploaded successfully", data);
         setSelectedFilesWithUrls((files) => {
           files[i].isUploading = false;
@@ -441,6 +424,25 @@ const ProjectAdd = () => {
     setVideoPercentageUploaded(0);
     await fetchData();
     // setRefresh((prev) => !prev);
+  };
+
+  //////////////////////////////////////////////// Display names /////////////////////////////////////////////////////////////
+  const transformFileArray = (files) => {
+    return files.map(({ file, presignedUrl }) => {
+      // Create a URL object
+      const url = new URL(presignedUrl);
+      // Extract the pathname (base URL without query parameters)
+      const baseUrl = url.origin + url.pathname;
+      return {
+        file: file.name,
+        signedUrl: baseUrl,
+      };
+    });
+  };
+  const transformFileNames = (files) => {
+    return files.map(({ name }) => ({
+      folder: name,
+    }));
   };
   const fetchData = async () => {
     const TeamId = currentTeam?.TeamId;

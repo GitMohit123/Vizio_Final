@@ -76,12 +76,12 @@ export const deleteTeamOperation = async (teamId, ownerId) => {
   }
 };
 
-export const renameTeamDB = async (teamId, newTeamName,ownerId) => {
+export const renameTeamDB = async (teamId, newTeamName, ownerId) => {
   const params = {
     TableName: "Teams",
     Key: {
       TeamId: { S: teamId },
-      OwnerId: { S: ownerId } 
+      OwnerId: { S: ownerId },
     },
     UpdateExpression: "SET TeamName = :newTeamName",
     ExpressionAttributeValues: {
@@ -99,4 +99,3 @@ export const renameTeamDB = async (teamId, newTeamName,ownerId) => {
     throw error;
   }
 };
-

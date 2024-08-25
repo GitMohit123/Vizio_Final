@@ -517,9 +517,10 @@ export const renameTeam = async (newName, oldName, userId,teamID) => {
 
 
 ////////////////////////////////////////  Create Project Api /////////////////////////////////////////
-export const createProject = async(TeamId, OwnerId, ProjectName,OwnerName,nestedFiles, nestedFolders)=>{
+export const createProject = async(ProjectId,TeamId, OwnerId, ProjectName,OwnerName,nestedFiles, nestedFolders)=>{
   try{
     const response = await axios.post(`/vidzspaceApi/users/s3/createProject`,{
+      ProjectId:ProjectId,
       TeamId:TeamId,
       ProjectName:ProjectName,
       OwnerId:OwnerId,
@@ -541,3 +542,18 @@ export const fetchTeamsData = async (teamId) => {
     console.log(err);
   }
 };
+
+export const createItem = async(ProjectId,ItemName, Size, PresignedUrl, FilePath)=>{
+  try{
+    const response = await axios.post(`/vidzspaceApi/users/s3/createItem`,{
+      ProjectId:ProjectId,
+      ItemName:ItemName,
+      Size:Size,
+      PresignedUrl:PresignedUrl,
+      FilePath:FilePath
+    })
+    console.log(response.data);
+  }catch(err){
+    console.log(err);
+  }
+}

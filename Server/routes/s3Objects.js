@@ -18,6 +18,7 @@ import {
 } from "../controllers/s3Objects.js";
 import { addTeamDetail, fetchTeam } from "../controllers/Team.js";
 import { addProject, retrieveProjects } from "../controllers/Projects.js";
+import { createItem } from "../controllers/Files.js";
 
 const s3router = Router();
 // s3router.get("/listTeams", listTeams);
@@ -41,5 +42,6 @@ s3router.post("/renameteam", renameTeam);
 s3router.get("/fetch/:OwnerId",fetchTeam);
 s3router.post("/createProject", addProject);
 s3router.get("/getProjectsById/:TeamId",retrieveProjects);
+s3router.post("/createItem",createItem);
 
 export default s3router;

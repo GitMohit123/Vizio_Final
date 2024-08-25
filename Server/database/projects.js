@@ -4,13 +4,12 @@ import {
   ScanCommand,
 } from "@aws-sdk/client-dynamodb";
 import dynamoDBClient from "./dynamoDB.js";
-import { v4 as uuidv4 } from "uuid";
 
 export const addProjectOperation = async (project) => {
   const params = {
     TableName: "Projects",
     Item: {
-      ProjectId: { S: uuidv4() }, // Partition Key
+      ProjectId: { S: project.ProjectId }, // Partition Key
       TeamId: { S: project.TeamId }, // Sort Key
       OwnerId: { S: project.OwnerId },
       OwnerName: { S: project.OwnerName }, // Owner's ID
@@ -35,8 +34,6 @@ export const addProjectOperation = async (project) => {
       },
     },
   };
-
-  console.log(params);
   try {
     const command = new PutItemCommand(params);
     await dynamoDBClient.send(command);

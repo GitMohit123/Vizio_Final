@@ -1,12 +1,12 @@
 import { addProjectOperation, getProjectsByTeamId } from "../database/projects.js";
 
 export const addProject = async (req, res, next) => {
-  const { TeamId,OwnerId, ProjectName,OwnerName,nestedFiles,nestedFolders } = req.body;
-  console.log(nestedFiles,nestedFolders)
+  const { ProjectId,TeamId,OwnerId, ProjectName,OwnerName,nestedFiles,nestedFolders } = req.body;
   try {
     const project = {
       TeamId: TeamId, // Sort Key
       OwnerId: OwnerId, // Owner's ID
+      ProjectId:ProjectId,
       ProjectName: ProjectName, // Project's name
       Progress: "Upcoming",
       OwnerName:OwnerName,

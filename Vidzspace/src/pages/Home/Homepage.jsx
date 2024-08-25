@@ -75,6 +75,7 @@ const Homepage = () => {
     setTeamToRename,
     owner_id,
     setOwner_id,
+    setLoad,
   } = useContext(HomeContext);
   const {
     isUploadingProgressOpen,
@@ -94,6 +95,7 @@ const Homepage = () => {
   const [encodedFullPath, setEncodedFullPath] = useState(encodedFullPath1);
   const [canWrite, setCanWrite] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const [dataArr, setDataArr] = useState([]);
 
   const setPermissions = (sharingDetails) => {
     console.log("owner:", owner_id, "userId", user?.user_id);
@@ -178,7 +180,8 @@ const Homepage = () => {
         try {
           const userId = user?.uid;
           const data = await listTeams(userId);
-          if (data.length==0) {
+          // console.log("Data length", data.length);
+          if (data.length == 0) {
             try {
               const userName = user?.name;
               const response = await createTeam(userName, userId, userName);
@@ -218,23 +221,7 @@ const Homepage = () => {
       {/* Section1 */}
       <div className="team-section flex h-full lg:w-[5%] w-[17%] flex-col gap-5 py-3 px-2 items-center">
         <img src="/icons/vizioLogo.png" alt="Vid" className="h-6 w-6" />
-        <div className="flex w-full flex-col gap-2">
-          {team?.map((team, index) => {
-            return (
-              <motion.div
-                whileHover={{ scale: 1.03 }}
-                key={index}
-                className={`w-full p-2 flex justify-center items-center cursor-pointer hover:shadow-[#f8ff2a] ${
-                  team.TeamName === currentTeam?.TeamName
-                    ? "bg-[#1B1B1B] text-[#f8ff2a] border-2 border-[#f8ff2a]"
-                    : "bg-[#2f2f2f] text-[#f8ff2a]"
-                }`}
-                onClick={() => handleTeamClick(team)}
-              >
-                <p>{displayName(team.TeamName)}</p>
-              </motion.div>
-            );
-          })}
+        <div className="flex w-full flex-col gap-2 h-full overflow-y-auto overflow-x-hidden">
           <motion.div
             whileHover={{ scale: 1.03 }}
             className={`w-full h-10 p-2 flex justify-center items-center hover:shadow-[#f8ff2a] hover:text-[#f8ff2a] bg-[#2f2f2f] text-[#bebea9] ${
@@ -244,6 +231,22 @@ const Homepage = () => {
           >
             <FaPlus />
           </motion.div>
+          {team?.map((team, index) => {
+            return (
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                key={index}
+                className={`w-full p-2 flex justify-center items-center cursor-pointer hover:shadow-[#f8ff2a] ${
+                  team.TeamId === currentTeam?.TeamId
+                    ? "bg-[#1B1B1B] text-[#f8ff2a] border-2 border-[#f8ff2a]"
+                    : "bg-[#2f2f2f] text-[#f8ff2a]"
+                }`}
+                onClick={() => handleTeamClick(team)}
+              >
+                <p>{displayName(team.TeamName)}</p>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
 
@@ -258,7 +261,9 @@ const Homepage = () => {
             onClick={handleDropDownClick}
             className="bg-[#2f2f2f] flex w-full lg:h-fit h-full lg:p-2 md:p-2 p-1 rounded-lg justify-center items-center text-[#f8ff2a] cursor-pointer "
           >
-            {currentTeam?.TeamName ? decodeURIComponent(currentTeam.TeamName) : "Team"}
+            {currentTeam?.TeamName
+              ? decodeURIComponent(currentTeam.TeamName)
+              : "Team"}
             <MdOutlineKeyboardArrowDown />
           </motion.div>
           {isTeamDropDownOpen && (
