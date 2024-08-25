@@ -24,6 +24,7 @@ import {
 import { loadGapiInsideDOM } from "gapi-script";
 import { useGoogleLogin } from "@react-oauth/google";
 import { v4 as uuidv4 } from "uuid";
+import pLimit from 'p-limit';
 
 const ProjectAdd = () => {
   const dispatch = useDispatch();
@@ -54,7 +55,9 @@ const ProjectAdd = () => {
     setProjectName,
     setVideoPercentageUploaded,
   } = useContext(ProjectContext);
+  const [itemsToProcess, setItemsToProcess] = useState([]);
 
+  const limit = pLimit(5);
   //////////////////////////////////////// Google Drive Api ////////////////////////////////////////////////////////////
   const [openPicker, authResponse] = useDrivePicker();
   const loadGapiInsideDOM = () => {
