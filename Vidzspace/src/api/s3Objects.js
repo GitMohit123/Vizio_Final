@@ -1,7 +1,8 @@
 import axios from "axios";
 
 export const prefix = "users/";
-
+import { BatchWriteItemCommand } from "@aws-sdk/client-dynamodb";
+import dynamoDBClient from "../../../Server/database/dynamoDB";
 export const listTeams = async (userId) => {
   try {
     const response = await axios.get(`/vidzspaceApi/users/s3/fetch/${userId}`);
@@ -543,17 +544,41 @@ export const fetchTeamsData = async (teamId) => {
   }
 };
 
-export const createItem = async(ProjectId,ItemName, Size, PresignedUrl, FilePath)=>{
-  try{
-    const response = await axios.post(`/vidzspaceApi/users/s3/createItem`,{
-      ProjectId:ProjectId,
-      ItemName:ItemName,
-      Size:Size,
-      PresignedUrl:PresignedUrl,
-      FilePath:FilePath
-    })
-    console.log(response.data);
-  }catch(err){
-    console.log(err);
+export const createItem = async (items) => {
+  const batchSize = 25; // DynamoDB allows up to 25 items per batch write
+  const batches = [];
+
+  for (let i = 0; i < items.length; i += batchSize) {
+    batches.push(items.slice(i, i + batchSize));
   }
-}
+
+  const results = await Promise.all(
+    batches.map(async (batch) => {
+      const params = {
+        RequestItems: {
+          'FilesAndFolders': batch.map(item => ({
+            PutRequest: {
+              Item: {
+                projectId: { S: item.projectId },
+                name: { S: item.name },
+                size: { N: item.size.toString() },
+                url: { S: item.url },
+                path: { S: item.path }
+              }
+            }
+          }))
+        }
+      };
+
+      try {
+        const command = new BatchWriteItemCommand(params);
+        return await dynamoDBClient.send(command);
+      } catch (error) {
+        console.error('Error in batch write:', error);
+        throw error;
+      }
+    })
+  );
+
+  return results;
+};

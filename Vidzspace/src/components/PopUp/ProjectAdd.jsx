@@ -384,33 +384,49 @@ const ProjectAdd = () => {
       filesArray,
       folderArray
     );
+
+    const itemsToAdd = [];
+
     for (let i = 0; i < filesWithUrls.length; i++) {
       const { file, presignedUrl } = filesWithUrls[i];
 
       setSelectedFilesWithUrls((files) => {
         files[i].isUploading = true;
-        return files;
+        return [...files];
       });
 
       try {
         const data = await uploadToPresignedUrl(presignedUrl, file);
-        if (file instanceof File) {
-          await createItem(
-            projectId,
-            file?.name,
-            file?.size,
-            presignedUrl,
-            file?.path || file?.name
-          );
-        }
         console.log("File uploaded successfully", data);
+
+        if (file instanceof File) {
+          itemsToAdd.push({
+            projectId,
+            name: file.name,
+            size: file.size,
+            url: presignedUrl,
+            path: file.path || file.name
+          });
+        }
+
         setSelectedFilesWithUrls((files) => {
-          files[i].isUploading = false;
-          return files;
+          const newFiles = [...files];
+          newFiles[i].isUploading = false;
+          return newFiles;
         });
       } catch (error) {
-        console.log("Error uploading file", file.name, error);
+        console.error("Error uploading file", file.name, error);
         // Handle error if required
+      }
+    }
+
+    // Batch create items in DynamoDB
+    if (itemsToAdd.length > 0) {
+      try {
+        const result = await createItem(itemsToAdd);
+        console.log("Items added to DynamoDB:", result);
+      } catch (error) {
+        console.error("Error adding items to DynamoDB:", error);
       }
     }
 

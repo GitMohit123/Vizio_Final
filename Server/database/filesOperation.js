@@ -2,15 +2,16 @@ import {
   PutItemCommand,
   QueryCommand,
   ScanCommand,
+  TransactWriteItemsCommand,
 } from "@aws-sdk/client-dynamodb";
 import dynamoDBClient from "./dynamoDB.js";
 import { v4 as uuidv4 } from "uuid";
-import { TransactWriteItemsCommand } from "@aws-sdk/client-dynamodb";
 
 export const addItemOperation = async (item) => {
-  const pathSegments = item?.FilePath.split("/").filter((segment) => segment); // Split path into segments
+  const pathSegments = item?.FilePath.split("/").filter((segment) => segment);
   let parentId = "root";
   let currentParentId = parentId;
+  const batchItems = [];
 
   for (let i = 0; i < pathSegments.length; i++) {
     const segment = pathSegments[i];
@@ -18,36 +19,47 @@ export const addItemOperation = async (item) => {
     const itemType = isMp4 ? "File" : "Folder";
     const itemId = uuidv4();
 
-    const params = {
-      TableName: "FilesAndFolders", // Specify your table name here
-      Item: {
-        ProjectId: { S: item.ProjectId }, // Partition Key
-        ItemId: { S: itemId }, // Unique ID for the item
-        ParentId: { S: currentParentId }, // Parent ID
-        ItemType: { S: itemType }, // Type (file or folder)
-        Name: { S: segment }, // Name of the item
-        Size: { N: item.Size ? item.Size.toString() : "0" }, // Size of the item (in bytes)
-        CreatedAt: { S: new Date().toISOString() }, // Creation timestamp
-        UpdatedAt: { S: new Date().toISOString() }, // Last update timestamp
-        Progress: { S: item.Progress || "" }, // Progress (optional)
-        ...(isMp4 && { SignedUrl: { S: item.SignedUrl } }), // Signed URL if it's a file
+    batchItems.push({
+      PutRequest: {
+        Item: {
+          ProjectId: { S: item.ProjectId },
+          ItemId: { S: itemId },
+          ParentId: { S: currentParentId },
+          ItemType: { S: itemType },
+          Name: { S: segment },
+          Size: { N: item.Size ? item.Size.toString() : "0" },
+          CreatedAt: { S: new Date().toISOString() },
+          UpdatedAt: { S: new Date().toISOString() },
+          Progress: { S: item.Progress || "" },
+          ...(isMp4 && { SignedUrl: { S: item.SignedUrl } }),
+        },
       },
-    };
-    try {
-      const command = new PutItemCommand(params);
-      console.log(command);
-      const response = await dynamoDBClient.send(command);
-      console.log(
-        `Item ${segment} added successfully with ParentId: ${currentParentId},`, response
-      );
+    });
 
-      // Update parentId only if the item is a folder
-      if (itemType === "Folder") {
-        currentParentId = itemId; // Set current folder's ID as the next ParentId
-      }
-    } catch (error) {
-      console.error(`Error adding item ${segment}:`, error);
-      throw error;
+    if (itemType === "Folder") {
+      currentParentId = itemId;
     }
   }
-};
+
+  try {
+    for (let i = 0; i < batchItems.length; i += 25) {
+      const chunk = batchItems.slice(i, i + 25);
+      const params = {
+        TransactItems: chunk.map((item) => ({
+          Put: {
+            TableName: "FilesAndFolders",
+            Item: item.PutRequest.Item,
+          },
+        })),
+      };
+
+      const command = new TransactWriteItemsCommand(params);
+      const response = await dynamoDBClient.send(command);
+      console.log(`Batch ${i/25 + 1} added successfully:`, response);
+    }
+    console.log("All items added successfully");
+  } catch (error) {
+    console.error("Error adding items:", error);
+    throw error;
+  }
+};	
